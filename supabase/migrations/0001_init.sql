@@ -47,7 +47,10 @@ create table public.habits (
   relapse_policy  text not null default 'continue'
                   check (relapse_policy in ('reset', 'continue')),
   created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
+  updated_at      timestamptz not null default now(),
+  -- Redundante frente a la clave primaria, pero es el anclaje de la llave
+  -- foránea compuesta de habit_logs. Ver la nota allá abajo.
+  unique (id, user_id)
 );
 
 create index habits_user_status_idx on public.habits (user_id, status);
@@ -58,14 +61,22 @@ create index habits_user_status_idx on public.habits (user_id, status);
 
 create table public.habit_logs (
   id          uuid primary key default gen_random_uuid(),
-  habit_id    uuid not null references public.habits (id) on delete cascade,
+  habit_id    uuid not null,
   user_id     uuid not null references auth.users (id) on delete cascade,
   log_date    date not null,
   status      text not null check (status in ('success', 'relapse', 'skipped')),
   note        text check (length(note) <= 1000),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
-  unique (habit_id, log_date)
+  unique (habit_id, log_date),
+
+  -- La llave va contra (id, user_id) y no solo contra id. Con la referencia
+  -- simple, la política RLS de escritura solo comprueba que user_id sea el de
+  -- quien escribe, así que cualquiera podía insertar un registro suyo colgando
+  -- del hábito de otra persona. Con la compuesta, la fila no existe si el
+  -- hábito no es de quien lo firma: lo garantiza el esquema, no la política.
+  foreign key (habit_id, user_id)
+    references public.habits (id, user_id) on delete cascade
 );
 
 create index habit_logs_user_date_idx on public.habit_logs (user_id, log_date desc);
