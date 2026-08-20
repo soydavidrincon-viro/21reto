@@ -1,0 +1,18 @@
+{
+  "artboards": [
+    { "file": "Bienvenida.dc.html", "x": 0, "y": 0, "w": 390, "h": 844, "title": "1 · Bienvenida" },
+    { "file": "Main.dc.html", "x": 470, "y": 0, "w": 390, "h": 844, "title": "2 · Hoy" },
+    { "file": "Habito.dc.html", "x": 940, "y": 0, "w": 390, "h": 844, "title": "3 · Detalle de hábito" },
+    { "file": "Progreso.dc.html", "x": 1410, "y": 0, "w": 390, "h": 844, "title": "4 · Progreso" }
+  ],
+  "annotations": [
+    {
+      "id": "paleta",
+      "x": 0,
+      "y": -210,
+      "w": 560,
+      "text": "Antídoto — sistema visual\n\nAzul #1B4DFF primario · Naranja #FF6B2C racha · Menta #12C7A6 completado\nÁmbar #F2B441 recaída (nunca rojo) · Tinta #14161C · Nieve #F6F8FC fondo\n\nSora para números y títulos · Plus Jakarta Sans para el resto.\nSin barra de estado falsa: en el teléfono real la pinta el sistema."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

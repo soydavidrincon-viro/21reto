@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #1B4DFF; } a:hover { color: #123AC7; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #F6F8FC; position: relative; overflow: hidden;">
+
+  <div style="display: flex; flex-direction: column; gap: 16px; padding: 60px 20px 0;">
+
+    <div style="display: flex; flex-direction: column; gap: 3px;">
+      <h1 style="margin: 0; font-family: 'Sora', system-ui, sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: #14161C;">Tu progreso</h1>
+      <p style="margin: 0; font-size: 14px; color: #7A8296;">Últimas 6 semanas</p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 24px; background: #14161C;">
+      <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+        <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.55);">Total acumulado</span>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <b style="font-family: 'Sora', system-ui, sans-serif; font-size: 42px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: #FFFFFF; font-variant-numeric: tabular-nums;">38</b>
+          <span style="font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.8);">días limpios</span>
+        </div>
+      </div>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: rgba(18,199,166,0.18); font-size: 12.5px; font-weight: 700; color: #4FE3C4; flex-shrink: 0;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4FE3C4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="m6 11 6-6 6 6"></path></svg>
+        +6
+      </span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; padding: 18px 16px; border-radius: 22px; background: #FFFFFF; border: 1px solid #EAEEF6;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <h2 style="margin: 0; font-family: 'Sora', system-ui, sans-serif; font-size: 15.5px; font-weight: 600; color: #14161C;">Cumplimiento semanal</h2>
+        <span style="font-size: 12.5px; font-weight: 600; color: #7A8296; font-variant-numeric: tabular-nums;">85% promedio</span>
+      </div>
+      <div style="display: flex; align-items: flex-end; gap: 10px; height: 118px;">
+        <sc-for list="{{semanas}}" as="semana" hint-placeholder-count="6">
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; flex-grow: 1; height: 100%;">
+            <small style="font-size: 10.5px; font-weight: 700; color: #5A6376; font-variant-numeric: tabular-nums;">{{semana.valor}}</small>
+            <span style="display: block; width: 100%; border-radius: 8px 8px 4px 4px; {{semana.barra}}"></span>
+            <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">{{semana.etiqueta}}</small>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; border-radius: 22px; background: #FFFFFF; border: 1px solid #EAEEF6;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <h2 style="margin: 0; font-family: 'Sora', system-ui, sans-serif; font-size: 15.5px; font-weight: 600; color: #14161C;">Tu ánimo</h2>
+        <span style="font-size: 12.5px; font-weight: 600; color: #7A8296;">Esta semana</span>
+      </div>
+      <svg viewBox="0 0 322 112" style="width: 100%; height: 112px; display: block; overflow: visible;">
+        <line x1="0" y1="20" x2="322" y2="20" stroke="#EDF0F6" stroke-width="1"></line>
+        <line x1="0" y1="58" x2="322" y2="58" stroke="#EDF0F6" stroke-width="1"></line>
+        <line x1="0" y1="96" x2="322" y2="96" stroke="#EDF0F6" stroke-width="1"></line>
+        <path d="M12,58 L62,77 L111,39 L161,58 L210,20 L260,39 L310,20 L310,104 L12,104 Z" fill="rgba(255,107,44,0.10)"></path>
+        <polyline points="12,58 62,77 111,39 161,58 210,20 260,39 310,20" fill="none" stroke="#FF6B2C" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        <circle cx="310" cy="20" r="5.5" fill="#FF6B2C" stroke="#FFFFFF" stroke-width="2.5"></circle>
+      </svg>
+      <div style="display: flex; justify-content: space-between;">
+        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">L</small>
+        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">M</small>
+        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">M</small>
+        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">J</small>
+        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">V</small>
+        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">S</small>
+        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">D</small>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; bottom: 26px; display: flex; align-items: center; justify-content: space-between; height: 66px; padding: 0 10px; border-radius: 23px; background: #14161C;">
+    <span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 46px;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5.5 9.6V20a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9.6"></path></svg>
+    </span>
+    <span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 46px;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4.8A1.8 1.8 0 0 1 6.3 3H19v18H6.3a1.8 1.8 0 0 1-1.8-1.8z"></path><path d="M9 3v18"></path></svg>
+    </span>
+    <span style="display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border-radius: 15px; background: #1B4DFF;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-7"></path><path d="M12 20V5"></path><path d="M19 20v-10"></path></svg>
+      <b style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Progreso</b>
+    </span>
+    <span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 46px;">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"></circle><path d="M5 20c0-3.7 3.1-6.2 7-6.2s7 2.5 7 6.2"></path></svg>
+    </span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var datos = [
+      { etiqueta: 'S1', valor: 71 },
+      { etiqueta: 'S2', valor: 86 },
+      { etiqueta: 'S3', valor: 100 },
+      { etiqueta: 'S4', valor: 57 },
+      { etiqueta: 'S5', valor: 100 },
+      { etiqueta: 'S6', valor: 95 }
+    ];
+    var semanas = datos.map(function (d) {
+      var alto = Math.round(d.valor * 0.78);
+      var color = d.valor === 100 ? '#12C7A6' : '#1B4DFF';
+      return {
+        etiqueta: d.etiqueta,
+        valor: d.valor + '%',
+        barra: 'height: ' + alto + 'px; background: ' + color + ';'
+      };
+    });
+    return { semanas: semanas };
+  }
+}
+</script>
+</body>
+</html>

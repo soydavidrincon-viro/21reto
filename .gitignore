@@ -1,0 +1,7 @@
+# Lienzo generado por el editor de diseño (2 MB, se regenera desde los .dc.html)
+design/antidoto-mockups.html
+
+node_modules/
+.next/
+.env*.local
+.DS_Store
