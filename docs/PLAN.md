@@ -20,39 +20,56 @@ Decisiones tomadas con el usuario:
 
 ## Dirección visual
 
-La referencia azul/naranja (pantallas *Daily Challenge* y *Profile*) define el branding. Las otras
-cuatro referencias aportan patrones concretos, no la identidad.
+La app debe sentirse nativa de iPhone. Las referencias azul/naranja fijaron el branding; el
+lenguaje visual es el de iOS, que usa casi los mismos tonos en sus colores de sistema.
 
-**Paleta**
+**Paleta — colores de sistema de iOS**
 
 | Token | Hex | Uso |
 |---|---|---|
-| `--azul` | `#1B4DFF` | Primario: acciones, día cumplido, tarjeta del reto |
-| `--naranja` | `#FF6B2C` | Racha, hitos, energía |
-| `--menta` | `#12C7A6` | Progreso completado, segundo color de tarjeta |
-| `--ambar` | `#F2B441` | Recaída — nunca rojo, la recaída es dato, no castigo |
-| `--tinta` | `#14161C` | Texto, botones sólidos, nav flotante |
-| `--nieve` | `#F6F8FC` | Fondo de app: gris con sesgo frío hacia el azul |
+| `--blue` | `#007AFF` | Primario: botones, día cumplido, anillo del reto |
+| `--orange` | `#FF9500` | Racha e hitos |
+| `--green` | `#34C759` | Cumplido, tendencia positiva |
+| `--yellow` | `#FFCC00` | Recaída — nunca rojo, la recaída es dato, no castigo |
+| `--label` | `#000000` | Texto principal |
+| `--label-2` | `rgba(60,60,67,0.6)` | Texto secundario |
+| `--separator` | `rgba(60,60,67,0.29)` | Separadores de lista, hairlines de 0.5px |
+| `--grouped-bg` | `#F2F2F7` | Fondo agrupado de la app |
 
-Modo oscuro con los mismos tokens redefinidos: `--tinta` pasa a fondo, azul y naranja suben
-luminosidad para mantener contraste AA sobre oscuro.
+Modo oscuro con los equivalentes oscuros de iOS: fondo `#000000`, tarjetas `#1C1C1E`, y las
+variantes dark de los colores de sistema (`#0A84FF`, `#FF9F0A`, `#30D158`, `#FFD60A`).
 
-**Tipografía:** `Sora` para display y números grandes (racha, día X de 21), `Plus Jakarta Sans`
-para UI y texto corrido. `font-variant-numeric: tabular-nums` en todo contador que cambie a diario.
+**Tipografía — sin fuentes de catálogo.** SF Pro no puede servirse como webfont; la licencia solo
+cubre plataformas Apple. La vía correcta es el *system font stack*, que en iPhone y Mac resuelve a
+SF Pro real:
 
-**Patrones tomados de cada referencia**
+```css
+--font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+           'Helvetica Neue', system-ui, sans-serif;
+--font-num: ui-rounded, 'SF Pro Rounded', -apple-system, 'Segoe UI Variable Display',
+            Roboto, system-ui, sans-serif;
+```
 
-- *Azul/naranja* — tarjeta grande destacada arriba del home (el reto activo), tira horizontal de
-  fechas con píldora del día seleccionado, tarjetas de hábito en colores sólidos alternados, nav
-  inferior flotante oscura de esquinas muy redondeadas.
-- *Streak naranja* — anillo de progreso con número grande al centro, fila de la semana con checks
-  (L M M J V S D), grid de estadísticas de 4 columnas.
-- *Onboarding cream* — chips de selección múltiple para elegir qué hábito dejar.
-- *Fitness lima* — botones pill de ancho completo, jerarquía de tarjeta blanca sobre fondo claro.
+`--font-num` va en rachas, contadores y porcentajes; en iOS resuelve a SF Pro Rounded, la de los
+anillos de Fitness. Siempre con `font-variant-numeric: tabular-nums`.
 
-**Nota de ejecución:** las referencias usan renders 3D. Esos son assets de diseñador que no
-tenemos; uso iconografía plana con relleno sólido y sombras suaves, que sostiene el mismo aire sin
-depender de arte externo. Si consigues los renders, se sustituyen sin tocar el layout.
+**Patrones de iOS a respetar**
+
+- Título grande (34px bold, tracking −0.026em) al tope de cada sección raíz.
+- Listas agrupadas insertadas: tarjeta blanca de radio 16, filas de 44px mínimo, separador de
+  0.5px que arranca a 58px del borde cuando la fila tiene icono.
+- Control segmentado para duración del reto y para el rango en Progreso.
+- Anillos concéntricos tipo Fitness en Hoy, uno por hábito activo.
+- Tab bar translúcida de 83px con `backdrop-filter: blur(20px)`, icono de 26px y etiqueta de 10px.
+- Emoji del sistema como iconografía de hábitos y en el selector de ánimo.
+
+**Qué se ve distinto fuera de Apple.** En Android el layout, los colores y los anillos son
+idénticos; cambian la tipografía (cae a Roboto) y los emoji (los de Google). Los glifos de Apple
+son propietarios y no se pueden empaquetar. Los iconos de la tab bar imitan el estilo de SF
+Symbols porque los originales tampoco son redistribuibles.
+
+**Sin chrome falso.** No dibujar barra de estado ni home indicator: en el teléfono real los pinta
+el sistema encima y se verían duplicados.
 
 ---
 
@@ -133,9 +150,9 @@ confirmación, confetti al completar un hito.
 
 ## Fases de implementación
 
-**Fase 0 — Fundaciones.** Scaffold Next.js + TypeScript + Tailwind + shadcn. Tokens de la paleta y
-las dos tipografías. ESLint/Prettier. `.env.example`. Proyecto Supabase y cliente SSR
-(`lib/supabase/{client,server,middleware}.ts`). Layout con la nav flotante.
+**Fase 0 — Fundaciones.** Scaffold Next.js + TypeScript + Tailwind + shadcn. Tokens de color y los
+dos stacks tipográficos. ESLint/Prettier. `.env.example`. Proyecto Supabase y cliente SSR
+(`lib/supabase/{client,server,middleware}.ts`). Layout con la tab bar translúcida.
 
 **Fase 1 — Base de datos.** Migraciones de las 5 tablas, políticas RLS, trigger que crea `profiles`
 al registrarse, `get_habit_stats`, vista `daily_overview`, `seed.sql` de frases. Tipos generados
@@ -149,8 +166,9 @@ optimista (se pinta al instante, se revierte si falla). Registro de recaída con
 y nota opcional. Racha y progreso hacia la meta. Cierre del reto al llegar a `target_days` con
 opción de extender.
 
-**Fase 4 — Capa visual.** Anillo de progreso animado en SVG, heatmap calendario, tira de fechas,
-tarjetas de color, hitos con confetti, modo oscuro, estados vacíos ilustrados, skeletons.
+**Fase 4 — Capa visual.** Anillos concéntricos animados en SVG, heatmap calendario, listas
+agrupadas, control segmentado, tab bar translúcida, hitos con confetti, modo oscuro, estados
+vacíos, skeletons.
 
 **Fase 5 — Bitácora y reacción del día.** Selector de emoji (12–16 estados) con intensidad 1–5,
 editor de nota, timeline con filtros, edición de días pasados.
@@ -180,7 +198,7 @@ el usuario **instala** la PWA en la pantalla de inicio (iOS 16.4+).
 
 La app toca adicciones reales. En Ajustes y en el flujo de recaída va un texto breve — *Antídoto
 acompaña tu proceso, no sustituye atención profesional* — con enlace a líneas de ayuda. La recaída
-se registra en ámbar, no en rojo, y se muestra como dato, no como fracaso.
+se registra en amarillo, no en rojo, y se muestra como dato, no como fracaso.
 
 ---
 
@@ -200,7 +218,7 @@ npm run lint && npm run build    # debe pasar limpio antes de cada push
 3. Marcar el día → anillo avanza a 1/21, racha en 1. Recargar: persiste.
 4. Guardar reacción 🙂 + nota → aparece en Bitácora con la fecha correcta.
 5. Registrar una recaída → según política, la racha se reinicia o continúa; el heatmap la marca en
-   ámbar.
+   amarillo.
 6. Insertar logs de días pasados desde SQL → verificar racha, mejor racha y % en Progreso.
 7. Cambiar la zona horaria del perfil → confirmar que el check sigue cayendo en el día local.
 8. Instalar la PWA en Android e iOS → abre en modo standalone sin barra del navegador.
