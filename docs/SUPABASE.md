@@ -18,19 +18,26 @@ persisten. Toma unos 15 minutos, casi todos de espera.
 
 ## 2. Copiar las dos credenciales
 
-En el panel del proyecto, **Project Settings → API** (en algunos paneles la
-sección se llama **API Keys**). Necesitas exactamente dos valores:
+Están en dos páginas distintas del panel.
 
-| Qué copiar | Cómo se ve |
-|---|---|
-| **Project URL** | `https://abcdefghijk.supabase.co` |
-| **anon / public key** | una cadena larga que empieza con `eyJ…` |
+**La llave** — **Project Settings → API Keys**, sección **Publishable key**. Es
+una cadena que empieza con `sb_publishable_…`; cópiala con el botón de la
+derecha.
 
-En ese mismo lugar vas a ver una **service_role key**. Esa no la uses aquí y no
-la pegues en ningún archivo del proyecto: se salta todas las políticas de
-seguridad y quien la tenga puede leer y borrar los datos de cualquier usuario.
-La `anon key` sí es pública por diseño — viaja al navegador en cada carga, y lo
-que protege los datos son las políticas RLS del esquema.
+Supabase renombró sus llaves: la *publishable key* es lo que antes se llamaba
+*anon key*, y las *secret keys* son lo que antes era la *service_role*. Si tu
+proyecto es viejo puedes ver todavía los nombres antiguos y una llave que
+empieza con `eyJ…`; sirve igual.
+
+La publishable key es pública por diseño: viaja al navegador en cada carga, y lo
+que protege los datos son las políticas RLS del esquema. Las **secret keys** que
+aparecen más abajo en esa misma página son otra cosa — se saltan todas las
+políticas, así que no van en este proyecto ni en ningún archivo del repo.
+
+**La URL** — menú lateral, bajo INTEGRATIONS, **Data API**. Ahí sale el
+*Project URL*, con la forma `https://abcdefghijk.supabase.co`. También puedes
+armarla: el `abcdefghijk` es el identificador del proyecto que aparece en la
+barra de direcciones del navegador.
 
 ## 3. Ponerlas en el proyecto
 
@@ -44,8 +51,11 @@ Abre `.env.local` y pega los dos valores:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijk.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 ```
+
+La variable se sigue llamando `ANON_KEY` por costumbre; el cliente de Supabase
+acepta los dos formatos de llave sin cambiar nada.
 
 `.env.local` está en `.gitignore`, así que no se sube al repo.
 
