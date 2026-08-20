@@ -7,91 +7,101 @@
 <body>
 <x-dc>
 <helmet>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   <style>
-    body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-    a { color: #1B4DFF; } a:hover { color: #123AC7; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #007AFF; } a:hover { color: #0062CC; }
     * { box-sizing: border-box; }
   </style>
 </helmet>
-<div style="width: 390px; height: 844px; background: #F6F8FC; position: relative; overflow: hidden;">
+<div style="width: 390px; height: 844px; background: #F2F2F7; position: relative; overflow: hidden;">
 
-  <div style="display: flex; flex-direction: column; gap: 16px; padding: 60px 20px 0;">
+  <div style="display: flex; flex-direction: column; gap: 14px; padding: 56px 0 0;">
 
-    <div style="display: flex; flex-direction: column; gap: 3px;">
-      <h1 style="margin: 0; font-family: 'Sora', system-ui, sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: #14161C;">Tu progreso</h1>
-      <p style="margin: 0; font-size: 14px; color: #7A8296;">Últimas 6 semanas</p>
+    <div style="padding: 0 20px;">
+      <h1 style="margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -0.026em; line-height: 1.08; color: #000000;">Progreso</h1>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 24px; background: #14161C;">
-      <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
-        <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.55);">Total acumulado</span>
-        <div style="display: flex; align-items: baseline; gap: 8px;">
-          <b style="font-family: 'Sora', system-ui, sans-serif; font-size: 42px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: #FFFFFF; font-variant-numeric: tabular-nums;">38</b>
-          <span style="font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.8);">días limpios</span>
+    <div style="display: flex; gap: 2px; margin: 0 16px; padding: 2px; border-radius: 9px; background: rgba(120,120,128,0.12);">
+      <span style="display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 7px; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; color: #000000;">Semana</span>
+      <span style="display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 7px; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.04); font-size: 13px; font-weight: 600; letter-spacing: -0.01em; color: #000000;">Mes</span>
+      <span style="display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 7px; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; color: #000000;">Año</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px; margin: 0 16px; padding: 18px 16px; border-radius: 16px; background: #FFFFFF;">
+      <span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: rgba(52,199,89,0.14); flex-shrink: 0; font-size: 24px;">🌱</span>
+      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1;">
+        <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: rgba(60,60,67,0.6);">Total acumulado</span>
+        <div style="display: flex; align-items: baseline; gap: 7px;">
+          <b style="font-family: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 34px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; color: #000000; font-variant-numeric: tabular-nums;">38</b>
+          <span style="font-size: 15px; font-weight: 500; letter-spacing: -0.01em; color: rgba(60,60,67,0.6);">días limpios</span>
         </div>
       </div>
-      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: rgba(18,199,166,0.18); font-size: 12.5px; font-weight: 700; color: #4FE3C4; flex-shrink: 0;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4FE3C4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="m6 11 6-6 6 6"></path></svg>
-        +6
+      <span style="display: inline-flex; align-items: center; gap: 3px; padding: 5px 9px; border-radius: 8px; background: rgba(52,199,89,0.14); font-size: 13px; font-weight: 600; color: #1E8B3C; flex-shrink: 0; font-variant-numeric: tabular-nums;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1E8B3C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"></path><path d="m6 12 6-6 6 6"></path></svg>
+        6
       </span>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 16px; padding: 18px 16px; border-radius: 22px; background: #FFFFFF; border: 1px solid #EAEEF6;">
-      <div style="display: flex; align-items: baseline; justify-content: space-between;">
-        <h2 style="margin: 0; font-family: 'Sora', system-ui, sans-serif; font-size: 15.5px; font-weight: 600; color: #14161C;">Cumplimiento semanal</h2>
-        <span style="font-size: 12.5px; font-weight: 600; color: #7A8296; font-variant-numeric: tabular-nums;">85% promedio</span>
-      </div>
-      <div style="display: flex; align-items: flex-end; gap: 10px; height: 118px;">
-        <sc-for list="{{semanas}}" as="semana" hint-placeholder-count="6">
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; flex-grow: 1; height: 100%;">
-            <small style="font-size: 10.5px; font-weight: 700; color: #5A6376; font-variant-numeric: tabular-nums;">{{semana.valor}}</small>
-            <span style="display: block; width: 100%; border-radius: 8px 8px 4px 4px; {{semana.barra}}"></span>
-            <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">{{semana.etiqueta}}</small>
-          </div>
-        </sc-for>
+    <div style="display: flex; flex-direction: column; gap: 7px;">
+      <span style="padding: 0 32px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: rgba(60,60,67,0.6);">Cumplimiento por semana</span>
+      <div style="display: flex; flex-direction: column; gap: 14px; margin: 0 16px; padding: 16px 14px; border-radius: 16px; background: #FFFFFF;">
+        <div style="display: flex; align-items: baseline; gap: 6px;">
+          <b style="font-family: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; color: #000000; font-variant-numeric: tabular-nums;">85%</b>
+          <span style="font-size: 14px; letter-spacing: -0.01em; color: rgba(60,60,67,0.6);">promedio de 6 semanas</span>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 10px; height: 106px;">
+          <sc-for list="{{semanas}}" as="semana" hint-placeholder-count="6">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 7px; flex-grow: 1; height: 100%;">
+              <small style="font-size: 10.5px; font-weight: 600; color: rgba(60,60,67,0.6); font-variant-numeric: tabular-nums;">{{semana.valor}}</small>
+              <span style="display: block; width: 100%; border-radius: 6px; {{semana.barra}}"></span>
+              <small style="font-size: 10.5px; font-weight: 500; color: rgba(60,60,67,0.6);">{{semana.etiqueta}}</small>
+            </div>
+          </sc-for>
+        </div>
       </div>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; border-radius: 22px; background: #FFFFFF; border: 1px solid #EAEEF6;">
-      <div style="display: flex; align-items: baseline; justify-content: space-between;">
-        <h2 style="margin: 0; font-family: 'Sora', system-ui, sans-serif; font-size: 15.5px; font-weight: 600; color: #14161C;">Tu ánimo</h2>
-        <span style="font-size: 12.5px; font-weight: 600; color: #7A8296;">Esta semana</span>
-      </div>
-      <svg viewBox="0 0 322 112" style="width: 100%; height: 112px; display: block; overflow: visible;">
-        <line x1="0" y1="20" x2="322" y2="20" stroke="#EDF0F6" stroke-width="1"></line>
-        <line x1="0" y1="58" x2="322" y2="58" stroke="#EDF0F6" stroke-width="1"></line>
-        <line x1="0" y1="96" x2="322" y2="96" stroke="#EDF0F6" stroke-width="1"></line>
-        <path d="M12,58 L62,77 L111,39 L161,58 L210,20 L260,39 L310,20 L310,104 L12,104 Z" fill="rgba(255,107,44,0.10)"></path>
-        <polyline points="12,58 62,77 111,39 161,58 210,20 260,39 310,20" fill="none" stroke="#FF6B2C" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></polyline>
-        <circle cx="310" cy="20" r="5.5" fill="#FF6B2C" stroke="#FFFFFF" stroke-width="2.5"></circle>
-      </svg>
-      <div style="display: flex; justify-content: space-between;">
-        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">L</small>
-        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">M</small>
-        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">M</small>
-        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">J</small>
-        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">V</small>
-        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">S</small>
-        <small style="font-size: 10.5px; font-weight: 600; color: #9AA2B4;">D</small>
+    <div style="display: flex; flex-direction: column; gap: 7px;">
+      <span style="padding: 0 32px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: rgba(60,60,67,0.6);">Tu ánimo esta semana</span>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin: 0 16px; padding: 16px 14px; border-radius: 16px; background: #FFFFFF;">
+        <svg viewBox="0 0 322 104" style="width: 100%; height: 104px; display: block; overflow: visible;">
+          <line x1="0" y1="16" x2="322" y2="16" stroke="rgba(60,60,67,0.12)" stroke-width="1"></line>
+          <line x1="0" y1="54" x2="322" y2="54" stroke="rgba(60,60,67,0.12)" stroke-width="1"></line>
+          <line x1="0" y1="92" x2="322" y2="92" stroke="rgba(60,60,67,0.12)" stroke-width="1"></line>
+          <path d="M12,54 L62,73 L111,35 L161,54 L210,16 L260,35 L310,16 L310,100 L12,100 Z" fill="rgba(0,122,255,0.10)"></path>
+          <polyline points="12,54 62,73 111,35 161,54 210,16 260,35 310,16" fill="none" stroke="#007AFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <circle cx="310" cy="16" r="5.5" fill="#007AFF" stroke="#FFFFFF" stroke-width="2.5"></circle>
+        </svg>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="font-size: 17px;">😐</span>
+          <span style="font-size: 17px;">😔</span>
+          <span style="font-size: 17px;">🙂</span>
+          <span style="font-size: 17px;">😐</span>
+          <span style="font-size: 17px;">😄</span>
+          <span style="font-size: 17px;">🙂</span>
+          <span style="font-size: 17px;">😄</span>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <div style="position: absolute; left: 20px; right: 20px; bottom: 26px; display: flex; align-items: center; justify-content: space-between; height: 66px; padding: 0 10px; border-radius: 23px; background: #14161C;">
-    <span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 46px;">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5.5 9.6V20a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9.6"></path></svg>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 83px; padding-top: 7px; display: flex; align-items: flex-start; background: rgba(249,249,249,0.94); backdrop-filter: blur(20px); border-top: 0.5px solid rgba(60,60,67,0.29);">
+    <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 10.6 12 3.6l8.6 7"></path><path d="M5.6 9.4V20a1 1 0 0 0 1 1h10.8a1 1 0 0 0 1-1V9.4"></path></svg>
+      <small style="font-size: 10px; font-weight: 500; letter-spacing: -0.01em; color: rgba(60,60,67,0.6);">Hoy</small>
     </span>
-    <span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 46px;">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4.8A1.8 1.8 0 0 1 6.3 3H19v18H6.3a1.8 1.8 0 0 1-1.8-1.8z"></path><path d="M9 3v18"></path></svg>
+    <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.2A2.2 2.2 0 0 1 6.7 3H19.5v18H6.7a2.2 2.2 0 0 1-2.2-2.2z"></path><path d="M9 3v18"></path></svg>
+      <small style="font-size: 10px; font-weight: 500; letter-spacing: -0.01em; color: rgba(60,60,67,0.6);">Bitácora</small>
     </span>
-    <span style="display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border-radius: 15px; background: #1B4DFF;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-7"></path><path d="M12 20V5"></path><path d="M19 20v-10"></path></svg>
-      <b style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Progreso</b>
+    <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="#007AFF"><rect x="3.6" y="13.4" width="3.6" height="7.4" rx="1.6"></rect><rect x="10.2" y="3.6" width="3.6" height="17.2" rx="1.6"></rect><rect x="16.8" y="9.4" width="3.6" height="11.4" rx="1.6"></rect></svg>
+      <small style="font-size: 10px; font-weight: 600; letter-spacing: -0.01em; color: #007AFF;">Progreso</small>
     </span>
-    <span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 46px;">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8E93A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"></circle><path d="M5 20c0-3.7 3.1-6.2 7-6.2s7 2.5 7 6.2"></path></svg>
+    <span style="display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"></circle><path d="M4.8 20.2c0-3.8 3.2-6.4 7.2-6.4s7.2 2.6 7.2 6.4"></path></svg>
+      <small style="font-size: 10px; font-weight: 500; letter-spacing: -0.01em; color: rgba(60,60,67,0.6);">Perfil</small>
     </span>
   </div>
 
@@ -109,8 +119,8 @@ class Component extends DCLogic {
       { etiqueta: 'S6', valor: 95 }
     ];
     var semanas = datos.map(function (d) {
-      var alto = Math.round(d.valor * 0.78);
-      var color = d.valor === 100 ? '#12C7A6' : '#1B4DFF';
+      var alto = Math.round(d.valor * 0.66);
+      var color = d.valor === 100 ? '#34C759' : '#007AFF';
       return {
         etiqueta: d.etiqueta,
         valor: d.valor + '%',

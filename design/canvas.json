@@ -7,11 +7,11 @@
   ],
   "annotations": [
     {
-      "id": "paleta",
+      "id": "sistema",
       "x": 0,
-      "y": -210,
-      "w": 560,
-      "text": "Antídoto — sistema visual\n\nAzul #1B4DFF primario · Naranja #FF6B2C racha · Menta #12C7A6 completado\nÁmbar #F2B441 recaída (nunca rojo) · Tinta #14161C · Nieve #F6F8FC fondo\n\nSora para números y títulos · Plus Jakarta Sans para el resto.\nSin barra de estado falsa: en el teléfono real la pinta el sistema."
+      "y": -250,
+      "w": 620,
+      "text": "Antídoto — lenguaje visual iOS\n\nTipografía: system font stack. En iPhone y Mac resuelve a SF Pro real; los números grandes usan ui-rounded, o sea SF Pro Rounded (la de los anillos de Fitness). No hay ninguna fuente de catálogo.\n\nColores del sistema: systemBlue #007AFF · systemOrange #FF9500 · systemGreen #34C759 · systemYellow #FFCC00 para la recaída · fondo agrupado #F2F2F7.\n\nPatrones iOS: título grande, listas agrupadas con separadores a 58px, control segmentado, anillos concéntricos tipo Fitness y tab bar translúcida con etiquetas.\n\nSin barra de estado ni home indicator falsos: los pinta el sistema encima."
     }
   ],
   "launch": { "view": "canvas" }
