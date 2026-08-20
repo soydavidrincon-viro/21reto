@@ -84,3 +84,13 @@ exception
   when unique_violation then raise notice 'OK: el día duplicado fue rechazado';
 end;
 $$;
+
+\echo '--- 9. eliminar la propia cuenta se lleva todo lo suyo y nada ajeno ---'
+set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select public.delete_own_account();
+select
+  (select count(*) from public.habits)       as habitos_restantes,
+  (select count(*) from public.habit_logs)   as registros_restantes,
+  (select count(*) from public.profiles)     as perfiles_restantes,
+  (select count(*) from auth.users)          as cuentas_restantes;
+-- Esperado: 0, 0, 1, 1 — solo sobrevive Beto.

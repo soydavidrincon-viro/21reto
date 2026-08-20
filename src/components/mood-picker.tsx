@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useTransition } from "react";
-import { saveMood } from "@/app/(app)/hoy/actions";
+import { saveJournal } from "@/app/(app)/hoy/actions";
 import { MOODS } from "@/lib/types";
 
 /**
@@ -21,7 +21,7 @@ export function MoodPicker({
   function pick(key: string) {
     startTransition(async () => {
       setOptimistic(key);
-      await saveMood(today, key);
+      await saveJournal(today, { mood: key });
     });
   }
 

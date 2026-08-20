@@ -60,12 +60,16 @@ export async function clearDay(habitId: string, dateISO: string) {
   return { error: null };
 }
 
-/** Guarda la reacción del día. Una entrada por usuario por fecha. */
-export async function saveMood(
+/**
+ * Guarda la entrada de bitácora del día. Una por usuario y fecha.
+ *
+ * Los campos que no vienen se conservan: el selector de ánimo y el editor de
+ * nota escriben en la misma fila, y un upsert plano haría que cambiar el emoji
+ * borrara lo que la persona acababa de escribir.
+ */
+export async function saveJournal(
   dateISO: string,
-  mood: string,
-  intensity = 3,
-  note?: string,
+  patch: { mood?: string; intensity?: number; note?: string | null },
 ) {
   const supabase = await createClient();
 
@@ -75,13 +79,23 @@ export async function saveMood(
 
   if (!user) return { error: "Necesitas iniciar sesión." };
 
+  const { data: existing } = await supabase
+    .from("journal_entries")
+    .select("mood, intensity, note")
+    .eq("user_id", user.id)
+    .eq("entry_date", dateISO)
+    .maybeSingle();
+
+  const mood = patch.mood ?? existing?.mood;
+  if (!mood) return { error: "Elige cómo te sentiste antes de guardar la nota." };
+
   const { error } = await supabase.from("journal_entries").upsert(
     {
       user_id: user.id,
       entry_date: dateISO,
       mood,
-      intensity,
-      note: note ?? null,
+      intensity: patch.intensity ?? existing?.intensity ?? 3,
+      note: patch.note !== undefined ? patch.note : (existing?.note ?? null),
     },
     { onConflict: "user_id,entry_date" },
   );

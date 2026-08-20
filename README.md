@@ -54,6 +54,9 @@ profesional, y eso aparece escrito donde el usuario lo va a leer.
 ## Estado
 
 Listo: fundaciones, esquema con RLS, entrada por magic link, onboarding,
-pantalla Hoy con anillos y check diario, detalle de hábito con heatmap.
+Hoy con anillos y check diario, detalle de hábito con heatmap, bitácora con
+editor y timeline, progreso con cumplimiento semanal y línea de ánimo, y perfil
+con tema, zona horaria, exportación y borrado de cuenta.
 
-Falta: bitácora, progreso, perfil, service worker y modo offline.
+Falta: service worker y modo offline, hitos con confetti, y cerrar el reto al
+llegar a la meta de días.

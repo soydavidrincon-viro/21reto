@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,11 +28,16 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // El tema se estampa en el servidor desde la cookie. Hacerlo al hidratar
+  // dejaría ver un fogonazo claro antes de que la app se ponga oscura.
+  const theme = (await cookies()).get("theme")?.value;
+  const attr = theme === "light" || theme === "dark" ? theme : undefined;
+
   return (
-    <html lang="es">
+    <html lang="es" data-theme={attr}>
       <body>{children}</body>
     </html>
   );

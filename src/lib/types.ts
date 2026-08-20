@@ -41,18 +41,24 @@ export const HABIT_HEX: Record<HabitColor, string> = {
 /**
  * Los estados de ánimo de la bitácora. El emoji es el dato que se guarda; en
  * iPhone y Mac se pinta con los glifos de Apple sin que la app envíe nada.
+ *
+ * `score` del 1 al 5 existe solo para poder dibujar la línea de ánimo. Es una
+ * simplificación discutible — estar orgulloso y estar en calma no son el mismo
+ * punto de una recta — pero sin un orden no hay gráfica posible.
  */
 export const MOODS = [
-  { key: "genial", emoji: "😄", label: "Genial" },
-  { key: "bien", emoji: "🙂", label: "Bien" },
-  { key: "neutral", emoji: "😐", label: "Neutral" },
-  { key: "bajo", emoji: "😔", label: "Bajo" },
-  { key: "tenso", emoji: "😣", label: "Tenso" },
-  { key: "molesto", emoji: "😤", label: "Molesto" },
-  { key: "ansioso", emoji: "😰", label: "Ansioso" },
-  { key: "cansado", emoji: "🥱", label: "Cansado" },
-  { key: "enfermo", emoji: "🤒", label: "Enfermo" },
-  { key: "orgulloso", emoji: "🥳", label: "Orgulloso" },
-  { key: "en_calma", emoji: "😌", label: "En calma" },
-  { key: "vacio", emoji: "🫥", label: "Vacío" },
+  { key: "genial", emoji: "😄", label: "Genial", score: 5 },
+  { key: "orgulloso", emoji: "🥳", label: "Orgulloso", score: 5 },
+  { key: "bien", emoji: "🙂", label: "Bien", score: 4 },
+  { key: "en_calma", emoji: "😌", label: "En calma", score: 4 },
+  { key: "neutral", emoji: "😐", label: "Neutral", score: 3 },
+  { key: "cansado", emoji: "🥱", label: "Cansado", score: 3 },
+  { key: "bajo", emoji: "😔", label: "Bajo", score: 2 },
+  { key: "tenso", emoji: "😣", label: "Tenso", score: 2 },
+  { key: "molesto", emoji: "😤", label: "Molesto", score: 2 },
+  { key: "ansioso", emoji: "😰", label: "Ansioso", score: 2 },
+  { key: "enfermo", emoji: "🤒", label: "Enfermo", score: 2 },
+  { key: "vacio", emoji: "🫥", label: "Vacío", score: 1 },
 ] as const;
+
+export const MOOD_BY_KEY = new Map(MOODS.map((mood) => [mood.key as string, mood]));
