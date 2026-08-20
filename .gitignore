@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...pero la plantilla sí se versiona: el README manda a copiarla y sin esta
+# excepción el patrón de arriba la dejaba fuera del repo.
+!.env.example
 
 # vercel
 .vercel

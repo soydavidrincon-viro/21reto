@@ -67,12 +67,17 @@ conviene si vas a seguir cambiando el esquema.
 ### Camino A — pegar el SQL en el panel
 
 1. En el panel, **SQL Editor → New query**.
-2. Abre `supabase/migrations/0001_init.sql`, copia todo y pégalo. **Run**.
-3. Nueva query con `supabase/migrations/0002_borrar_cuenta.sql`. **Run**.
-4. Nueva query. Abre `supabase/seed.sql`, copia todo y pégalo. **Run** — esto
-   carga las 60 frases del día.
-5. Comprueba en **Table Editor** que aparezcan las cinco tablas: `profiles`,
+2. Abre `supabase/setup-completo.sql`, copia todo y pégalo. **Run**. Ese archivo
+   junta las dos migraciones y las frases, así que es una sola pasada.
+3. Comprueba en **Table Editor** que aparezcan las cinco tablas: `profiles`,
    `habits`, `habit_logs`, `journal_entries` y `quotes`.
+
+`setup-completo.sql` se genera desde los otros archivos; si tocas el esquema,
+regenéralo en vez de editarlo a mano:
+
+```bash
+cat supabase/migrations/*.sql supabase/seed.sql > supabase/setup-completo.sql
+```
 
 ### Camino B — con el CLI
 
