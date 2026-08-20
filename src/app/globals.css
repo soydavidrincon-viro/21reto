@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Antídoto — tokens
+   Colores de sistema de iOS. Los valores viven en :root para que el tema
+   cambie en runtime; @theme inline solo los expone a Tailwind.
+   --------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-blue: var(--c-blue);
+  --color-orange: var(--c-orange);
+  --color-green: var(--c-green);
+  --color-yellow: var(--c-yellow);
+  --color-red: var(--c-red);
+  --color-purple: var(--c-purple);
+  --color-pink: var(--c-pink);
+
+  --color-label: var(--c-label);
+  --color-label-2: var(--c-label-2);
+  --color-label-3: var(--c-label-3);
+  --color-separator: var(--c-separator);
+  --color-fill: var(--c-fill);
+
+  --color-grouped: var(--c-grouped);
+  --color-card: var(--c-card);
+  --color-bar: var(--c-bar);
+
+  --font-ui: var(--f-ui);
+  --font-num: var(--f-num);
+}
+
+:root {
+  /* Tipografía. SF Pro no puede servirse como webfont: la licencia solo cubre
+     plataformas Apple. El system stack resuelve a SF Pro real en iPhone y Mac,
+     y cae en Roboto o Segoe UI fuera de ellas. */
+  --f-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+    "Helvetica Neue", system-ui, sans-serif;
+  --f-num: ui-rounded, "SF Pro Rounded", -apple-system, "Segoe UI Variable Display",
+    Roboto, system-ui, sans-serif;
+
+  /* Modo claro */
+  --c-blue: #007aff;
+  --c-orange: #ff9500;
+  --c-green: #34c759;
+  --c-yellow: #ffcc00;
+  --c-red: #ff3b30;
+  --c-purple: #af52de;
+  --c-pink: #ff2d55;
+
+  --c-label: #000000;
+  --c-label-2: rgba(60, 60, 67, 0.6);
+  --c-label-3: rgba(60, 60, 67, 0.3);
+  --c-separator: rgba(60, 60, 67, 0.29);
+  --c-fill: rgba(120, 120, 128, 0.12);
+
+  --c-grouped: #f2f2f7;
+  --c-card: #ffffff;
+  --c-bar: rgba(249, 249, 249, 0.94);
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-blue: #0a84ff;
+    --c-orange: #ff9f0a;
+    --c-green: #30d158;
+    --c-yellow: #ffd60a;
+    --c-red: #ff453a;
+    --c-purple: #bf5af2;
+    --c-pink: #ff375f;
+
+    --c-label: #ffffff;
+    --c-label-2: rgba(235, 235, 245, 0.6);
+    --c-label-3: rgba(235, 235, 245, 0.3);
+    --c-separator: rgba(84, 84, 88, 0.65);
+    --c-fill: rgba(120, 120, 128, 0.24);
+
+    --c-grouped: #000000;
+    --c-card: #1c1c1e;
+    --c-bar: rgba(22, 22, 24, 0.94);
+  }
+}
+
+:root[data-theme="dark"] {
+  --c-blue: #0a84ff;
+  --c-orange: #ff9f0a;
+  --c-green: #30d158;
+  --c-yellow: #ffd60a;
+  --c-red: #ff453a;
+  --c-purple: #bf5af2;
+  --c-pink: #ff375f;
+
+  --c-label: #ffffff;
+  --c-label-2: rgba(235, 235, 245, 0.6);
+  --c-label-3: rgba(235, 235, 245, 0.3);
+  --c-separator: rgba(84, 84, 88, 0.65);
+  --c-fill: rgba(120, 120, 128, 0.24);
+
+  --c-grouped: #000000;
+  --c-card: #1c1c1e;
+  --c-bar: rgba(22, 22, 24, 0.94);
+}
+
+body {
+  background: var(--c-grouped);
+  color: var(--c-label);
+  font-family: var(--f-ui);
+  -webkit-font-smoothing: antialiased;
+  /* La app se comporta como nativa: sin rebote de scroll ni selección de texto
+     accidental al mantener pulsado un control. */
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Los contadores que cambian a diario no deben bailar de ancho. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

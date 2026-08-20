@@ -120,7 +120,7 @@ Puntos clave:
   limpios totales y % de cumplimiento. Evita traer el histórico completo al cliente.
 - Vista `daily_overview` que junta hábitos activos + log de hoy + entrada de bitácora, para que el
   home haga **una sola consulta**.
-- Migraciones versionadas en `supabase/migrations/`, más `seed.sql` con ~120 frases en español.
+- Migraciones versionadas en `supabase/migrations/`, más `seed.sql` con 60 frases en español.
 
 ---
 
