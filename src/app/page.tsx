@@ -54,7 +54,7 @@ const CLAIMS = [
 export default function LandingPage() {
   return (
     <main
-      className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden px-6 pb-10 lg:max-w-[1120px] lg:px-10 lg:pb-16"
+      className="relative mx-auto flex min-h-svh w-full max-w-[430px] flex-col overflow-hidden px-6 pb-10 lg:max-w-[1120px] lg:px-10 lg:pb-16"
       style={{ paddingTop: "max(env(safe-area-inset-top), 32px)" }}
     >
       <div

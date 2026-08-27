@@ -5,7 +5,7 @@ export const metadata = { title: "Bienvenida · Antídoto" };
 export default function BienvenidaPage() {
   return (
     <main
-      className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col gap-5 pb-9"
+      className="mx-auto flex min-h-svh w-full max-w-[430px] flex-col gap-5 pb-9"
       style={{ paddingTop: "max(env(safe-area-inset-top), 56px)" }}
     >
       <header className="flex flex-col gap-[7px] px-5">

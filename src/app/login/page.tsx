@@ -101,7 +101,12 @@ export default function LoginPage() {
 
   return (
     <main
-      className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-6 pb-10 lg:max-w-[980px] lg:px-10"
+      // min-h-svh y no dvh: `dvh` cambia cuando se abre el teclado y cuando la
+      // barra del navegador se esconde. Con el contenido centrado, eso movía el
+      // campo de correo 176px de golpe justo al tocarlo — medido — y en el
+      // teléfono eso es que el dedo cae en otra parte, se cierra el teclado y
+      // toca empezar de nuevo. `svh` es el valor estable: no se mueve.
+      className="mx-auto flex min-h-svh w-full max-w-[430px] flex-col px-6 pb-10 lg:max-w-[980px] lg:px-10"
       style={{ paddingTop: "max(env(safe-area-inset-top), 40px)" }}
     >
       <Link
@@ -111,7 +116,10 @@ export default function LoginPage() {
         <Logo size={26} />
       </Link>
 
-      <div className="flex flex-1 flex-col justify-center gap-7 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16">
+      {/* En teléfono el bloque va arriba y no centrado: centrado, cualquier
+          cambio de alto lo reacomoda entero. En escritorio no hay teclado que
+          empuje nada, así que ahí sí se centra. */}
+      <div className="flex flex-1 flex-col gap-7 pt-10 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-0">
         <div className="entrar flex flex-col gap-2 lg:gap-4">
           <h1 className="text-balance font-display text-[34px] font-semibold leading-[1.05] tracking-[-0.02em] text-label lg:text-[48px]">
             {state === "sent" ? "Revisa tu correo" : "Entra a Antídoto"}
@@ -138,7 +146,8 @@ export default function LoginPage() {
             </button>
 
             <span className="flex items-center gap-3 py-0.5 text-[12.5px] font-semibold uppercase tracking-[0.08em] text-label-3">
-              <span className="h-px flex-1 bg-separator" />o<span className="h-px flex-1 bg-separator" />
+              <span className="h-px flex-1 bg-separator" />o
+              <span className="h-px flex-1 bg-separator" />
             </span>
 
             <form onSubmit={withEmail} className="flex flex-col gap-2.5">
