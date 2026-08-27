@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { ProfileSettings } from "@/components/profile-settings";
 import { createClient } from "@/lib/supabase/server";
+import { usuarioActual } from "@/lib/supabase/sesion";
 import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -9,9 +10,7 @@ export const metadata = { title: "Perfil · Antídoto" };
 export default async function PerfilPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioActual();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase

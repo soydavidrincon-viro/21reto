@@ -132,6 +132,43 @@ export async function extendHabit(habitId: string, nuevaMeta: number) {
   return { error: null };
 }
 
+/**
+ * Borrar un reto de verdad, con todo lo que cuelga de él.
+ *
+ * Existe porque no existía, y eso dejaba la app inservible para lo primero que
+ * hace cualquiera: crear tres o cuatro retos de prueba antes de poner el de
+ * verdad. `archiveHabit` estaba escrito desde el principio pero su única puerta
+ * era la tarjeta de reto cumplido, así que un hábito que nunca se completó no
+ * había forma de quitarlo.
+ *
+ * Las dos opciones no son la misma y por eso conviven: archivar conserva el
+ * historial y solo lo saca de Hoy —sirve para algo que ya dejó de ser un reto—,
+ * y borrar se lleva los registros y los antojos por la cascada del esquema.
+ * Para lo que se creó por error, archivar sería dejar basura para siempre.
+ */
+export async function deleteHabit(habitId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  // La política RLS ya limita el borrado a lo propio; el filtro por user_id es
+  // el segundo cerrojo, para que un fallo de política no baste por sí solo.
+  const { error } = await supabase
+    .from("habits")
+    .delete()
+    .eq("id", habitId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/hoy");
+  revalidatePath("/progreso");
+  redirect("/hoy");
+}
+
 export async function archiveHabit(habitId: string) {
   const supabase = await createClient();
 

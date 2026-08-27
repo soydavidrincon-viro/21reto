@@ -3,10 +3,12 @@ import { HabitIcon } from "@/components/habit-icon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CompartirTarjeta } from "@/components/compartir-tarjeta";
+import { GestionDeReto } from "@/components/gestion-de-reto";
 import { HabitActions } from "@/components/habit-actions";
 import { MonthHeatmap } from "@/components/month-heatmap";
 import { monthGrid, monthName, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { usuarioActual } from "@/lib/supabase/sesion";
 import type { LogStatus, Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -27,9 +29,7 @@ export default async function HabitoPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioActual();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
@@ -134,6 +134,10 @@ export default async function HabitoPage({
 
           <div className="mx-4 lg:mx-0">
             <CompartirTarjeta habitId={habit.id} nombre={habit.name} />
+          </div>
+
+          <div className="mx-4 lg:mx-0">
+            <GestionDeReto habitId={habit.id} nombre={habit.name} />
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { CABECERA_EMAIL, CABECERA_USUARIO } from "./cabeceras";
 
 /** Rutas que se pueden ver sin sesión. */
 const PUBLIC_PATHS = ["/", "/login", "/auth"];
@@ -39,8 +40,24 @@ function traeCookieDeSesion(request: NextRequest) {
  */
 const ESPERA_MAXIMA_MS = 3000;
 
+/**
+ * Las cabeceras de la petición, con las nuestras borradas.
+ *
+ * El borrado va aquí y no junto al `set`, y no es condicional, porque es lo
+ * único que impide que alguien mande `x-antidoto-user` desde fuera y se haga
+ * pasar por otro. Pasando por esta función, la cabecera solo puede existir si
+ * la escribimos nosotros después de validar el token.
+ */
+function cabecerasLimpias(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  headers.delete(CABECERA_USUARIO);
+  headers.delete(CABECERA_EMAIL);
+  return headers;
+}
+
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const headers = cabecerasLimpias(request);
+  let response = NextResponse.next({ request: { headers } });
   const { pathname } = request.nextUrl;
 
   // Sin cookie no hay sesión que refrescar ni nada que preguntar.
@@ -64,7 +81,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: { headers } });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );
@@ -80,7 +97,9 @@ export async function updateSession(request: NextRequest) {
     setTimeout(() => resolve("tardo"), ESPERA_MAXIMA_MS),
   );
 
-  const resultado = await Promise.race([consulta, plazo]).catch(() => "tardo");
+  const resultado = await Promise.race([consulta, plazo]).catch(
+    () => "tardo" as const,
+  );
 
   // El servidor de auth no contestó a tiempo. Que pase y decida la página.
   if (resultado === "tardo") return response;
@@ -99,6 +118,12 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/hoy";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  if (user) {
+    headers.set(CABECERA_USUARIO, user.id);
+    if (user.email) headers.set(CABECERA_EMAIL, user.email);
+    response = NextResponse.next({ request: { headers } });
   }
 
   return response;

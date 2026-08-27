@@ -247,8 +247,8 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
               ))}
             </select>
             <p className="text-pretty text-[13px] leading-[1.4] text-label-2">
-              De aquí sale a qué día pertenece cada check. Si está mal, marcar
-              de noche caería en el día siguiente.
+              Si está mal, lo que marques de noche puede contarte al día
+              siguiente.
             </p>
             {zoneMismatch && (
               <button

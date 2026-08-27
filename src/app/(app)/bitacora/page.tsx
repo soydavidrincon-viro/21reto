@@ -3,6 +3,7 @@ import { HabitIcon } from "@/components/habit-icon";
 import { JournalEditor } from "@/components/journal-editor";
 import { longDate, shiftISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { usuarioActual } from "@/lib/supabase/sesion";
 import { MOOD_BY_KEY, type Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -11,9 +12,7 @@ export const metadata = { title: "Bitácora · Antídoto" };
 export default async function BitacoraPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioActual();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase

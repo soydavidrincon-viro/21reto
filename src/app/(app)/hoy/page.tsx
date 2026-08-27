@@ -15,6 +15,7 @@ import {
   zonedNow,
 } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { usuarioActual } from "@/lib/supabase/sesion";
 import { etapaDeRacha, type CompanionMood } from "@/components/companion";
 import type { DailyOverviewRow, Profile, Quote } from "@/lib/types";
 
@@ -23,9 +24,7 @@ export const dynamic = "force-dynamic";
 export default async function HoyPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioActual();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase

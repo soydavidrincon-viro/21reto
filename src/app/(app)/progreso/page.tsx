@@ -5,6 +5,7 @@ import { MoodLine } from "@/components/mood-line";
 import { WeeklyBars } from "@/components/weekly-bars";
 import { lastSevenDays, shiftISO, todayIn, weekdayInitial } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { usuarioActual } from "@/lib/supabase/sesion";
 import type { CravingGridCell, CravingSummary, Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +16,7 @@ const WEEKS = 6;
 export default async function ProgresoPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await usuarioActual();
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase

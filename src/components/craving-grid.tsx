@@ -40,8 +40,9 @@ export function CravingGrid({
             : `Llevas ${total} ${total === 1 ? "antojo registrado" : "antojos registrados"}.`}
         </p>
         <p className="text-pretty text-[13.5px] leading-[1.45] text-label-2">
-          Con {faltan} {faltan === 1 ? "más" : "más"} te puedo decir a qué horas
-          y con qué se te aparecen. Con menos sería adivinar.
+          {total === 0
+            ? "Cuando te dé, tócale a «Ando flaqueando» en Hoy. Con unos cuantos registros esto te muestra a qué horas y con qué se te aparecen."
+            : `Con ${faltan} ${faltan === 1 ? "más" : "más"} ya te muestro a qué horas y con qué se te aparecen.`}
         </p>
       </div>
     );
