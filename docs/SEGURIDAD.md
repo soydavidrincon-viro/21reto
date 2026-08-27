@@ -72,7 +72,7 @@ Sobre la casilla de **confirmar correo**: aplica al registro con contraseña, qu
 esta app no usa. Con enlace por correo, abrir el enlace ya demuestra que la
 persona controla ese buzón — esa *es* la confirmación, no hay un paso extra.
 
-**4. Las URLs de producción.**
+**3. Las URLs de producción.**
 En *Authentication → URL Configuration*, la Site URL y los Redirect URLs deben
 ser los del dominio real. Un redirect mal puesto no es solo un login roto: es la
 puerta por la que se cuelan los ataques de redirección abierta.
