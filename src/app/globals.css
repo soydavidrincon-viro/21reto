@@ -173,8 +173,16 @@ body {
   to   { opacity: 1; transform: none; }
 }
 
+/* `backwards` y no `both`, y no es un detalle.
+   Con `both` la animación se queda agarrada al `transform` del elemento hasta
+   el fin de los tiempos, y en la cascada de CSS una animación le gana a una
+   regla normal — así que en todo lo que lleva `entrar` y `pulsable` a la vez
+   (el botón de Empezar, las tarjetas de hábito, Agregar hábito) el hundido del
+   toque nunca llegaba a aplicarse. Medido: transform en identidad con el botón
+   pulsado. `backwards` pinta el estado inicial durante el retraso y suelta el
+   control al terminar, que es justo lo que hace falta. */
 .entrar {
-  animation: entrar 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: entrar 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 /* Llenado de los anillos. Mueve solo el offset: el dasharray ya está en el
@@ -233,16 +241,53 @@ body {
   filter: brightness(0.94);
 }
 
+/* ---------------------------------------------------------------------------
+   Menos movimiento
+
+   Esta señal la enciende quien la pide por salud —hay gente a la que el
+   movimiento en pantalla le produce mareo o migraña— pero los navegadores la
+   encienden TAMBIÉN para ahorrar batería. Brave y Chrome la activan solos con
+   el portátil desenchufado, y esa es una intención distinta.
+
+   La primera versión de este bloque apagaba todo con `* !important`, así que a
+   quien tuviera el portátil sin cargador la app le llegaba muerta: sin fundidos
+   y, peor, sin la respuesta al toque de los botones. Un botón que no acusa
+   recibo no se lee como sobrio, se lee como roto.
+
+   Así que aquí se quita lo que de verdad marea —el movimiento grande, repetido
+   o inesperado— y se queda lo que no: los fundidos de opacidad y el aviso de
+   que el toque llegó.
+   --------------------------------------------------------------------------- */
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    /* Sin esto, el retraso escalonado seguiría dejando la pantalla en blanco
-       casi un segundo para quien pidió menos movimiento. */
-    animation-delay: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0.01ms !important;
+  /* Fuera: son movimiento grande, en bucle, o ambas cosas. */
+  .flota,
+  .parpadea,
+  .salta {
+    animation: none;
+  }
+
+  /* La entrada se queda, pero solo como fundido: sin el desplazamiento y sin
+     el escalonado, que es lo que movía el bloque entero mientras se leía. */
+  @keyframes entrar {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .entrar {
+    animation-duration: 0.2s;
+    animation-delay: 0s !important;
+  }
+
+  /* Los anillos aparecen llenos de una vez. El dasharray ya está en su valor
+     final, así que quitar la animación los deja pintados, no vacíos. */
+  .llenar {
+    animation: none;
+  }
+
+  /* El botón sigue avisando de que lo tocaste, pero sin encogerse: el cambio
+     de brillo da la misma señal y no mueve un solo píxel. */
+  .pulsable:active:not(:disabled) {
+    transform: none;
   }
 }
