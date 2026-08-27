@@ -6,6 +6,10 @@ App de trackeo de hábitos para dejar lo que te pesa, un día a la vez. Retos de
 Web app instalable (PWA) en lenguaje visual de iOS. El plan completo está en
 [`docs/PLAN.md`](docs/PLAN.md); los mockups de las pantallas, en `design/`.
 
+Para verlo funcionando: [`docs/DEPLOY.md`](docs/DEPLOY.md) — publicarlo en
+Vercel o correrlo en tu máquina. Para conectar la base de datos:
+[`docs/SUPABASE.md`](docs/SUPABASE.md).
+
 ## Poner a andar el proyecto
 
 ```bash
