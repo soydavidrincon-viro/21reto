@@ -13,6 +13,15 @@ import type { DailyOverviewRow } from "@/lib/types";
  * el momento en que menos ganas hay de buscarlo. Y el compañero asoma detrás
  * porque este es el gesto que la app quiere premiar — aguantar es más trabajo
  * que marcar un día ya pasado.
+ *
+ * "Ando flaqueando" y no "estoy cayendo": el botón es para el momento de
+ * antes, cuando todavía no ha pasado nada. Ponerle nombre de derrota a ese
+ * momento sería declarar perdido a quien justamente vino a no perderlo — y
+ * además chocaría con el botón "Caí" que vive dentro de la hoja.
+ *
+ * La segunda línea del primer estado explica la palabra. "Flaquear" es de
+ * diccionario y se entiende en todas partes, pero esto se lee en el peor
+ * momento del día y ahí nadie quiere ponerse a interpretar vocabulario.
  */
 export function CravingButton({
   habits,
@@ -38,11 +47,11 @@ export function CravingButton({
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-px">
           <span className="font-display text-[17px] font-semibold tracking-[-0.01em] text-naranja-tinta">
-            Me está dando
+            Ando flaqueando
           </span>
           <span className="text-[12.5px] font-medium text-naranja-tinta opacity-75">
             {hoy === 0
-              ? "Regístralo y pasa. Toma treinta segundos."
+              ? "Estás a punto y no has caído. Regístralo."
               : hoy === 1
                 ? "Ya aguantaste uno hoy. Este también pasa."
                 : `Van ${hoy} hoy. Cada uno cuenta.`}

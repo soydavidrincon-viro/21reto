@@ -6,7 +6,7 @@ import { logCraving } from "@/app/actions/cravings";
 import { CRAVING_TRIGGERS, type DailyOverviewRow } from "@/lib/types";
 
 /**
- * "Me está dando".
+ * La hoja de "Ando flaqueando".
  *
  * Se toca en el momento, no al final del día, así que todo aquí está pensado
  * para alguien que tiene treinta segundos de paciencia: intensidad, disparador
@@ -68,10 +68,10 @@ export function CravingSheet({
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-0.5">
             <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
-              Te está dando
+              Estás flaqueando
             </h2>
             <p className="text-[13.5px] leading-[1.4] text-label-2">
-              Registrarlo ya es hacer algo. Toma treinta segundos.
+              Todavía no ha pasado nada. Registrarlo ya es hacer algo.
             </p>
           </div>
           <button
