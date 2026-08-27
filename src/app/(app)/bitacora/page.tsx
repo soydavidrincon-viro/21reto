@@ -52,7 +52,11 @@ export default async function BitacoraPage() {
   }
 
   const todayEntry = (entries ?? []).find((entry) => entry.entry_date === today);
-  const past = (entries ?? []).filter((entry) => entry.entry_date !== today);
+
+  // La de hoy también va en el historial. Antes se excluía porque ya estaba en
+  // el editor de arriba, pero eso hacía que al guardar no apareciera en ningún
+  // lado y pareciera que no se había guardado.
+  const historial = entries ?? [];
 
   return (
     <div className="flex flex-col gap-5 pt-11">
@@ -75,16 +79,16 @@ export default async function BitacoraPage() {
 
       <section className="flex flex-col gap-[7px]">
         <h2 className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
-          Días anteriores
+          Historial
         </h2>
 
-        {past.length === 0 ? (
+        {historial.length === 0 ? (
           <p className="mx-4 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2">
-            Todavía no hay entradas anteriores. La de hoy aparecerá aquí mañana.
+            Todavía no has escrito nada. Lo que guardes arriba aparece aquí.
           </p>
         ) : (
           <ol className="mx-4 flex flex-col gap-2">
-            {past.map((entry) => {
+            {historial.map((entry) => {
               const date = entry.entry_date as string;
               const icons = cleanByDate.get(date) ?? [];
 
@@ -102,7 +106,7 @@ export default async function BitacoraPage() {
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
-                        {longDate(date)}
+                        {date === today ? "Hoy" : longDate(date)}
                       </span>
                       {icons.length > 0 && (
                         <span

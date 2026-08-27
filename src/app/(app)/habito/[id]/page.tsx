@@ -2,6 +2,7 @@ import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { HabitActions } from "@/components/habit-actions";
+import { MonthHeatmap } from "@/components/month-heatmap";
 import { monthGrid, monthName, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import type { LogStatus, Profile } from "@/lib/types";
@@ -128,52 +129,16 @@ export default async function HabitoPage({
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1.5" aria-hidden="true">
-          {["L", "M", "M", "J", "V", "S", "D"].map((initial, i) => (
-            <span
-              key={i}
-              className="text-center text-[10.5px] font-semibold text-label-2"
-            >
-              {initial}
-            </span>
-          ))}
-        </div>
+        <MonthHeatmap
+          habitId={habit.id}
+          days={grid}
+          today={today}
+          initial={Object.fromEntries(byDate)}
+        />
 
-        <ul className="grid grid-cols-7 gap-1.5">
-          {grid.map((date, i) => {
-            if (!date) return <li key={`gap-${i}`} aria-hidden="true" />;
-
-            const status = byDate.get(date);
-            const isToday = date === today;
-            const isFuture = date > today;
-
-            const tone = status === "success"
-              ? "bg-blue text-white"
-              : status === "relapse"
-                ? "bg-yellow text-[#4A3A00]"
-                : isToday
-                  ? "bg-card text-blue ring-2 ring-blue ring-inset"
-                  : "bg-fill text-label-3";
-
-            return (
-              <li
-                key={date}
-                aria-label={`${date}: ${
-                  status === "success"
-                    ? "limpio"
-                    : status === "relapse"
-                      ? "recaída"
-                      : isFuture
-                        ? "por venir"
-                        : "sin registro"
-                }`}
-                className={`tnum flex h-[30px] items-center justify-center rounded-lg text-[11px] font-semibold ${tone}`}
-              >
-                {Number(date.slice(-2))}
-              </li>
-            );
-          })}
-        </ul>
+        <p className="text-[12px] leading-[1.35] text-label-2">
+          ¿Se te olvidó marcar un día? Tócalo y corrígelo.
+        </p>
       </section>
 
       <HabitActions habitId={habit.id} today={today} todayStatus={todayStatus} />

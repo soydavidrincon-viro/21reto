@@ -12,6 +12,20 @@ import {
 import { detectTimeZone } from "@/lib/dates";
 import type { Profile } from "@/lib/types";
 
+/**
+ * Todas las zonas horarias que conoce el navegador. Se pide una sola vez porque
+ * la lista pasa de 400 entradas y recalcularla en cada render es gratis de
+ * escribir y caro de correr. El fallback cubre navegadores viejos sin
+ * supportedValuesOf, donde al menos queda la del dispositivo.
+ */
+const ZONES: string[] = (() => {
+  try {
+    return Intl.supportedValuesOf("timeZone");
+  } catch {
+    return [detectTimeZone(), "UTC"];
+  }
+})();
+
 const THEMES: { key: Theme; label: string }[] = [
   { key: "system", label: "Sistema" },
   { key: "light", label: "Claro" },
@@ -43,10 +57,10 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
     });
   }
 
-  function fixZone() {
+  function pickZone(zone: string) {
     startTransition(async () => {
-      const result = await updateProfile({ timezone: browserZone });
-      setMessage(result.error ?? `Zona horaria cambiada a ${browserZone}`);
+      const result = await updateProfile({ timezone: zone });
+      setMessage(result.error ?? `Zona horaria: ${zone.replace(/_/g, " ")}`);
     });
   }
 
@@ -115,8 +129,10 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
               role="radio"
               aria-checked={theme === option.key}
               onClick={() => pickTheme(option.key)}
-              className={`flex h-[38px] w-full items-center justify-center rounded-[7px] text-[14px] tracking-[-0.01em] text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
-                theme === option.key ? "bg-card font-semibold shadow-sm" : "font-medium"
+              className={`flex h-[38px] w-full items-center justify-center rounded-[7px] text-[14px] font-medium tracking-[-0.01em] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
+                theme === option.key
+                  ? "bg-segment text-label shadow-sm"
+                  : "text-label-2"
               }`}
             >
               {option.label}
@@ -129,8 +145,23 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
         <span className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
           Zona horaria
         </span>
-        <div className="mx-4 flex flex-col gap-2 rounded-2xl bg-card px-4 py-3.5">
-          <p className="text-[17px] tracking-[-0.02em] text-label">{profile.timezone}</p>
+        <div className="mx-4 flex flex-col gap-2.5 rounded-2xl bg-card px-4 py-3.5">
+          <label className="sr-only" htmlFor="zona">
+            Zona horaria
+          </label>
+          <select
+            id="zona"
+            value={profile.timezone}
+            disabled={pending}
+            onChange={(event) => pickZone(event.target.value)}
+            className="h-11 rounded-xl bg-fill px-3 text-[17px] tracking-[-0.02em] text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+          >
+            {ZONES.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
           <p className="text-pretty text-[13px] leading-[1.4] text-label-2">
             De aquí sale a qué día pertenece cada check. Si está mal, marcar de
             noche caería en el día siguiente.
@@ -138,11 +169,11 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
           {zoneMismatch && (
             <button
               type="button"
-              onClick={fixZone}
+              onClick={() => pickZone(browserZone)}
               disabled={pending}
               className="self-start text-[15px] font-medium text-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
             >
-              Cambiar a la de este dispositivo ({browserZone})
+              Usar la de este dispositivo ({browserZone.replace(/_/g, " ")})
             </button>
           )}
         </div>

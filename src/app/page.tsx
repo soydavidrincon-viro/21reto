@@ -46,9 +46,15 @@ export default function LandingPage() {
         }}
       />
 
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-8">
+      <header className="entrar relative flex items-center justify-center gap-2 pb-2">
+        <span className="text-[19px] font-semibold tracking-[-0.02em] text-label">
+          Antídoto
+        </span>
+      </header>
+
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-7 py-6">
         <div className="entrar">
-          <ProgressRings rings={RINGS} size={192} />
+          <ProgressRings rings={RINGS} size={184} />
         </div>
 
         <div className="flex flex-col items-center gap-3 text-center">
@@ -90,7 +96,7 @@ export default function LandingPage() {
 
       <Link
         href="/login"
-        className="entrar relative flex h-[54px] items-center justify-center rounded-[16px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] transition-transform active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+        className="entrar relative mt-6 flex h-[54px] items-center justify-center rounded-[16px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] transition-transform active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
         style={{ animationDelay: "0.5s" }}
       >
         Empezar

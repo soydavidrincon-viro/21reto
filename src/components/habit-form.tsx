@@ -62,10 +62,11 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
                 setPreset(active ? null : option);
                 setCustom("");
               }}
-              className={`inline-flex min-h-11 items-center gap-[7px] rounded-[22px] px-4 text-[15px] tracking-[-0.01em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
-                active
-                  ? "bg-blue font-semibold text-white"
-                  : "bg-card font-medium text-label"
+              // El peso de la fuente no cambia al seleccionar: si el chip
+              // elegido se pone en negrita se ensancha y toda la fila se
+              // reacomoda, saltando de tres columnas a dos.
+              className={`inline-flex min-h-11 items-center gap-[7px] rounded-[22px] px-4 text-[15px] font-medium tracking-[-0.01em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
+                active ? "bg-blue text-white" : "bg-card text-label"
               }`}
             >
               <span aria-hidden="true" className="text-[17px]">
@@ -115,8 +116,10 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
                 role="radio"
                 aria-checked={active}
                 onClick={() => setTargetDays(days)}
-                className={`tnum flex h-[38px] w-full items-center justify-center rounded-[7px] text-[14px] tracking-[-0.01em] text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
-                  active ? "bg-card font-semibold shadow-sm" : "font-medium"
+                className={`tnum flex h-[38px] w-full items-center justify-center rounded-[7px] text-[14px] font-medium tracking-[-0.01em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
+                  active
+                    ? "bg-segment text-label shadow-sm"
+                    : "text-label-2"
                 }`}
               >
                 {days === 21 ? "21 días" : days}

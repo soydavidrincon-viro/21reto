@@ -24,6 +24,7 @@
   --color-grouped: var(--c-grouped);
   --color-card: var(--c-card);
   --color-bar: var(--c-bar);
+  --color-segment: var(--c-segment);
 
   --font-ui: var(--f-ui);
   --font-num: var(--f-num);
@@ -56,6 +57,9 @@
   --c-grouped: #f2f2f7;
   --c-card: #ffffff;
   --c-bar: rgba(249, 249, 249, 0.94);
+  /* Pastilla del control segmentado. No reusa --c-card porque en oscuro el
+     gris de tarjeta queda casi igual que el riel y no se ve qué está elegido. */
+  --c-segment: #ffffff;
 
   color-scheme: light dark;
 }
@@ -79,6 +83,7 @@
     --c-grouped: #000000;
     --c-card: #1c1c1e;
     --c-bar: rgba(22, 22, 24, 0.94);
+    --c-segment: #636366;
   }
 }
 
@@ -100,6 +105,7 @@
   --c-grouped: #000000;
   --c-card: #1c1c1e;
   --c-bar: rgba(22, 22, 24, 0.94);
+  --c-segment: #636366;
 }
 
 body {

@@ -32,11 +32,6 @@ export default async function PerfilPage() {
       </header>
 
       <ProfileSettings profile={profile} />
-
-      <p className="text-pretty px-6 pb-4 text-center text-[12px] leading-[1.4] text-label-2">
-        Antídoto acompaña tu proceso y no sustituye atención profesional. Si
-        sientes que la situación te supera, buscar ayuda no es recaer.
-      </p>
     </div>
   );
 }
