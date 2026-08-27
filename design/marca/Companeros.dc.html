@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Figtree', system-ui, sans-serif; }
+    a { color: #2d5bff; } a:hover { color: #1f42cc; }
+    * { box-sizing: border-box; }
+    @keyframes flotar { from { transform: translateY(0); } to { transform: translateY(-7px); } }
+    .flota { animation: flotar 2.4s ease-in-out infinite alternate; }
+    @keyframes parpadeo { 0%,92%,100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+    .ojos { animation: parpadeo 4.2s infinite; transform-origin: center 70px; }
+  </style>
+</helmet>
+
+<div style="width: 900px; height: 700px; background: #F4F6FB; padding: 36px 40px; display: flex; flex-direction: column; gap: 22px;">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #8A8FA3;">Compañeros</span>
+      <span style="font-family: 'Fredoka', system-ui, sans-serif; font-size: 28px; font-weight: 600; color: #14161F;">Eliges uno y te acompaña</span>
+    </div>
+    <span style="max-width: 340px; text-align: right; font-size: 12.5px; line-height: 1.5; color: #6B7186;">Mismo cuerpo, distinta oreja y color. Así se construye una familia: se reconocen entre sí y se pueden dibujar nuevos sin rehacer nada.</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 12px 16px; border-radius: 22px; background: #2D5BFF;">
+      <svg class="flota" width="118" height="128" viewBox="0 0 120 130" aria-label="Roco">
+        <ellipse cx="60" cy="120" rx="30" ry="6" fill="rgba(0,0,0,0.16)"></ellipse>
+        <circle cx="30" cy="38" r="13" fill="#B9C9FF"></circle>
+        <circle cx="90" cy="38" r="13" fill="#B9C9FF"></circle>
+        <circle cx="30" cy="38" r="6" fill="#7F9BFF"></circle>
+        <circle cx="90" cy="38" r="6" fill="#7F9BFF"></circle>
+        <path d="M60 24 C86 24 100 46 100 72 C100 100 82 116 60 116 C38 116 20 100 20 72 C20 46 34 24 60 24 Z" fill="#DCE5FF"></path>
+        <path d="M60 62 C74 62 84 72 84 86 C84 102 74 116 60 116 C46 116 36 102 36 86 C36 72 46 62 60 62 Z" fill="#FFFFFF" opacity="0.75"></path>
+        <g class="ojos">
+          <ellipse cx="46" cy="70" rx="6" ry="8" fill="#14161F"></ellipse>
+          <ellipse cx="74" cy="70" rx="6" ry="8" fill="#14161F"></ellipse>
+        </g>
+        <circle cx="48.4" cy="67" r="2" fill="#FFFFFF"></circle>
+        <circle cx="76.4" cy="67" r="2" fill="#FFFFFF"></circle>
+        <ellipse cx="33" cy="82" rx="6.5" ry="4.5" fill="#7F9BFF" opacity="0.55"></ellipse>
+        <ellipse cx="87" cy="82" rx="6.5" ry="4.5" fill="#7F9BFF" opacity="0.55"></ellipse>
+        <path d="M54 84 q6 6 12 0" fill="none" stroke="#14161F" stroke-width="2.6" stroke-linecap="round"></path>
+      </svg>
+      <span style="font-family: 'Fredoka', system-ui, sans-serif; font-size: 19px; font-weight: 600; color: #FFFFFF;">Roco</span>
+      <span style="text-align: center; font-size: 11.5px; line-height: 1.4; color: rgba(255,255,255,0.75);">El que no se mueve.<br>Para quien necesita firmeza.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 12px 16px; border-radius: 22px; background: #FF6B2C;">
+      <svg class="flota" width="118" height="128" viewBox="0 0 120 130" style="animation-delay: 0.3s;" aria-label="Chispa">
+        <ellipse cx="60" cy="120" rx="30" ry="6" fill="rgba(0,0,0,0.16)"></ellipse>
+        <path d="M34 40 L26 12 L52 28 Z" fill="#FFD9C2"></path>
+        <path d="M86 40 L94 12 L68 28 Z" fill="#FFD9C2"></path>
+        <path d="M34 38 L30 20 L46 30 Z" fill="#FF9A63"></path>
+        <path d="M86 38 L90 20 L74 30 Z" fill="#FF9A63"></path>
+        <path d="M60 24 C86 24 100 46 100 72 C100 100 82 116 60 116 C38 116 20 100 20 72 C20 46 34 24 60 24 Z" fill="#FFD9C2"></path>
+        <path d="M60 62 C74 62 84 72 84 86 C84 102 74 116 60 116 C46 116 36 102 36 86 C36 72 46 62 60 62 Z" fill="#FFFFFF" opacity="0.8"></path>
+        <g class="ojos">
+          <ellipse cx="46" cy="70" rx="6" ry="8" fill="#14161F"></ellipse>
+          <ellipse cx="74" cy="70" rx="6" ry="8" fill="#14161F"></ellipse>
+        </g>
+        <circle cx="48.4" cy="67" r="2" fill="#FFFFFF"></circle>
+        <circle cx="76.4" cy="67" r="2" fill="#FFFFFF"></circle>
+        <ellipse cx="33" cy="82" rx="6.5" ry="4.5" fill="#FF9A63" opacity="0.7"></ellipse>
+        <ellipse cx="87" cy="82" rx="6.5" ry="4.5" fill="#FF9A63" opacity="0.7"></ellipse>
+        <path d="M54 84 q6 6 12 0" fill="none" stroke="#14161F" stroke-width="2.6" stroke-linecap="round"></path>
+      </svg>
+      <span style="font-family: 'Fredoka', system-ui, sans-serif; font-size: 19px; font-weight: 600; color: #3D1A00;">Chispa</span>
+      <span style="text-align: center; font-size: 11.5px; line-height: 1.4; color: rgba(61,26,0,0.7);">El que empuja.<br>Para los días sin ganas.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 12px 16px; border-radius: 22px; background: #00C9A7;">
+      <svg class="flota" width="118" height="128" viewBox="0 0 120 130" style="animation-delay: 0.6s;" aria-label="Brote">
+        <ellipse cx="60" cy="120" rx="30" ry="6" fill="rgba(0,0,0,0.16)"></ellipse>
+        <path d="M60 26 L60 8" stroke="#2E9E86" stroke-width="4" stroke-linecap="round"></path>
+        <path d="M60 14 C50 14 44 8 44 2 C54 0 60 6 60 14 Z" fill="#8FE9D6"></path>
+        <path d="M60 18 C70 18 78 12 78 5 C67 3 60 10 60 18 Z" fill="#5FD9C0"></path>
+        <path d="M60 24 C86 24 100 46 100 72 C100 100 82 116 60 116 C38 116 20 100 20 72 C20 46 34 24 60 24 Z" fill="#C3F5EA"></path>
+        <path d="M60 62 C74 62 84 72 84 86 C84 102 74 116 60 116 C46 116 36 102 36 86 C36 72 46 62 60 62 Z" fill="#FFFFFF" opacity="0.8"></path>
+        <g class="ojos">
+          <ellipse cx="46" cy="70" rx="6" ry="8" fill="#14161F"></ellipse>
+          <ellipse cx="74" cy="70" rx="6" ry="8" fill="#14161F"></ellipse>
+        </g>
+        <circle cx="48.4" cy="67" r="2" fill="#FFFFFF"></circle>
+        <circle cx="76.4" cy="67" r="2" fill="#FFFFFF"></circle>
+        <ellipse cx="33" cy="82" rx="6.5" ry="4.5" fill="#5FD9C0" opacity="0.8"></ellipse>
+        <ellipse cx="87" cy="82" rx="6.5" ry="4.5" fill="#5FD9C0" opacity="0.8"></ellipse>
+        <path d="M54 84 q6 6 12 0" fill="none" stroke="#14161F" stroke-width="2.6" stroke-linecap="round"></path>
+      </svg>
+      <span style="font-family: 'Fredoka', system-ui, sans-serif; font-size: 19px; font-weight: 600; color: #06382F;">Brote</span>
+      <span style="text-align: center; font-size: 11.5px; line-height: 1.4; color: rgba(6,56,47,0.72);">El que crece contigo.<br>Para quien va empezando.</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 12px 16px; border-radius: 22px; background: #7B61FF;">
+      <svg class="flota" width="118" height="128" viewBox="0 0 120 130" style="animation-delay: 0.9s;" aria-label="Nube">
+        <ellipse cx="60" cy="120" rx="30" ry="6" fill="rgba(0,0,0,0.16)"></ellipse>
+        <circle cx="34" cy="34" r="11" fill="#E0D8FF"></circle>
+        <circle cx="86" cy="34" r="11" fill="#E0D8FF"></circle>
+        <path d="M60 24 C86 24 100 46 100 72 C100 100 82 116 60 116 C38 116 20 100 20 72 C20 46 34 24 60 24 Z" fill="#E0D8FF"></path>
+        <path d="M60 62 C74 62 84 72 84 86 C84 102 74 116 60 116 C46 116 36 102 36 86 C36 72 46 62 60 62 Z" fill="#FFFFFF" opacity="0.75"></path>
+        <g class="ojos">
+          <path d="M40 70 q6 -7 12 0" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+          <path d="M68 70 q6 -7 12 0" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+        </g>
+        <ellipse cx="33" cy="82" rx="6.5" ry="4.5" fill="#A995FF" opacity="0.8"></ellipse>
+        <ellipse cx="87" cy="82" rx="6.5" ry="4.5" fill="#A995FF" opacity="0.8"></ellipse>
+        <path d="M54 84 q6 6 12 0" fill="none" stroke="#14161F" stroke-width="2.6" stroke-linecap="round"></path>
+      </svg>
+      <span style="font-family: 'Fredoka', system-ui, sans-serif; font-size: 19px; font-weight: 600; color: #FFFFFF;">Nube</span>
+      <span style="text-align: center; font-size: 11.5px; line-height: 1.4; color: rgba(255,255,255,0.78);">El que calma.<br>Para la ansiedad de las noches.</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 340px; gap: 16px; flex: 1;">
+
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; border-radius: 22px; background: #FFFFFF;">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #8A8FA3;">Expresiones — cada una responde a algo que hiciste</span>
+      <div style="display: flex; justify-content: space-between; gap: 8px;">
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <svg width="72" height="72" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="#FFD9C2"></circle>
+            <ellipse cx="46" cy="56" rx="6" ry="8" fill="#14161F"></ellipse>
+            <ellipse cx="74" cy="56" rx="6" ry="8" fill="#14161F"></ellipse>
+            <path d="M52 74 q8 9 16 0" fill="none" stroke="#14161F" stroke-width="3" stroke-linecap="round"></path>
+            <ellipse cx="32" cy="70" rx="7" ry="5" fill="#FF9A63" opacity="0.7"></ellipse>
+            <ellipse cx="88" cy="70" rx="7" ry="5" fill="#FF9A63" opacity="0.7"></ellipse>
+          </svg>
+          <span style="font-size: 11px; font-weight: 600; color: #14161F;">Día marcado</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <svg width="72" height="72" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="#FFD9C2"></circle>
+            <path d="M38 54 q8 -9 16 0" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+            <path d="M66 54 q8 -9 16 0" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+            <path d="M50 76 q10 10 20 0" fill="none" stroke="#14161F" stroke-width="3" stroke-linecap="round"></path>
+            <path d="M22 34 l4 8 8 4 -8 4 -4 8 -4 -8 -8 -4 8 -4 Z" fill="#FFC53D"></path>
+            <path d="M98 40 l3 6 6 3 -6 3 -3 6 -3 -6 -6 -3 6 -3 Z" fill="#FFC53D"></path>
+          </svg>
+          <span style="font-size: 11px; font-weight: 600; color: #14161F;">Hito</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <svg width="72" height="72" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="#FFD9C2"></circle>
+            <ellipse cx="46" cy="58" rx="6" ry="5" fill="#14161F"></ellipse>
+            <ellipse cx="74" cy="58" rx="6" ry="5" fill="#14161F"></ellipse>
+            <path d="M52 78 h16" fill="none" stroke="#14161F" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+          <span style="font-size: 11px; font-weight: 600; color: #14161F;">Sin marcar</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <svg width="72" height="72" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="#FFD9C2"></circle>
+            <path d="M38 60 h14" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+            <path d="M68 60 h14" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+            <path d="M52 80 q8 -6 16 0" fill="none" stroke="#14161F" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+          <span style="font-size: 11px; font-weight: 600; color: #14161F;">Recaída</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <svg width="72" height="72" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="46" fill="#FFD9C2"></circle>
+            <path d="M38 56 q8 8 16 0" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+            <path d="M66 56 q8 8 16 0" fill="none" stroke="#14161F" stroke-width="3.4" stroke-linecap="round"></path>
+            <ellipse cx="60" cy="80" rx="7" ry="9" fill="#14161F"></ellipse>
+          </svg>
+          <span style="font-size: 11px; font-weight: 600; color: #14161F;">Bostezo</span>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #6B7186;">En la recaída el compañero no se enoja ni se pone triste: se queda. Toda la app está construida sobre esa idea, y sería raro que el muñeco fuera el único que te reprocha.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 22px; background: #14161F;">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45);">Cómo vive en la app</span>
+      <ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 7px;">
+        <li style="font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,0.8);">Flota y parpadea solo, sin que pase nada.</li>
+        <li style="font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,0.8);">Salta cuando marcas el día.</li>
+        <li style="font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,0.8);">Asoma media cara detrás del calendario y de la tarjeta del reto.</li>
+        <li style="font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,0.8);">Si lo tocas, reacciona.</li>
+      </ul>
+      <p style="margin: 4px 0 0; font-size: 11.5px; line-height: 1.5; color: rgba(255,255,255,0.5);">Todo esto es vector animado con CSS. Pesa unos 3 KB por personaje y se recolorea solo según el hábito.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":900,"height":700}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>
