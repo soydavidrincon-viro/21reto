@@ -1,8 +1,12 @@
 "use client";
 
+import { CaretRight, CheckCircle, Circle } from "@phosphor-icons/react";
+import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
+import { MilestoneCelebration } from "@/components/milestone-celebration";
+import { milestoneReached } from "@/lib/milestones";
 import type { DailyOverviewRow } from "@/lib/types";
 
 /**
@@ -20,18 +24,30 @@ export function HabitRow({
   last: boolean;
 }) {
   const [pending, startTransition] = useTransition();
+  const [celebrating, setCelebrating] = useState<number | null>(null);
+  const reduced = useReducedMotion();
+
   const done = habit.today_status === "success";
   const relapsed = habit.today_status === "relapse";
 
   function toggle() {
     startTransition(async () => {
-      if (done) await clearDay(habit.habit_id, today);
-      else await markDay(habit.habit_id, today, "success");
+      if (done) {
+        await clearDay(habit.habit_id, today);
+        return;
+      }
+
+      const result = await markDay(habit.habit_id, today, "success");
+      if (result.streak !== null) {
+        setCelebrating(milestoneReached(result.streak));
+      }
     });
   }
 
   return (
     <>
+      <MilestoneCelebration day={celebrating} onDone={() => setCelebrating(null)} />
+
       <div className="flex items-center gap-3 px-3.5 py-2.5">
         <Link
           href={`/habito/${habit.habit_id}`}
@@ -40,7 +56,7 @@ export function HabitRow({
           <span
             aria-hidden="true"
             className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[17px]"
-            style={{ background: `var(--c-${habit.color}, var(--c-blue))` }}
+            style={{ background: `var(--c-${habit.color})` }}
           >
             {habit.icon}
           </span>
@@ -56,41 +72,27 @@ export function HabitRow({
                   : `Racha de ${habit.current_streak} ${habit.current_streak === 1 ? "día" : "días"}`}
             </span>
           </span>
+          <CaretRight size={16} weight="bold" className="shrink-0 text-label-3" aria-hidden="true" />
         </Link>
 
-        <button
+        <motion.button
           type="button"
           onClick={toggle}
           disabled={pending}
           aria-pressed={done}
-          aria-label={done ? `Deshacer ${habit.name} de hoy` : `Marcar ${habit.name} como limpio hoy`}
+          aria-label={
+            done ? `Deshacer ${habit.name} de hoy` : `Marcar ${habit.name} como limpio hoy`
+          }
+          whileTap={reduced ? undefined : { scale: 0.85 }}
+          transition={{ type: "spring", stiffness: 600, damping: 22 }}
           className="shrink-0 rounded-full transition-opacity disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
         >
-          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-            {done ? (
-              <>
-                <circle cx="15" cy="15" r="14" className="fill-green" />
-                <path
-                  d="m9 15.4 4 4 8-8.4"
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth="2.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </>
-            ) : (
-              <circle
-                cx="15"
-                cy="15"
-                r="13.5"
-                fill="none"
-                className="stroke-separator"
-                strokeWidth="1.6"
-              />
-            )}
-          </svg>
-        </button>
+          {done ? (
+            <CheckCircle size={30} weight="fill" className="text-green" aria-hidden="true" />
+          ) : (
+            <Circle size={30} weight="regular" className="text-label-3" aria-hidden="true" />
+          )}
+        </motion.button>
       </div>
 
       {!last && <div className="ml-[58px] h-px bg-separator" />}

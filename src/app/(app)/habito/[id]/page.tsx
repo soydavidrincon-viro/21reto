@@ -1,3 +1,4 @@
+import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { HabitActions } from "@/components/habit-actions";
@@ -66,16 +67,7 @@ export default async function HabitoPage({
           href="/hoy"
           className="inline-flex items-center gap-0.5 text-[17px] tracking-[-0.02em] text-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
         >
-          <svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true">
-            <path
-              d="M9.5 2.5 2.5 10l7 7.5"
-              fill="none"
-              className="stroke-blue"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <CaretLeft size={18} weight="bold" aria-hidden="true" />
           Hoy
         </Link>
         <h1 className="truncate text-[17px] font-semibold tracking-[-0.02em] text-label">

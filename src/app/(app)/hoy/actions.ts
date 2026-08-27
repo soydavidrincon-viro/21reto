@@ -36,11 +36,19 @@ export async function markDay(
     { onConflict: "habit_id,log_date" },
   );
 
-  if (error) return { error: error.message };
+  if (error) return { error: error.message, streak: null };
+
+  // La racha se relee del servidor en vez de sumarle uno a la que tenía el
+  // cliente: con la política 'reset' una recaída la manda a cero, y adivinarlo
+  // desde el navegador haría que la celebración de un hito saliera equivocada.
+  const { data } = await supabase.rpc("get_habit_stats", {
+    p_habit_id: habitId,
+    p_today: dateISO,
+  });
 
   revalidatePath("/hoy");
   revalidatePath(`/habito/${habitId}`);
-  return { error: null };
+  return { error: null, streak: data?.[0]?.current_streak ?? null };
 }
 
 /** Quita el registro del día, para cuando alguien marcó por error. */

@@ -1,3 +1,4 @@
+import { Plus } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { HabitRow } from "@/components/habit-row";
@@ -61,6 +62,7 @@ export default async function HoyPage() {
               color: h.color,
               value: h.clean_days,
               goal: h.target_days,
+              label: h.name,
             }))}
           />
           <ul className="flex flex-1 flex-col gap-3">
@@ -116,15 +118,7 @@ export default async function HoyPage() {
             className="flex items-center gap-3 px-3.5 py-2.5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue"
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-fill">
-              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M12 5v14M5 12h14"
-                  fill="none"
-                  className="stroke-blue"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                />
-              </svg>
+              <Plus size={17} weight="bold" className="text-blue" aria-hidden="true" />
             </span>
             <span className="text-[17px] font-medium tracking-[-0.02em] text-blue">
               {habits.length === 0 ? "Crear tu primer hábito" : "Agregar hábito"}

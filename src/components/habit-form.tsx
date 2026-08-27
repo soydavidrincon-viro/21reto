@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { createHabit } from "@/app/actions/habits";
 import type { HabitColor } from "@/lib/types";
@@ -149,16 +150,7 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
                   <span className="text-[13px] tracking-[-0.01em] text-label-2">{detail}</span>
                 </span>
                 {policy === value && (
-                  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="m5 12.5 4.5 4.5L19 7"
-                      fill="none"
-                      className="stroke-blue"
-                      strokeWidth="2.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <Check size={22} weight="bold" className="text-blue" aria-hidden="true" />
                 )}
               </button>
             </div>

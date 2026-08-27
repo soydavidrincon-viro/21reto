@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
 import type { LogStatus } from "@/lib/types";
@@ -43,18 +44,7 @@ export function HabitActions({
           done ? "bg-fill text-label" : "bg-blue text-white"
         }`}
       >
-        {!done && (
-          <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="m5 12.5 4.5 4.5L19 7"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="2.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
+        {!done && <Check size={19} weight="bold" aria-hidden="true" />}
         {done ? "Hoy ya está marcado" : "Marcar hoy como limpio"}
       </button>
 
