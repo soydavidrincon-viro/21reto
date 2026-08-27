@@ -1,12 +1,14 @@
 "use client";
 
-import { GoogleLogo } from "@phosphor-icons/react";
+import { GoogleLogo, PaperPlaneTilt } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useState } from "react";
+import { Logo } from "@/components/logo";
 import { detectTimeZone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Dos formas de entrar, y el orden importa.
+ * Dos formas de entrar, y las dos a la vista.
  *
  * Google va primero porque no manda ningún correo: la dirección ya viene
  * verificada, así que no depende del servidor de correo ni de que el mensaje
@@ -17,6 +19,12 @@ import { createClient } from "@/lib/supabase/client";
  * a su cuenta principal de Google, y quitarles la salida sería empujarlos a algo
  * que no querían o dejarlos fuera.
  *
+ * El formulario ya no vive detrás de un botón "prefiero un enlace a mi correo".
+ * Ese botón solo hacía algo si el JavaScript había hidratado, así que cualquier
+ * fallo de carga dejaba la pantalla entera muerta: se veía bien y no respondía a
+ * nada. Ahora el campo está desde el primer pintado y lo único que necesita JS
+ * es el envío.
+ *
  * Ninguna de las dos usa contraseña, así que no hay nada que olvidar ni que
  * recuperar: quien no puede entrar pide otro enlace.
  */
@@ -24,7 +32,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [showEmail, setShowEmail] = useState(false);
 
   async function withGoogle() {
     setError(null);
@@ -38,10 +45,7 @@ export default function LoginPage() {
       },
     });
 
-    if (error) {
-      setError("No pudimos abrir Google. Prueba con tu correo.");
-      setShowEmail(true);
-    }
+    if (error) setError("No pudimos abrir Google. Usa tu correo aquí abajo.");
   }
 
   async function withEmail(event: React.FormEvent) {
@@ -59,7 +63,9 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError("No pudimos enviar el enlace. Revisa el correo e inténtalo otra vez.");
+      setError(
+        "No pudimos enviar el enlace. Revisa el correo e inténtalo otra vez.",
+      );
       setState("idle");
       return;
     }
@@ -69,23 +75,33 @@ export default function LoginPage() {
 
   return (
     <main
-      className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-6 pb-10"
-      style={{ paddingTop: "max(env(safe-area-inset-top), 72px)" }}
+      className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-6 pb-10 lg:max-w-[980px] lg:px-10"
+      style={{ paddingTop: "max(env(safe-area-inset-top), 40px)" }}
     >
-      <div className="flex flex-1 flex-col justify-center gap-7">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-balance text-[34px] font-bold leading-[1.08] tracking-[-0.026em] text-label">
+      <Link
+        href="/"
+        className="entrar flex justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:justify-start"
+      >
+        <Logo size={26} />
+      </Link>
+
+      <div className="flex flex-1 flex-col justify-center gap-7 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16">
+        <div className="entrar flex flex-col gap-2 lg:gap-4">
+          <h1 className="text-balance font-display text-[34px] font-semibold leading-[1.05] tracking-[-0.02em] text-label lg:text-[48px]">
             {state === "sent" ? "Revisa tu correo" : "Entra a Antídoto"}
           </h1>
-          <p className="text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label-2">
+          <p className="text-pretty text-[15px] leading-[1.45] tracking-[-0.01em] text-label-2 lg:text-[18px]">
             {state === "sent"
-              ? `Te mandamos un enlace a ${email}. Ábrelo desde este mismo teléfono.`
-              : "Sin contraseñas. Elige por dónde prefieres entrar."}
+              ? `Te mandamos un enlace a ${email}. Ábrelo desde este mismo dispositivo.`
+              : "Sin contraseñas: ni que crear ni que olvidar. Elige por dónde prefieres entrar."}
           </p>
         </div>
 
         {state !== "sent" && (
-          <div className="flex flex-col gap-3">
+          <div
+            className="entrar flex flex-col gap-3"
+            style={{ animationDelay: "0.1s" }}
+          >
             <button
               type="button"
               onClick={withGoogle}
@@ -95,43 +111,43 @@ export default function LoginPage() {
               Continuar con Google
             </button>
 
-            {showEmail ? (
-              <form onSubmit={withEmail} className="flex flex-col gap-3">
-                <label className="sr-only" htmlFor="email">
-                  Correo electrónico
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  autoFocus
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="tu@correo.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="h-[50px] rounded-[14px] bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                />
-                <button
-                  type="submit"
-                  disabled={state === "sending"}
-                  className="pulsable flex h-[54px] items-center justify-center rounded-[16px] bg-azul text-[17px] font-semibold tracking-[-0.02em] text-azul-tinta shadow-[0_8px_24px_-8px_var(--c-azul)] disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                >
-                  {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
-                </button>
-              </form>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowEmail(true)}
-                className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            <span className="flex items-center gap-3 py-0.5 text-[12.5px] font-semibold uppercase tracking-[0.08em] text-label-3">
+              <span className="h-px flex-1 bg-separator" />o<span className="h-px flex-1 bg-separator" />
+            </span>
+
+            <form onSubmit={withEmail} className="flex flex-col gap-2.5">
+              <label
+                htmlFor="email"
+                className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3"
               >
-                Prefiero un enlace a mi correo
+                Un enlace a tu correo
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                inputMode="email"
+                placeholder="tu@correo.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="h-[52px] rounded-[14px] bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              />
+              <button
+                type="submit"
+                disabled={state === "sending"}
+                className="pulsable flex h-[54px] items-center justify-center gap-2 rounded-[16px] bg-azul text-[17px] font-semibold tracking-[-0.02em] text-azul-tinta shadow-[0_8px_24px_-8px_var(--c-azul)] disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              >
+                <PaperPlaneTilt size={18} weight="fill" aria-hidden="true" />
+                {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
               </button>
-            )}
+            </form>
 
             {error && (
-              <p role="alert" className="text-center text-[13px] leading-[1.35] text-rojo">
+              <p
+                role="alert"
+                className="text-center text-[13px] leading-[1.35] text-rojo"
+              >
                 {error}
               </p>
             )}

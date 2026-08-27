@@ -88,11 +88,11 @@ export default async function HabitoPage({
       <div className="flex flex-col gap-3.5 lg:grid lg:grid-cols-[1fr_1.15fr] lg:items-start lg:gap-6">
         <div className="flex flex-col gap-3.5">
           <section className="mx-4 flex flex-col items-center gap-2 rounded-[22px] bg-card px-4 py-6 lg:mx-0 lg:py-8">
-            <span className="flex size-14 items-center justify-center rounded-2xl bg-fill text-label">
+            <span className="flex size-14 items-center justify-center rounded-2xl bg-naranja text-naranja-tinta">
               <HabitIcon clave={habit.icon} size={30} />
             </span>
             <p className="flex items-baseline gap-2">
-              <span className="tnum font-display text-[46px] font-bold leading-none tracking-[-0.04em] text-label">
+              <span className="tnum font-display text-[46px] font-bold leading-none tracking-[-0.04em] text-naranja">
                 {stats.current_streak}
               </span>
               <span className="text-[15px] font-semibold text-label-2">

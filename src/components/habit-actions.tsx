@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, Check } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
 import type { LogStatus } from "@/lib/types";
@@ -20,6 +20,8 @@ export function HabitActions({
 }) {
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
+  // Igual que en la tarjeta de Hoy: marcar cuesta un toque, desmarcar dos.
+  const [deshaciendo, setDeshaciendo] = useState(false);
   const done = todayStatus === "success";
   const relapsed = todayStatus === "relapse";
 
@@ -35,17 +37,34 @@ export function HabitActions({
       <button
         type="button"
         disabled={pending}
-        onClick={() =>
+        onClick={() => {
+          if (done && !deshaciendo) {
+            setDeshaciendo(true);
+            setTimeout(() => setDeshaciendo(false), 4000);
+            return;
+          }
           run(() =>
             done ? clearDay(habitId, today) : markDay(habitId, today, "success"),
-          )
-        }
-        className={`flex h-[54px] items-center justify-center gap-2 rounded-[16px] text-[17px] font-semibold tracking-[-0.02em] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-          done ? "bg-fill text-label" : "bg-azul text-azul-tinta"
+          );
+        }}
+        className={`pulsable flex h-[54px] items-center justify-center gap-2 rounded-[16px] text-[17px] font-semibold tracking-[-0.02em] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+          deshaciendo
+            ? "bg-ambar text-ambar-tinta"
+            : done
+              ? "bg-fill text-label"
+              : "bg-azul text-azul-tinta"
         }`}
       >
-        {!done && <Check size={19} weight="bold" aria-hidden="true" />}
-        {done ? "Hoy ya está marcado" : "Marcar hoy como limpio"}
+        {deshaciendo ? (
+          <ArrowCounterClockwise size={19} weight="bold" aria-hidden="true" />
+        ) : (
+          !done && <Check size={19} weight="bold" aria-hidden="true" />
+        )}
+        {deshaciendo
+          ? "Toca otra vez para quitarlo"
+          : done
+            ? "Hoy ya está marcado"
+            : "Marcar hoy como limpio"}
       </button>
 
       {confirming ? (

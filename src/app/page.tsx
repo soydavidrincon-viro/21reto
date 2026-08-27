@@ -11,6 +11,10 @@ import { ProgressRings } from "@/components/progress-rings";
  * persona va a mirar todos los días, así que verlo funcionar antes de
  * registrarse dice qué hace la app mejor que cualquier frase.
  *
+ * En escritorio se parte en dos columnas. Antes era la misma columna de 430px
+ * centrada en una pantalla de 1440, que es lo que hace que una web se vea como
+ * una app de móvil abierta en el sitio equivocado.
+ *
  * La entrada escalonada es CSS y no JavaScript. La primera versión usaba motion
  * y el servidor mandaba el texto con opacity:0 esperando la hidratación: una
  * carga lenta dejaba la pantalla con los anillos flotando en negro y nada más.
@@ -50,82 +54,97 @@ const CLAIMS = [
 export default function LandingPage() {
   return (
     <main
-      className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden px-6 pb-10"
+      className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden px-6 pb-10 lg:max-w-[1120px] lg:px-10 lg:pb-16"
       style={{ paddingTop: "max(env(safe-area-inset-top), 32px)" }}
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[2%] size-[380px] -translate-x-1/2 rounded-full opacity-30 blur-[80px]"
+        className="pointer-events-none absolute left-1/2 top-[2%] size-[380px] -translate-x-1/2 rounded-full opacity-30 blur-[80px] lg:left-auto lg:right-[6%] lg:top-[8%] lg:size-[560px] lg:translate-x-0"
         style={{
           background:
             "conic-gradient(from 210deg, var(--c-azul), var(--c-naranja), var(--c-menta), var(--c-azul))",
         }}
       />
 
-      <header className="entrar relative flex justify-center pb-1">
+      <header className="entrar relative flex justify-center pb-1 lg:justify-start lg:pb-0 lg:pt-2">
         <Logo size={26} />
       </header>
 
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 py-4">
-        <div className="entrar relative">
-          <ProgressRings rings={RINGS} size={186} />
+      {/* Móvil: una columna, el visual arriba. Escritorio: el texto manda a la
+          izquierda y el visual pasa a la derecha, que es el orden en que se lee
+          una página ancha. `lg:order-*` lo reordena sin duplicar el markup. */}
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-6 py-4 lg:grid lg:grid-cols-[1fr_0.95fr] lg:items-center lg:gap-16 lg:py-10">
+        <div className="entrar relative lg:order-2 lg:justify-self-center">
+          <ProgressRings rings={RINGS} size={186} className="lg:hidden" />
+          <ProgressRings rings={RINGS} size={300} className="hidden lg:block" />
           <Companion
             who="brote"
             size={78}
             mood="contento"
             sombra={false}
-            className="flota absolute -bottom-2 -right-5"
+            className="flota absolute -bottom-2 -right-5 lg:hidden"
+          />
+          <Companion
+            who="brote"
+            size={124}
+            mood="contento"
+            sombra={false}
+            className="flota absolute -bottom-4 -right-9 hidden lg:block"
           />
         </div>
 
-        <div className="flex flex-col items-center gap-2.5 text-center">
-          <h1
-            className="entrar text-balance font-display text-[40px] font-semibold leading-[1.05] tracking-[-0.025em] text-label"
-            style={{ animationDelay: "0.1s" }}
-          >
-            Un día a la vez
-          </h1>
-          <p
-            className="entrar text-pretty text-[16.5px] leading-[1.45] text-label-2"
-            style={{ animationDelay: "0.18s" }}
-          >
-            Lleva la cuenta de los días que llevas sin eso. Marcas el día, anotas
-            cómo te fue, y la racha crece sola.
-          </p>
-        </div>
-
-        <ul className="flex w-full flex-col gap-2">
-          {CLAIMS.map(({ Icon, color, tinta, title, detail }, i) => (
-            <li
-              key={title}
-              className="entrar flex items-center gap-3 rounded-[20px] bg-card px-4 py-3"
-              style={{ animationDelay: `${0.26 + i * 0.07}s` }}
+        <div className="flex flex-col items-center gap-6 lg:order-1 lg:items-start lg:gap-7">
+          <div className="flex flex-col items-center gap-2.5 text-center lg:items-start lg:gap-4 lg:text-left">
+            <h1
+              className="entrar text-balance font-display text-[40px] font-semibold leading-[1.05] tracking-[-0.025em] text-label lg:text-[64px] lg:leading-[0.98]"
+              style={{ animationDelay: "0.1s" }}
             >
-              <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: color, color: tinta }}
-              >
-                <Icon size={21} weight="fill" aria-hidden="true" />
-              </span>
-              <span className="flex flex-col gap-px">
-                <span className="font-display text-[16px] font-semibold text-label">
-                  {title}
-                </span>
-                <span className="text-[13px] text-label-2">{detail}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+              Un día a la vez
+            </h1>
+            <p
+              className="entrar text-pretty text-[16.5px] leading-[1.45] text-label-2 lg:max-w-[46ch] lg:text-[20px] lg:leading-[1.5]"
+              style={{ animationDelay: "0.18s" }}
+            >
+              Lleva la cuenta de los días que llevas sin eso. Marcas el día,
+              anotas cómo te fue, y la racha crece sola.
+            </p>
+          </div>
 
-      <Link
-        href="/login"
-        className="entrar pulsable relative mt-5 flex h-[56px] items-center justify-center gap-2 rounded-[18px] bg-azul font-display text-[17px] font-semibold text-azul-tinta shadow-[0_10px_28px_-10px_var(--c-azul)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-        style={{ animationDelay: "0.5s" }}
-      >
-        Empezar
-        <ArrowRight size={19} weight="bold" aria-hidden="true" />
-      </Link>
+          <ul className="flex w-full flex-col gap-2 lg:gap-2.5">
+            {CLAIMS.map(({ Icon, color, tinta, title, detail }, i) => (
+              <li
+                key={title}
+                className="entrar flex items-center gap-3 rounded-[20px] bg-card px-4 py-3 lg:px-5 lg:py-3.5"
+                style={{ animationDelay: `${0.26 + i * 0.07}s` }}
+              >
+                <span
+                  className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: color, color: tinta }}
+                >
+                  <Icon size={21} weight="fill" aria-hidden="true" />
+                </span>
+                <span className="flex flex-col gap-px">
+                  <span className="font-display text-[16px] font-semibold text-label lg:text-[17px]">
+                    {title}
+                  </span>
+                  <span className="text-[13px] text-label-2 lg:text-[14px]">
+                    {detail}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <Link
+            href="/login"
+            className="entrar pulsable relative flex h-[56px] w-full items-center justify-center gap-2 rounded-[18px] bg-azul font-display text-[17px] font-semibold text-azul-tinta shadow-[0_10px_28px_-10px_var(--c-azul)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:w-auto lg:px-9"
+            style={{ animationDelay: "0.5s" }}
+          >
+            Empezar
+            <ArrowRight size={19} weight="bold" aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

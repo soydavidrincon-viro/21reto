@@ -16,9 +16,11 @@ type Ring = { color: HabitColor; value: number; goal: number; label: string };
 export function ProgressRings({
   rings,
   size = 132,
+  className,
 }: {
   rings: Ring[];
   size?: number;
+  className?: string;
 }) {
   const visible = rings.slice(0, 3);
   const width = 14;
@@ -33,7 +35,7 @@ export function ProgressRings({
       aria-label={visible
         .map((ring) => `${ring.label}: ${ring.value} de ${ring.goal} días`)
         .join(". ")}
-      className="shrink-0"
+      className={`shrink-0 ${className ?? ""}`}
     >
       <g transform="rotate(-90 70 70)">
         {visible.map((ring, i) => {

@@ -64,6 +64,7 @@ export async function setAvatar(url: string | null) {
 export async function updateProfile(patch: {
   display_name?: string;
   timezone?: string;
+  companion?: string;
 }) {
   const supabase = await createClient();
 

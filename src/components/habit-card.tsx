@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretRight, Check } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, CaretRight, Check } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
@@ -27,16 +27,32 @@ export function HabitCard({
 }) {
   const [pending, startTransition] = useTransition();
   const [celebrating, setCelebrating] = useState<number | null>(null);
+  const [deshaciendo, setDeshaciendo] = useState(false);
 
   const done = habit.today_status === "success";
   const relapsed = habit.today_status === "relapse";
   const skin = HABIT_SKIN[habit.color];
   const progreso = Math.min(100, (habit.clean_days / habit.target_days) * 100);
 
-  function toggle() {
+  /**
+   * Marcar es de un toque; desmarcar, de dos.
+   *
+   * Antes el mismo botón hacía las dos cosas, así que volver a tocarlo por
+   * costumbre —o para comprobar que sí había quedado— borraba el día sin decir
+   * nada. Perder un día marcado por un toque de más es exactamente el tipo de
+   * cosa que hace que alguien deje de usar la app.
+   */
+  function alTocar() {
+    if (done && !deshaciendo) {
+      setDeshaciendo(true);
+      setTimeout(() => setDeshaciendo(false), 4000);
+      return;
+    }
+
     startTransition(async () => {
       if (done) {
         await clearDay(habit.habit_id, today);
+        setDeshaciendo(false);
         return;
       }
       const result = await markDay(habit.habit_id, today, "success");
@@ -76,7 +92,9 @@ export function HabitCard({
                 style={{ color: skin.tinta }}
               >
                 {relapsed
-                  ? "Recaída registrada hoy"
+                  ? habit.kind === "build"
+                    ? "Hoy quedó saltado"
+                    : "Recaída registrada hoy"
                   : habit.current_streak === 0
                     ? "Sin racha todavía"
                     : `Racha de ${habit.current_streak} ${habit.current_streak === 1 ? "día" : "días"}`}
@@ -112,19 +130,30 @@ export function HabitCard({
 
         <button
           type="button"
-          onClick={toggle}
+          onClick={alTocar}
           disabled={pending}
-          aria-pressed={done}
           aria-label={
-            done ? `Deshacer ${habit.name} de hoy` : `Marcar ${habit.name} como limpio hoy`
+            deshaciendo
+              ? `Confirmar que quieres quitar ${habit.name} de hoy`
+              : done
+                ? `${habit.name} está marcado hoy. Tocar para quitarlo.`
+                : `Marcar ${habit.name} de hoy`
           }
           className={`pulsable flex w-[76px] shrink-0 flex-col items-center justify-center gap-1 rounded-[22px] transition-colors disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-            done ? "bg-menta text-menta-tinta" : "bg-card text-label-3"
+            deshaciendo
+              ? "bg-ambar text-ambar-tinta"
+              : done
+                ? "bg-menta text-menta-tinta"
+                : "bg-card text-label-3"
           }`}
         >
-          <Check size={done ? 26 : 22} weight="bold" aria-hidden="true" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.05em]">
-            {done ? "Hecho" : "Marcar"}
+          {deshaciendo ? (
+            <ArrowCounterClockwise size={22} weight="bold" aria-hidden="true" />
+          ) : (
+            <Check size={done ? 26 : 22} weight="bold" aria-hidden="true" />
+          )}
+          <span className="text-center text-[10.5px] font-bold uppercase leading-[1.1] tracking-[0.04em]">
+            {deshaciendo ? "¿Quitar?" : done ? "Hecho" : "Marcar"}
           </span>
         </button>
       </div>

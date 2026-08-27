@@ -133,8 +133,18 @@ export default async function BitacoraPage() {
                     </span>
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
-                          {date === today ? "Hoy" : longDate(date)}
+                        {/* La fecha va siempre. Antes la de hoy decía solo
+                            "Hoy", y quien acababa de escribir su primera
+                            entrada veía una lista sin una sola fecha. */}
+                        <span className="flex items-baseline gap-2">
+                          {date === today && (
+                            <span className="rounded-md bg-azul px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] text-azul-tinta">
+                              Hoy
+                            </span>
+                          )}
+                          <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
+                            {longDate(date)}
+                          </span>
                         </span>
                         {cumplidos.length > 0 && (
                           <span

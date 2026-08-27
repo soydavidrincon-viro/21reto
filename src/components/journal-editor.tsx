@@ -3,6 +3,7 @@
 import { CheckCircle } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { saveJournal } from "@/app/(app)/hoy/actions";
+import { longDate } from "@/lib/dates";
 import { MOODS } from "@/lib/types";
 
 /**
@@ -50,6 +51,16 @@ export function JournalEditor({
 
   return (
     <div className="flex flex-col gap-3 rounded-[22px] bg-card p-4">
+      {/* El encabezado dice de qué día es esta caja. Sin él, ver el propio texto
+          ahí después de guardar parecía un borrador sin enviar y no lo que es:
+          la entrada de hoy, que se puede seguir editando hasta medianoche. */}
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="font-display text-[16px] font-semibold text-label">
+          Tu entrada de hoy
+        </h3>
+        <span className="text-[12.5px] text-label-3">{longDate(date)}</span>
+      </div>
+
       <div
         role="radiogroup"
         aria-label="Cómo te sentiste"
@@ -102,18 +113,23 @@ export function JournalEditor({
           {!dirty && guardado.mood && (
             <>
               <CheckCircle size={16} weight="fill" aria-hidden="true" />
-              Guardado
+              Guardada. La puedes editar hasta medianoche.
             </>
           )}
         </span>
-        <button
-          type="button"
-          onClick={save}
-          disabled={pending || !dirty || !mood}
-          className="pulsable h-11 rounded-xl bg-azul px-5 text-[15px] font-semibold text-azul-tinta disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-        >
-          {pending ? "Guardando…" : dirty ? "Guardar" : "Guardado"}
-        </button>
+        {/* El botón solo existe cuando hay algo sin guardar. Antes se quedaba
+            ahí apagado diciendo "Guardado" al lado de otro "Guardado", y dos
+            avisos de lo mismo se leen como que algo falló. */}
+        {(dirty || pending) && (
+          <button
+            type="button"
+            onClick={save}
+            disabled={pending || !mood}
+            className="pulsable h-11 shrink-0 rounded-xl bg-azul px-5 text-[15px] font-semibold text-azul-tinta disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          >
+            {pending ? "Guardando…" : guardado.mood ? "Guardar cambios" : "Guardar"}
+          </button>
+        )}
       </div>
     </div>
   );

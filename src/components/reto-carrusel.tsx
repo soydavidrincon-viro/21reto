@@ -1,0 +1,129 @@
+import { Companion, type CompanionKey } from "@/components/companion";
+import { HABIT_SKIN, type DailyOverviewRow } from "@/lib/types";
+
+/**
+ * Los retos activos, uno al lado del otro y con arrastre.
+ *
+ * Antes la tarjeta grande mostraba siempre el primer hábito y no había forma de
+ * ver el segundo ahí arriba: quien llevaba tres retos veía la portada de uno
+ * solo. Esto es scroll con `scroll-snap` y nada de JavaScript, así que funciona
+ * con el dedo en el teléfono, con la rueda en escritorio y sin hidratar.
+ */
+export function RetoCarrusel({
+  habits,
+  companion,
+  marcadosHoy,
+}: {
+  habits: DailyOverviewRow[];
+  companion: CompanionKey;
+  marcadosHoy: number;
+}) {
+  if (habits.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 lg:px-0"
+        style={{ scrollbarWidth: "none" }}
+        aria-label="Tus retos activos"
+      >
+        {habits.map((habit, i) => {
+          const skin = HABIT_SKIN[habit.color];
+          const progreso = Math.min(
+            100,
+            (habit.clean_days / habit.target_days) * 100,
+          );
+
+          return (
+            <section
+              key={habit.habit_id}
+              className="entrar relative w-full shrink-0 snap-center overflow-hidden rounded-[26px] px-5 pb-5 pt-6 lg:px-7 lg:pb-7 lg:pt-8"
+              style={{ background: skin.fondo, animationDelay: `${0.06 + i * 0.05}s` }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <span
+                    className="text-[11.5px] font-bold uppercase tracking-[0.1em] opacity-65"
+                    style={{ color: skin.tinta }}
+                  >
+                    {habit.kind === "build" ? "Hábito en marcha" : "Reto activo"}
+                    {habits.length > 1 && ` · ${i + 1} de ${habits.length}`}
+                  </span>
+                  <h2
+                    className="font-display text-[27px] font-semibold leading-[1.1] tracking-[-0.01em] lg:text-[32px]"
+                    style={{ color: skin.tinta }}
+                  >
+                    {habit.name}
+                  </h2>
+                </div>
+
+                <div className="flex flex-col items-end">
+                  <span
+                    className="tnum font-display text-[46px] font-bold leading-none tracking-[-0.03em] lg:text-[56px]"
+                    style={{ color: skin.tinta }}
+                  >
+                    {habit.clean_days}
+                  </span>
+                  <span
+                    className="tnum text-[13px] font-semibold opacity-70"
+                    style={{ color: skin.tinta }}
+                  >
+                    de {habit.target_days} días
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className="mt-4 h-2.5 overflow-hidden rounded-full"
+                style={{ background: "rgba(0,0,0,0.16)" }}
+                role="progressbar"
+                aria-valuenow={habit.clean_days}
+                aria-valuemin={0}
+                aria-valuemax={habit.target_days}
+                aria-label={`Progreso de ${habit.name}`}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${progreso}%`,
+                    background: skin.tinta,
+                    opacity: 0.9,
+                  }}
+                />
+              </div>
+
+              <div className="mt-4 flex items-end justify-between gap-3">
+                <p
+                  className="max-w-[62%] text-pretty text-[14px] leading-[1.4] opacity-80"
+                  style={{ color: skin.tinta }}
+                >
+                  {habit.current_streak === 0
+                    ? "Hoy puede ser el día uno."
+                    : `Llevas ${habit.current_streak} ${habit.current_streak === 1 ? "día seguido" : "días seguidos"}.`}
+                </p>
+                {/* El compañero solo asoma en la primera tarjeta: repetido en
+                    cada una parecería un adorno del componente y no alguien
+                    que te acompaña. */}
+                {i === 0 && (
+                  <Companion
+                    who={companion}
+                    size={92}
+                    mood={marcadosHoy > 0 ? "contento" : "normal"}
+                    className="flota -mb-5 shrink-0 lg:-mb-7"
+                    sombra={false}
+                  />
+                )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {habits.length > 1 && (
+        <p className="px-6 text-[12px] text-label-3 lg:px-0">
+          Desliza para ver tus otros retos.
+        </p>
+      )}
+    </div>
+  );
+}

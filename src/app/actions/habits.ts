@@ -8,6 +8,11 @@ import type { HabitColor, Profile } from "@/lib/types";
 
 export type NewHabit = {
   name: string;
+  /**
+   * Dejar algo o empezar algo. Se cuentan igual —un día hecho es un día
+   * hecho— y solo cambian las palabras que ve la persona.
+   */
+  kind: "quit" | "build";
   icon: string;
   color: HabitColor;
   targetDays: number;
@@ -56,6 +61,7 @@ export async function createHabit(input: NewHabit) {
   const { error } = await supabase.from("habits").insert({
     user_id: user.id,
     name,
+    kind: input.kind,
     icon: input.icon,
     color: input.color,
     target_days: input.targetDays,

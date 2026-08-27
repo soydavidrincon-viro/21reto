@@ -10,6 +10,11 @@ import {
   type Theme,
 } from "@/app/actions/profile";
 import { AvatarUploader } from "@/components/avatar-uploader";
+import {
+  COMPANIONS,
+  Companion,
+  type CompanionKey,
+} from "@/components/companion";
 import { detectTimeZone } from "@/lib/dates";
 import type { Profile } from "@/lib/types";
 
@@ -36,6 +41,9 @@ const THEMES: { key: Theme; label: string }[] = [
 export function ProfileSettings({ profile }: { profile: Profile }) {
   const [name, setName] = useState(profile.display_name ?? "");
   const [theme, setThemeState] = useState<Theme>(profile.theme);
+  const [companion, setCompanion] = useState<CompanionKey>(
+    profile.companion ?? "brote",
+  );
   const [confirmText, setConfirmText] = useState("");
   const [danger, setDanger] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -55,6 +63,22 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
     setThemeState(next);
     startTransition(async () => {
       await setTheme(next);
+    });
+  }
+
+  /**
+   * El compañero también se cambia desde aquí y no solo en el onboarding.
+   * Quien se registró antes de que existieran los personajes nunca pasó por esa
+   * pantalla, así que sin esto se quedaba con el que le tocó por defecto y sin
+   * forma de tocarlo.
+   */
+  function pickCompanion(clave: CompanionKey) {
+    setCompanion(clave);
+    startTransition(async () => {
+      const result = await updateProfile({ companion: clave });
+      setMessage(
+        result.error ?? `Ahora te acompaña ${COMPANIONS[clave].nombre}`,
+      );
     });
   }
 
@@ -123,6 +147,52 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
               Guardar
             </button>
           </div>
+        </section>
+
+        <section className="flex flex-col gap-[7px]">
+          <span className="px-8 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+            Tu compañero
+          </span>
+          <div
+            role="radiogroup"
+            aria-label="Compañero"
+            className="mx-4 grid grid-cols-4 gap-2 lg:mx-0"
+          >
+            {(Object.keys(COMPANIONS) as CompanionKey[]).map((clave) => {
+              const elegido = companion === clave;
+              return (
+                <button
+                  key={clave}
+                  type="button"
+                  role="radio"
+                  aria-checked={elegido}
+                  disabled={pending}
+                  onClick={() => pickCompanion(clave)}
+                  className={`pulsable flex flex-col items-center gap-1 rounded-[18px] px-1 pb-2.5 pt-3 transition-all disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+                    elegido ? "ring-2 ring-label" : "opacity-70"
+                  }`}
+                  style={{ background: COMPANIONS[clave].fondo }}
+                >
+                  <Companion
+                    who={clave}
+                    size={54}
+                    sombra={false}
+                    className={elegido ? "flota" : ""}
+                    mood={elegido ? "contento" : "normal"}
+                  />
+                  <span
+                    className="font-display text-[13px] font-semibold"
+                    style={{ color: COMPANIONS[clave].tinta }}
+                  >
+                    {COMPANIONS[clave].nombre}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="px-8 text-[12.5px] leading-[1.4] text-label-2 lg:px-0">
+            {COMPANIONS[companion].frase}
+          </p>
         </section>
 
         <section className="flex flex-col gap-[7px]">

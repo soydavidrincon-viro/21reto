@@ -2,11 +2,17 @@
 
 import { Check } from "@phosphor-icons/react";
 import { HabitIcon } from "@/components/habit-icon";
-import { COMPANIONS, Companion, type CompanionKey } from "@/components/companion";
+import {
+  COMPANIONS,
+  Companion,
+  type CompanionKey,
+} from "@/components/companion";
 import { useState, useTransition } from "react";
 import { createHabit } from "@/app/actions/habits";
 import { detectTimeZone } from "@/lib/dates";
 import type { HabitColor } from "@/lib/types";
+
+type Preset = { name: string; icon: string; color: HabitColor };
 
 /**
  * Los sospechosos habituales, con color e icono ya elegidos.
@@ -15,7 +21,7 @@ import type { HabitColor } from "@/lib/types";
  * sistema, y el hábito de alguien no debería cambiar de cara según el teléfono
  * con que abra la app.
  */
-const PRESETS: { name: string; icon: string; color: HabitColor }[] = [
+const DEJAR: Preset[] = [
   { name: "Alcohol", icon: "alcohol", color: "blue" },
   { name: "Nicotina", icon: "nicotina", color: "orange" },
   { name: "Azúcar", icon: "azucar", color: "pink" },
@@ -26,10 +32,31 @@ const PRESETS: { name: string; icon: string; color: HabitColor }[] = [
   { name: "Videojuegos", icon: "videojuegos", color: "purple" },
 ];
 
+/**
+ * Dejar algo y empezar algo no son el mismo trabajo, pero se cuentan igual: un
+ * día hecho es un día hecho. Por eso comparten tabla, racha y calendario, y lo
+ * único que cambia es `kind`, los presets y las palabras.
+ */
+const EMPEZAR: Preset[] = [
+  { name: "Ejercicio", icon: "ejercicio", color: "orange" },
+  { name: "Correr", icon: "correr", color: "green" },
+  { name: "Leer", icon: "leer", color: "purple" },
+  { name: "Meditar", icon: "meditar", color: "green" },
+  { name: "Tomar agua", icon: "agua", color: "blue" },
+  { name: "Dormir temprano", icon: "dormir", color: "purple" },
+  { name: "Escribir", icon: "escribir", color: "yellow" },
+  { name: "Estudiar", icon: "mente", color: "blue" },
+];
+
 const DURATIONS = [21, 30, 60, 90];
 
-export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boolean }) {
-  const [preset, setPreset] = useState<(typeof PRESETS)[number] | null>(null);
+export function HabitForm({
+  finishOnboarding = false,
+}: {
+  finishOnboarding?: boolean;
+}) {
+  const [kind, setKind] = useState<"quit" | "build">("quit");
+  const [preset, setPreset] = useState<Preset | null>(null);
   const [custom, setCustom] = useState("");
   const [targetDays, setTargetDays] = useState(21);
   const [policy, setPolicy] = useState<"reset" | "continue">("continue");
@@ -39,12 +66,15 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
 
   const name = preset?.name ?? custom;
   const ready = name.trim().length > 0;
+  const dejar = kind === "quit";
+  const presets = dejar ? DEJAR : EMPEZAR;
 
   function submit() {
     setError(null);
     startTransition(async () => {
       const result = await createHabit({
         name,
+        kind,
         icon: preset?.icon ?? "otro",
         color: preset?.color ?? "blue",
         targetDays,
@@ -59,8 +89,39 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
 
   return (
     <div className="flex flex-1 flex-col gap-6">
+      <div
+        role="radiogroup"
+        aria-label="Tipo de hábito"
+        className="mx-4 flex gap-0.5 rounded-[11px] bg-fill p-0.5"
+      >
+        {(
+          [
+            ["quit", "Quiero dejar"],
+            ["build", "Quiero empezar"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={kind === value}
+            onClick={() => {
+              setKind(value);
+              setPreset(null);
+            }}
+            className={`flex h-[38px] w-full items-center justify-center rounded-[9px] text-[14px] font-medium tracking-[-0.01em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+              kind === value
+                ? "bg-segment text-label shadow-sm"
+                : "text-label-2"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-wrap gap-2.5 px-5">
-        {PRESETS.map((option) => {
+        {presets.map((option) => {
           const active = preset?.name === option.name;
           return (
             <button
@@ -78,7 +139,11 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
                 active ? "bg-azul text-azul-tinta" : "bg-card text-label"
               }`}
             >
-              <HabitIcon clave={option.icon} size={18} weight={active ? "fill" : "regular"} />
+              <HabitIcon
+                clave={option.icon}
+                size={18}
+                weight={active ? "fill" : "regular"}
+              />
               {option.name}
             </button>
           );
@@ -100,7 +165,9 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
             setPreset(null);
           }}
           maxLength={80}
-          placeholder="Lo que quieres dejar"
+          placeholder={
+            dejar ? "Lo que quieres dejar" : "Lo que quieres empezar"
+          }
           className="mx-4 h-[50px] rounded-2xl bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         />
       </div>
@@ -124,9 +191,7 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
                 aria-checked={active}
                 onClick={() => setTargetDays(days)}
                 className={`tnum flex h-[38px] w-full items-center justify-center rounded-[7px] text-[14px] font-medium tracking-[-0.01em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-                  active
-                    ? "bg-segment text-label shadow-sm"
-                    : "text-label-2"
+                  active ? "bg-segment text-label shadow-sm" : "text-label-2"
                 }`}
               >
                 {days === 21 ? "21 días" : days}
@@ -185,13 +250,23 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
 
       <div className="flex flex-col gap-[7px]">
         <span className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
-          Si tengo una recaída
+          {dejar ? "Si tengo una recaída" : "Si me salto un día"}
         </span>
         <div className="mx-4 overflow-hidden rounded-2xl bg-card">
           {(
             [
-              ["continue", "Sigo contando", "El reto continúa y la recaída queda registrada"],
-              ["reset", "Vuelvo a empezar de cero", "La racha se reinicia ese día"],
+              [
+                "continue",
+                "Sigo contando",
+                dejar
+                  ? "El reto continúa y la recaída queda registrada"
+                  : "El reto continúa y el día saltado queda registrado",
+              ],
+              [
+                "reset",
+                "Vuelvo a empezar de cero",
+                "La racha se reinicia ese día",
+              ],
             ] as const
           ).map(([value, title, detail], i) => (
             <div key={value}>
@@ -207,10 +282,17 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
                   <span className="text-[17px] font-medium tracking-[-0.02em] text-label">
                     {title}
                   </span>
-                  <span className="text-[13px] tracking-[-0.01em] text-label-2">{detail}</span>
+                  <span className="text-[13px] tracking-[-0.01em] text-label-2">
+                    {detail}
+                  </span>
                 </span>
                 {policy === value && (
-                  <Check size={22} weight="bold" className="text-azul" aria-hidden="true" />
+                  <Check
+                    size={22}
+                    weight="bold"
+                    className="text-azul"
+                    aria-hidden="true"
+                  />
                 )}
               </button>
             </div>
@@ -220,7 +302,10 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
 
       <div className="mt-auto flex flex-col gap-3 px-5 pt-4">
         {error && (
-          <p role="alert" className="text-center text-[13px] leading-[1.35] text-rojo">
+          <p
+            role="alert"
+            className="text-center text-[13px] leading-[1.35] text-rojo"
+          >
             {error}
           </p>
         )}

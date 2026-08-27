@@ -55,7 +55,7 @@ export function MilestoneCelebration({
           style={{ top: "max(env(safe-area-inset-top), 16px)" }}
         >
           <div className="flex items-center gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ambar text-ambar-tinta">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-naranja text-naranja-tinta">
               <Confetti size={24} weight="fill" aria-hidden="true" />
             </span>
             <div className="flex flex-col gap-0.5">
