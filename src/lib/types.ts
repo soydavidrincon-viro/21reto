@@ -135,3 +135,16 @@ export type CravingSummary = {
  * aquí, la app enseña cuántos faltan.
  */
 export const MIN_PARA_HABLAR = 8;
+
+/**
+ * Cómo se lee un hábito dentro de una frase: "sin alcohol", "de ejercicio".
+ *
+ * Dos trampas que aparecieron al escribir la tarjeta compartible. Una: los
+ * hábitos que se construyen no van con "sin" — "21 días sin ejercicio" dice lo
+ * contrario de lo que pasó. Otra: mucha gente bautiza el suyo "Sin alcohol",
+ * y concatenar a ciegas daba "días sin sin alcohol".
+ */
+export function comoSeLee(kind: "quit" | "build", name: string): string {
+  const limpio = name.trim().replace(/^sin\s+/i, "").toLowerCase();
+  return kind === "build" ? `de ${limpio}` : `sin ${limpio}`;
+}

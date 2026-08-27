@@ -1,4 +1,9 @@
-import { Companion, type CompanionKey } from "@/components/companion";
+import {
+  Companion,
+  type CompanionEtapa,
+  type CompanionKey,
+  type CompanionMood,
+} from "@/components/companion";
 import { HABIT_SKIN, type DailyOverviewRow } from "@/lib/types";
 
 /**
@@ -12,13 +17,19 @@ import { HABIT_SKIN, type DailyOverviewRow } from "@/lib/types";
 export function RetoCarrusel({
   habits,
   companion,
-  marcadosHoy,
+  humor,
+  etapa,
 }: {
   habits: DailyOverviewRow[];
   companion: CompanionKey;
-  marcadosHoy: number;
+  humor: CompanionMood;
+  etapa: CompanionEtapa;
 }) {
-  if (habits.length === 0) return null;
+  // Los retos cumplidos tienen su propia tarjeta de cierre arriba, así que
+  // aquí solo van los que siguen en marcha. Repetirlos sería enseñar dos veces
+  // lo mismo y una de las dos con la barra congelada en el tope.
+  const enMarcha = habits.filter((h) => h.clean_days < h.target_days);
+  if (enMarcha.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -27,7 +38,7 @@ export function RetoCarrusel({
         style={{ scrollbarWidth: "none" }}
         aria-label="Tus retos activos"
       >
-        {habits.map((habit, i) => {
+        {enMarcha.map((habit, i) => {
           const skin = HABIT_SKIN[habit.color];
           const progreso = Math.min(
             100,
@@ -38,7 +49,10 @@ export function RetoCarrusel({
             <section
               key={habit.habit_id}
               className="entrar relative w-full shrink-0 snap-center overflow-hidden rounded-[26px] px-5 pb-5 pt-6 lg:px-7 lg:pb-7 lg:pt-8"
-              style={{ background: skin.fondo, animationDelay: `${0.06 + i * 0.05}s` }}
+              style={{
+                background: skin.fondo,
+                animationDelay: `${0.06 + i * 0.05}s`,
+              }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex flex-col gap-1">
@@ -46,8 +60,10 @@ export function RetoCarrusel({
                     className="text-[11.5px] font-bold uppercase tracking-[0.1em] opacity-65"
                     style={{ color: skin.tinta }}
                   >
-                    {habit.kind === "build" ? "Hábito en marcha" : "Reto activo"}
-                    {habits.length > 1 && ` · ${i + 1} de ${habits.length}`}
+                    {habit.kind === "build"
+                      ? "Hábito en marcha"
+                      : "Reto activo"}
+                    {enMarcha.length > 1 && ` · ${i + 1} de ${enMarcha.length}`}
                   </span>
                   <h2
                     className="font-display text-[27px] font-semibold leading-[1.1] tracking-[-0.01em] lg:text-[32px]"
@@ -108,8 +124,9 @@ export function RetoCarrusel({
                   <Companion
                     who={companion}
                     size={92}
-                    mood={marcadosHoy > 0 ? "contento" : "normal"}
-                    className="flota -mb-5 shrink-0 lg:-mb-7"
+                    mood={humor}
+                    etapa={etapa}
+                    className={`-mb-5 shrink-0 lg:-mb-7 ${humor === "apagado" ? "" : "flota"}`}
                     sombra={false}
                   />
                 )}
@@ -119,7 +136,7 @@ export function RetoCarrusel({
         })}
       </div>
 
-      {habits.length > 1 && (
+      {enMarcha.length > 1 && (
         <p className="px-6 text-[12px] text-label-3 lg:px-0">
           Desliza para ver tus otros retos.
         </p>

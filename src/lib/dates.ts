@@ -12,6 +12,38 @@ export function todayIn(timeZone: string): string {
   return formatInTimeZone(new Date(), timeZone, "yyyy-MM-dd");
 }
 
+/**
+ * El "ahora" del usuario partido en día, hora y día de la semana.
+ *
+ * Sale de la zona del perfil, nunca del reloj del servidor. Lo usan el registro
+ * de antojos —donde todo el análisis cuelga de esa hora— y el compañero, que se
+ * duerme de noche. `en-US` con hourCycle h23 devuelve 0..23 de forma estable sin
+ * que el locale del servidor intervenga.
+ */
+export function zonedNow(timeZone: string): {
+  date: string;
+  hour: number;
+  dow: number;
+} {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    hourCycle: "h23",
+    weekday: "short",
+  }).formatToParts(new Date());
+
+  const DIAS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return {
+    date: todayIn(timeZone),
+    hour: Number(partes.find((p) => p.type === "hour")?.value ?? "0"),
+    dow: Math.max(
+      0,
+      DIAS.indexOf(partes.find((p) => p.type === "weekday")?.value ?? "Sun"),
+    ),
+  };
+}
+
 /** Zona horaria del navegador, para sembrar el perfil en el primer ingreso. */
 export function detectTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -27,12 +59,17 @@ export function shiftISO(dateISO: string, days: number): string {
   return format(addDays(parseISO(dateISO), days), "yyyy-MM-dd");
 }
 
+/** Los últimos n días que terminan en `todayISO`, del más viejo al más nuevo. */
+export function lastNDays(todayISO: string, n: number): string[] {
+  return Array.from({ length: n }, (_, i) => shiftISO(todayISO, i - (n - 1)));
+}
+
 /**
  * Los siete días que terminan en `todayISO`, del más viejo al más nuevo.
  * Es la tira de fechas de la pantalla Hoy y la fila de checks del detalle.
  */
 export function lastSevenDays(todayISO: string): string[] {
-  return Array.from({ length: 7 }, (_, i) => shiftISO(todayISO, i - 6));
+  return lastNDays(todayISO, 7);
 }
 
 const WEEKDAY_INITIALS = ["D", "L", "M", "M", "J", "V", "S"];

@@ -1,13 +1,21 @@
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CierreDeReto } from "@/components/cierre-de-reto";
 import { CravingButton } from "@/components/craving-button";
 import { HabitCard } from "@/components/habit-card";
 import { RetoCarrusel } from "@/components/reto-carrusel";
 import { Isotipo } from "@/components/logo";
 import { MoodPicker } from "@/components/mood-picker";
-import { daysBetween, longDate, shiftISO, todayIn } from "@/lib/dates";
+import {
+  daysBetween,
+  longDate,
+  shiftISO,
+  todayIn,
+  zonedNow,
+} from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { etapaDeRacha, type CompanionMood } from "@/components/companion";
 import type { DailyOverviewRow, Profile, Quote } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +69,34 @@ export default async function HoyPage() {
   const frase = ((quote.data ?? []) as Quote[])[0];
   const firstName = profile.display_name?.split(" ")[0] ?? "";
   const marcadosHoy = habits.filter((h) => h.today_status === "success").length;
+  const rachaViva = habits.reduce(
+    (max, h) => Math.max(max, h.current_streak),
+    0,
+  );
+
+  // Los retos que ya llegaron a su meta. Van arriba de todo porque son la única
+  // cosa de la pantalla que pide una decisión.
+  const cumplidos = habits.filter((h) => h.clean_days >= h.target_days);
+
+  /**
+   * De qué humor está el compañero. Sale del estado real, no de un valor fijo:
+   * un muñeco que se ve igual el día que llevas veinte seguidos y el día que
+   * acabas de romper la racha no está diciendo nada.
+   *
+   * La hora es la del perfil, no la del servidor. Sin eso, alguien en México
+   * vería a su compañero dormido a las seis de la tarde.
+   */
+  const { hour: horaLocal } = zonedNow(profile.timezone);
+  const esDeNoche = horaLocal >= 23 || horaLocal < 6;
+  const rompioLaRacha = rachaViva === 0 && habits.some((h) => h.clean_days > 0);
+
+  const humor: CompanionMood = esDeNoche
+    ? "dormido"
+    : rompioLaRacha
+      ? "apagado"
+      : marcadosHoy > 0
+        ? "contento"
+        : "normal";
 
   // Una entrada propia del pasado, elegida de forma estable para el día: si
   // cambiara en cada recarga dejaría de ser un recuerdo y sería una ruleta.
@@ -101,11 +137,24 @@ export default async function HoyPage() {
 
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-6">
         <div className="flex flex-col gap-4">
+          {cumplidos.length > 0 && (
+            <div className="flex flex-col gap-3 px-4 lg:px-0">
+              {cumplidos.map((habit) => (
+                <CierreDeReto
+                  key={habit.habit_id}
+                  habit={habit}
+                  companion={profile.companion ?? "brote"}
+                />
+              ))}
+            </div>
+          )}
+
           {habits.length > 0 && (
             <div className="px-4 lg:px-0">
               <CravingButton
                 habits={habits}
                 companion={profile.companion ?? "brote"}
+                etapa={etapaDeRacha(rachaViva)}
                 hoy={antojosHoy.count ?? 0}
               />
             </div>
@@ -114,7 +163,8 @@ export default async function HoyPage() {
           <RetoCarrusel
             habits={habits}
             companion={profile.companion ?? "brote"}
-            marcadosHoy={marcadosHoy}
+            humor={humor}
+            etapa={etapaDeRacha(rachaViva)}
           />
 
           <section className="flex flex-col gap-2.5">

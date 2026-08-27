@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { todayIn } from "@/lib/dates";
+import { zonedNow } from "@/lib/dates";
 import type { Profile } from "@/lib/types";
 
 export type NuevoAntojo = {
@@ -42,23 +42,11 @@ export async function logCraving(input: NuevoAntojo) {
     .single<Pick<Profile, "timezone">>();
 
   const zone = profile?.timezone ?? "UTC";
-  const localDate = todayIn(zone);
-
-  // La hora y el día de la semana en la zona del perfil. `en-US` con hourCycle
-  // h23 devuelve 0..23 de forma estable; el locale del servidor no interviene.
-  const partes = new Intl.DateTimeFormat("en-US", {
-    timeZone: zone,
-    hour: "2-digit",
-    hourCycle: "h23",
-    weekday: "short",
-  }).formatToParts(new Date());
-
-  const localHour = Number(partes.find((p) => p.type === "hour")?.value ?? "0");
-  const DIAS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const localDow = Math.max(
-    0,
-    DIAS.indexOf(partes.find((p) => p.type === "weekday")?.value ?? "Sun"),
-  );
+  const {
+    date: localDate,
+    hour: localHour,
+    dow: localDow,
+  } = zonedNow(zone);
 
   const { error } = await supabase.from("cravings").insert({
     user_id: user.id,

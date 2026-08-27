@@ -2,7 +2,11 @@
 
 import { Waves } from "@phosphor-icons/react";
 import { useState } from "react";
-import { Companion, type CompanionKey } from "@/components/companion";
+import {
+  Companion,
+  type CompanionEtapa,
+  type CompanionKey,
+} from "@/components/companion";
 import { CravingSheet } from "@/components/craving-sheet";
 import type { DailyOverviewRow } from "@/lib/types";
 
@@ -26,10 +30,12 @@ import type { DailyOverviewRow } from "@/lib/types";
 export function CravingButton({
   habits,
   companion,
+  etapa,
   hoy,
 }: {
   habits: DailyOverviewRow[];
   companion: CompanionKey;
+  etapa: CompanionEtapa;
   /** Cuántos antojos van hoy. Cambia el texto: el primero no es el tercero. */
   hoy: number;
 }) {
@@ -61,6 +67,7 @@ export function CravingButton({
           who={companion}
           size={58}
           mood="normal"
+          etapa={etapa}
           sombra={false}
           className="flota -mb-4 -mr-1 shrink-0"
         />

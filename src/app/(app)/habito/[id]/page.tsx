@@ -2,6 +2,7 @@ import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
 import { HabitIcon } from "@/components/habit-icon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { CompartirTarjeta } from "@/components/compartir-tarjeta";
 import { HabitActions } from "@/components/habit-actions";
 import { MonthHeatmap } from "@/components/month-heatmap";
 import { monthGrid, monthName, todayIn } from "@/lib/dates";
@@ -130,6 +131,10 @@ export default async function HabitoPage({
             today={today}
             todayStatus={todayStatus}
           />
+
+          <div className="mx-4 lg:mx-0">
+            <CompartirTarjeta habitId={habit.id} nombre={habit.name} />
+          </div>
         </div>
 
         <section className="mx-4 flex flex-col gap-3 rounded-[22px] bg-card px-3.5 py-4 lg:mx-0 lg:px-5 lg:py-5">
