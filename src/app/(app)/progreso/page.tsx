@@ -1,10 +1,11 @@
 import { Plant } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
+import { CravingGrid } from "@/components/craving-grid";
 import { MoodLine } from "@/components/mood-line";
 import { WeeklyBars } from "@/components/weekly-bars";
 import { lastSevenDays, shiftISO, todayIn, weekdayInitial } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/lib/types";
+import type { CravingGridCell, CravingSummary, Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Progreso · Antídoto" };
@@ -52,6 +53,21 @@ export default async function ProgresoPage() {
     .from("habit_logs")
     .select("id", { count: "exact", head: true })
     .eq("status", "success");
+
+  // Los antojos de los últimos 90 días. Más atrás la vida de alguien ya cambió
+  // y el patrón de hace medio año no describe el de ahora.
+  const desdeAntojos = shiftISO(today, -90);
+  const [rejilla, resumenAntojos] = await Promise.all([
+    supabase.rpc("get_craving_grid", { p_since: desdeAntojos }),
+    supabase.rpc("get_craving_summary", { p_since: desdeAntojos }),
+  ]);
+
+  const celdas = ((rejilla.data ?? []) as CravingGridCell[]).map((c) => ({
+    ...c,
+    total: Number(c.total),
+    resisted: Number(c.resisted),
+  }));
+  const resumen = ((resumenAntojos.data ?? []) as CravingSummary[])[0] ?? null;
 
   const weeks = Array.from({ length: WEEKS }, (_, i) => {
     const start = shiftISO(firstMonday, i * 7);
@@ -127,6 +143,38 @@ export default async function ProgresoPage() {
         <span className="tnum shrink-0 rounded-lg bg-fill px-2.5 py-1.5 text-[13px] font-semibold text-label-2">
           {activeHabits ?? 0} {activeHabits === 1 ? "hábito" : "hábitos"}
         </span>
+      </section>
+
+      <section
+        className="entrar flex flex-col gap-2.5"
+        style={{ animationDelay: "0.09s" }}
+      >
+        <h2 className="px-6 text-[12.5px] lg:px-0 font-bold uppercase tracking-[0.08em] text-label-3">
+          Tus antojos
+        </h2>
+        <div className="mx-4 lg:mx-0">
+          <CravingGrid
+            celdas={celdas}
+            resumen={
+              resumen
+                ? {
+                    ...resumen,
+                    total: Number(resumen.total),
+                    resisted: Number(resumen.resisted),
+                    caved: Number(resumen.caved),
+                    top_trigger_total:
+                      resumen.top_trigger_total === null
+                        ? null
+                        : Number(resumen.top_trigger_total),
+                    top_block_total:
+                      resumen.top_block_total === null
+                        ? null
+                        : Number(resumen.top_block_total),
+                  }
+                : null
+            }
+          />
+        </div>
       </section>
 
       {/* Dos gráficas en paralelo: en escritorio, apiladas dejaban una barra de

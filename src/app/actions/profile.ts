@@ -89,11 +89,12 @@ export async function exportData() {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión.", data: null };
 
-  const [profile, habits, logs, journal] = await Promise.all([
+  const [profile, habits, logs, journal, cravings] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("habits").select("*").order("created_at"),
     supabase.from("habit_logs").select("*").order("log_date"),
     supabase.from("journal_entries").select("*").order("entry_date"),
+    supabase.from("cravings").select("*").order("logged_at"),
   ]);
 
   return {
@@ -104,6 +105,7 @@ export async function exportData() {
       habitos: habits.data ?? [],
       registros: logs.data ?? [],
       bitacora: journal.data ?? [],
+      antojos: cravings.data ?? [],
     },
   };
 }

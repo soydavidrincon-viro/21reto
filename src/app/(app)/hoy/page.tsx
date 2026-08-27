@@ -1,11 +1,12 @@
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CravingButton } from "@/components/craving-button";
 import { HabitCard } from "@/components/habit-card";
 import { RetoCarrusel } from "@/components/reto-carrusel";
 import { Isotipo } from "@/components/logo";
 import { MoodPicker } from "@/components/mood-picker";
-import { longDate, todayIn } from "@/lib/dates";
+import { daysBetween, longDate, shiftISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import type { DailyOverviewRow, Profile, Quote } from "@/lib/types";
 
@@ -30,7 +31,7 @@ export default async function HoyPage() {
   // El día se resuelve con la zona horaria del perfil, no con la del servidor.
   const today = todayIn(profile.timezone);
 
-  const [overview, quote, entry] = await Promise.all([
+  const [overview, quote, entry, pasadas, antojosHoy] = await Promise.all([
     supabase.rpc("get_daily_overview", { p_date: today }),
     supabase.rpc("get_daily_quote", { p_date: today }),
     supabase
@@ -39,12 +40,37 @@ export default async function HoyPage() {
       .eq("user_id", user.id)
       .eq("entry_date", today)
       .maybeSingle(),
+    // Para "tus propias palabras". Se piden las de los últimos tres meses
+    // menos la de hoy: releerse a uno mismo de hace dos semanas dice más que
+    // una frase de un desconocido, y mejora sola con el uso.
+    supabase
+      .from("journal_entries")
+      .select("entry_date, note")
+      .not("note", "is", null)
+      .lt("entry_date", today)
+      .gte("entry_date", shiftISO(today, -90))
+      .order("entry_date", { ascending: false })
+      .limit(40),
+    supabase
+      .from("cravings")
+      .select("id", { count: "exact", head: true })
+      .eq("local_date", today),
   ]);
 
   const habits = (overview.data ?? []) as DailyOverviewRow[];
   const frase = ((quote.data ?? []) as Quote[])[0];
   const firstName = profile.display_name?.split(" ")[0] ?? "";
   const marcadosHoy = habits.filter((h) => h.today_status === "success").length;
+
+  // Una entrada propia del pasado, elegida de forma estable para el día: si
+  // cambiara en cada recarga dejaría de ser un recuerdo y sería una ruleta.
+  // Hacen falta tres para que no sea siempre la misma los primeros días.
+  const conNota = (pasadas.data ?? []).filter((e) =>
+    (e.note as string | null)?.trim(),
+  );
+  const semilla = Number(today.replaceAll("-", ""));
+  const recuerdo =
+    conNota.length >= 3 ? conNota[semilla % conNota.length] : null;
   const totalLimpios = habits.reduce((suma, h) => suma + h.clean_days, 0);
   const mejorRacha = habits.reduce((max, h) => Math.max(max, h.best_streak), 0);
 
@@ -75,6 +101,16 @@ export default async function HoyPage() {
 
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-6">
         <div className="flex flex-col gap-4">
+          {habits.length > 0 && (
+            <div className="px-4 lg:px-0">
+              <CravingButton
+                habits={habits}
+                companion={profile.companion ?? "brote"}
+                hoy={antojosHoy.count ?? 0}
+              />
+            </div>
+          )}
+
           <RetoCarrusel
             habits={habits}
             companion={profile.companion ?? "brote"}
@@ -182,15 +218,33 @@ export default async function HoyPage() {
             </section>
           )}
 
-          {frase && (
+          {/* Tus propias palabras antes que las de nadie más. La frase del
+              catálogo solo aparece mientras todavía no hay historial que
+              releer. */}
+          {recuerdo ? (
             <section
-              className="entrar mx-4 rounded-[22px] bg-card px-5 py-4 lg:mx-0 lg:px-6 lg:py-6"
+              className="entrar mx-4 flex flex-col gap-2 rounded-[22px] bg-card px-5 py-4 lg:mx-0 lg:px-6 lg:py-6"
               style={{ animationDelay: "0.12s" }}
             >
-              <p className="text-pretty font-display text-[16px] font-medium leading-[1.4] text-label lg:text-[19px] lg:leading-[1.45]">
-                {frase.text}
+              <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
+                Tú escribiste, hace{" "}
+                {daysBetween(recuerdo.entry_date as string, today)} días
+              </span>
+              <p className="text-pretty font-display text-[16px] font-medium leading-[1.45] text-label lg:text-[18px]">
+                {recuerdo.note as string}
               </p>
             </section>
+          ) : (
+            frase && (
+              <section
+                className="entrar mx-4 rounded-[22px] bg-card px-5 py-4 lg:mx-0 lg:px-6 lg:py-6"
+                style={{ animationDelay: "0.12s" }}
+              >
+                <p className="text-pretty font-display text-[16px] font-medium leading-[1.4] text-label lg:text-[19px] lg:leading-[1.45]">
+                  {frase.text}
+                </p>
+              </section>
+            )
           )}
 
           <section className="flex flex-col gap-2.5">

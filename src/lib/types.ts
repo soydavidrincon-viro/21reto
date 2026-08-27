@@ -76,3 +76,62 @@ export const MOODS = [
 ] as const;
 
 export const MOOD_BY_KEY = new Map(MOODS.map((mood) => [mood.key as string, mood]));
+
+/**
+ * Los disparadores de un antojo. Lista cerrada a propósito: con texto libre
+ * cada quien escribe "estres", "estrés" y "mucho estres", y agrupar se vuelve
+ * imposible — que es justo para lo que existe el registro. El matiz va en la
+ * nota.
+ */
+export const CRAVING_TRIGGERS = [
+  { key: "estres", label: "Estrés" },
+  { key: "aburrimiento", label: "Aburrimiento" },
+  { key: "gente", label: "La gente" },
+  { key: "lugar", label: "El lugar" },
+  { key: "celebracion", label: "Celebración" },
+  { key: "tristeza", label: "Tristeza" },
+  { key: "otro", label: "Otro" },
+] as const;
+
+export const TRIGGER_BY_KEY = new Map(
+  CRAVING_TRIGGERS.map((t) => [t.key as string, t]),
+);
+
+/** Los seis bloques de cuatro horas de la rejilla de antojos. */
+export const CRAVING_BLOCKS = [
+  "12–4 a.m.",
+  "4–8 a.m.",
+  "8 a.m.–12",
+  "12–4 p.m.",
+  "4–8 p.m.",
+  "8 p.m.–12",
+];
+
+export const DOW_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+export type CravingGridCell = {
+  dow: number;
+  block: number;
+  total: number;
+  resisted: number;
+};
+
+export type CravingSummary = {
+  total: number;
+  resisted: number;
+  caved: number;
+  top_trigger: string | null;
+  top_trigger_total: number | null;
+  top_dow: number | null;
+  top_block: number | null;
+  top_block_total: number | null;
+};
+
+/**
+ * Cuántos antojos hacen falta antes de que la app afirme algo.
+ *
+ * Con cuatro registros cualquier "patrón" es ruido, y decirle a alguien "tu
+ * hora difícil son los martes" con esa muestra sería inventar. Hasta llegar
+ * aquí, la app enseña cuántos faltan.
+ */
+export const MIN_PARA_HABLAR = 8;
