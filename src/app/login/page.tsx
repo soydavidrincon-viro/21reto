@@ -1,20 +1,50 @@
 "use client";
 
+import { GoogleLogo } from "@phosphor-icons/react";
 import { useState } from "react";
 import { detectTimeZone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Entrada por magic link: sin contraseñas que recordar ni recuperar. La zona
- * horaria detectada viaja en los metadatos para sembrar el perfil apenas se
- * cree la cuenta.
+ * Dos formas de entrar, y el orden importa.
+ *
+ * Google va primero porque no manda ningún correo: la dirección ya viene
+ * verificada, así que no depende del servidor de correo ni de que el mensaje
+ * esquive la carpeta de spam.
+ *
+ * El enlace por correo se queda como alternativa y no como respaldo técnico.
+ * Antídoto trackea alcohol, porno y apuestas; hay gente que no quiere eso atado
+ * a su cuenta principal de Google, y quitarles la salida sería empujarlos a algo
+ * que no querían o dejarlos fuera.
+ *
+ * Ninguna de las dos usa contraseña, así que no hay nada que olvidar ni que
+ * recuperar: quien no puede entrar pide otro enlace.
  */
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [showEmail, setShowEmail] = useState(false);
 
-  async function submit(event: React.FormEvent) {
+  async function withGoogle() {
+    setError(null);
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { prompt: "select_account" },
+      },
+    });
+
+    if (error) {
+      setError("No pudimos abrir Google. Prueba con tu correo.");
+      setShowEmail(true);
+    }
+  }
+
+  async function withEmail(event: React.FormEvent) {
     event.preventDefault();
     setState("sending");
     setError(null);
@@ -50,43 +80,68 @@ export default function LoginPage() {
           <p className="text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label-2">
             {state === "sent"
               ? `Te mandamos un enlace a ${email}. Ábrelo desde este mismo teléfono.`
-              : "Te enviamos un enlace por correo. Sin contraseñas."}
+              : "Sin contraseñas. Elige por dónde prefieres entrar."}
           </p>
         </div>
 
         {state !== "sent" && (
-          <form onSubmit={submit} className="flex flex-col gap-3">
-            <label className="sr-only" htmlFor="email">
-              Correo electrónico
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              inputMode="email"
-              placeholder="tu@correo.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="h-[50px] rounded-[14px] bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
-            />
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={withGoogle}
+              className="flex h-[50px] items-center justify-center gap-2.5 rounded-[14px] bg-label text-[17px] font-semibold tracking-[-0.02em] text-grouped focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+            >
+              <GoogleLogo size={20} weight="bold" aria-hidden="true" />
+              Continuar con Google
+            </button>
+
+            {showEmail ? (
+              <form onSubmit={withEmail} className="flex flex-col gap-3">
+                <label className="sr-only" htmlFor="email">
+                  Correo electrónico
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  autoFocus
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="tu@correo.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="h-[50px] rounded-[14px] bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+                />
+                <button
+                  type="submit"
+                  disabled={state === "sending"}
+                  className="flex h-[50px] items-center justify-center rounded-[14px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+                >
+                  {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowEmail(true)}
+                className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+              >
+                Prefiero un enlace a mi correo
+              </button>
+            )}
 
             {error && (
-              <p role="alert" className="text-[13px] leading-[1.35] text-red">
+              <p role="alert" className="text-center text-[13px] leading-[1.35] text-red">
                 {error}
               </p>
             )}
-
-            <button
-              type="submit"
-              disabled={state === "sending"}
-              className="flex h-[50px] items-center justify-center rounded-[14px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
-            >
-              {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
-            </button>
-          </form>
+          </div>
         )}
       </div>
+
+      <p className="text-pretty text-center text-[12px] leading-[1.4] text-label-2">
+        Nadie más que tú ve lo que registras aquí.
+      </p>
     </main>
   );
 }

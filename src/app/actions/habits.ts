@@ -14,6 +14,13 @@ export type NewHabit = {
   relapsePolicy: "reset" | "continue";
   /** Solo en el alta inicial: cierra el onboarding al crear el primer hábito. */
   finishOnboarding?: boolean;
+  /**
+   * Zona horaria detectada en el navegador. Entrar con Google no deja
+   * metadatos donde venga —a diferencia del enlace por correo, que la manda al
+   * pedirlo—, así que el onboarding es el punto por donde pasa todo el mundo y
+   * sirve para resolverla antes del primer check.
+   */
+  timezone?: string;
 };
 
 export async function createHabit(input: NewHabit) {
@@ -33,8 +40,16 @@ export async function createHabit(input: NewHabit) {
     .eq("id", user.id)
     .single<Pick<Profile, "timezone">>();
 
+  // Solo se siembra si el perfil sigue en el valor por defecto: si la persona
+  // ya la corrigió a mano en Perfil, el navegador no debe pisarla.
+  let zone = profile?.timezone ?? "UTC";
+  if (input.timezone && zone === "UTC") {
+    await supabase.from("profiles").update({ timezone: input.timezone }).eq("id", user.id);
+    zone = input.timezone;
+  }
+
   // El reto arranca hoy según el reloj del usuario, no el del servidor.
-  const startDate = todayIn(profile?.timezone ?? "UTC");
+  const startDate = todayIn(zone);
 
   const { error } = await supabase.from("habits").insert({
     user_id: user.id,

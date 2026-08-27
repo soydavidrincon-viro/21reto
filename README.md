@@ -9,7 +9,8 @@ Web app instalable (PWA) en lenguaje visual de iOS. El plan completo está en
 Para verlo funcionando: [`docs/DEPLOY.md`](docs/DEPLOY.md) — publicarlo en
 Vercel o correrlo en tu máquina. Para conectar la base de datos:
 [`docs/SUPABASE.md`](docs/SUPABASE.md). Cómo funcionan las cuentas y qué falta
-antes de abrirla a gente real: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
+antes de abrirla a gente real: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md). Para
+activar el ingreso con Google: [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md).
 
 ## Poner a andar el proyecto
 

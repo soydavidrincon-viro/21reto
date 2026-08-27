@@ -61,16 +61,16 @@ persona pide el enlace, no le llega, y se va. Conecta un SMTP en
 *Project Settings → Auth → SMTP Settings*. [Resend](https://resend.com) tiene
 plan gratuito suficiente para empezar y se configura en unos minutos.
 
-**2. Confirmación de correo activada.**
-Si la apagaste para probar, vuelve a encenderla en
-*Authentication → Providers → Email*. Sin ella alguien puede registrarse con un
-correo que no es suyo.
+**2. Ingreso con Google.**
+Ya está construido; falta configurarlo — los pasos están en
+[`GOOGLE-LOGIN.md`](GOOGLE-LOGIN.md). Es gratis y quita el problema del correo
+de raíz: Google ya verificó la dirección, así que la app no manda nada. Si la
+mayoría entra por ahí, el volumen de correos se desploma y el SMTP deja de ser
+bloqueante.
 
-**3. Google y Apple como entrada alterna.**
-Además de ser más rápido que esperar un correo, le da a la persona una segunda
-forma de recuperar su cuenta. Se configuran en
-*Authentication → Providers*, y del lado del código es agregar un botón que
-llame a `signInWithOAuth`.
+Sobre la casilla de **confirmar correo**: aplica al registro con contraseña, que
+esta app no usa. Con enlace por correo, abrir el enlace ya demuestra que la
+persona controla ese buzón — esa *es* la confirmación, no hay un paso extra.
 
 **4. Las URLs de producción.**
 En *Authentication → URL Configuration*, la Site URL y los Redirect URLs deben

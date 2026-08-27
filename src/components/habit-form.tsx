@@ -3,6 +3,7 @@
 import { Check } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { createHabit } from "@/app/actions/habits";
+import { detectTimeZone } from "@/lib/dates";
 import type { HabitColor } from "@/lib/types";
 
 /** Los sospechosos habituales, con el color e icono ya elegidos. */
@@ -40,6 +41,7 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
         targetDays,
         relapsePolicy: policy,
         finishOnboarding,
+        timezone: detectTimeZone(),
       });
       if (result?.error) setError(result.error);
     });
