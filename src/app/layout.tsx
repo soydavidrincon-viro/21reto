@@ -48,7 +48,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // Sin maximumScale: bloquear el zoom deja fuera a quien necesita agrandar
+  // para leer, y en iOS es sospechoso habitual de rarezas al enfocar campos.
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F4F6FB" },

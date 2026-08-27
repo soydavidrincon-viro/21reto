@@ -111,7 +111,7 @@ export default function LoginPage() {
     >
       <Link
         href="/"
-        className="entrar flex justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:justify-start"
+        className="flex justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:justify-start"
       >
         <Logo size={26} />
       </Link>
@@ -120,7 +120,7 @@ export default function LoginPage() {
           cambio de alto lo reacomoda entero. En escritorio no hay teclado que
           empuje nada, así que ahí sí se centra. */}
       <div className="flex flex-1 flex-col gap-7 pt-10 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:pt-0">
-        <div className="entrar flex flex-col gap-2 lg:gap-4">
+        <div className="flex flex-col gap-2 lg:gap-4">
           <h1 className="text-balance font-display text-[34px] font-semibold leading-[1.05] tracking-[-0.02em] text-label lg:text-[48px]">
             {state === "sent" ? "Revisa tu correo" : "Entra a Antídoto"}
           </h1>
@@ -131,11 +131,15 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Sin animación de entrada, a propósito.
+            Este bloque lleva el campo de correo, y con `entrar` el campo pasaba
+            los primeros 650ms invisible y después deslizándose 14px hacia
+            arriba — o sea que durante ese rato es tocable pero se está
+            moviendo, y en un teléfono un toque sobre algo que se mueve puede no
+            contar como toque sobre eso. Ninguna animación vale un campo de
+            texto que a veces no responde. */}
         {state !== "sent" && (
-          <div
-            className="entrar flex flex-col gap-3"
-            style={{ animationDelay: "0.1s" }}
-          >
+          <div className="flex flex-col gap-3">
             <button
               type="button"
               onClick={withGoogle}
