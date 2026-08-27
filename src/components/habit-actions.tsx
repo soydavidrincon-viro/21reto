@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "@phosphor-icons/react";
+import { PressableButton } from "@/components/pressable";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
 import type { LogStatus } from "@/lib/types";
@@ -32,7 +33,7 @@ export function HabitActions({
 
   return (
     <div className="mx-4 mt-1 flex flex-col gap-1">
-      <button
+      <PressableButton
         type="button"
         disabled={pending}
         onClick={() =>
@@ -40,13 +41,13 @@ export function HabitActions({
             done ? clearDay(habitId, today) : markDay(habitId, today, "success"),
           )
         }
-        className={`flex h-[50px] items-center justify-center gap-2 rounded-[14px] text-[17px] font-semibold tracking-[-0.02em] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
+        className={`flex h-[54px] items-center justify-center gap-2 rounded-[16px] text-[17px] font-semibold tracking-[-0.02em] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
           done ? "bg-fill text-label" : "bg-blue text-white"
         }`}
       >
         {!done && <Check size={19} weight="bold" aria-hidden="true" />}
         {done ? "Hoy ya está marcado" : "Marcar hoy como limpio"}
-      </button>
+      </PressableButton>
 
       {confirming ? (
         <div className="flex flex-col gap-2 rounded-[14px] bg-card p-4">

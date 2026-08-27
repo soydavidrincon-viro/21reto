@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "@phosphor-icons/react";
+import { PressableButton } from "@/components/pressable";
 import { useState, useTransition } from "react";
 import { createHabit } from "@/app/actions/habits";
 import { detectTimeZone } from "@/lib/dates";
@@ -166,17 +167,14 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
             {error}
           </p>
         )}
-        <p className="text-pretty text-center text-[12px] leading-[1.35] text-label-2">
-          Antídoto acompaña tu proceso. No sustituye atención profesional.
-        </p>
-        <button
+        <PressableButton
           type="button"
           onClick={submit}
           disabled={!ready || pending}
-          className="flex h-[50px] items-center justify-center rounded-[14px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+          className="flex h-[54px] items-center justify-center rounded-[16px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] disabled:opacity-40 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
         >
           {pending ? "Creando…" : "Empezar mi reto"}
-        </button>
+        </PressableButton>
       </div>
     </div>
   );

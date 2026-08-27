@@ -1,6 +1,7 @@
 "use client";
 
 import { GoogleLogo } from "@phosphor-icons/react";
+import { PressableButton } from "@/components/pressable";
 import { useState } from "react";
 import { detectTimeZone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/client";
@@ -86,14 +87,14 @@ export default function LoginPage() {
 
         {state !== "sent" && (
           <div className="flex flex-col gap-3">
-            <button
+            <PressableButton
               type="button"
               onClick={withGoogle}
-              className="flex h-[50px] items-center justify-center gap-2.5 rounded-[14px] bg-label text-[17px] font-semibold tracking-[-0.02em] text-grouped focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+              className="flex h-[54px] items-center justify-center gap-2.5 rounded-[16px] bg-label text-[17px] font-semibold tracking-[-0.02em] text-grouped focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
             >
               <GoogleLogo size={20} weight="bold" aria-hidden="true" />
               Continuar con Google
-            </button>
+            </PressableButton>
 
             {showEmail ? (
               <form onSubmit={withEmail} className="flex flex-col gap-3">
@@ -112,13 +113,13 @@ export default function LoginPage() {
                   onChange={(event) => setEmail(event.target.value)}
                   className="h-[50px] rounded-[14px] bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
                 />
-                <button
+                <PressableButton
                   type="submit"
                   disabled={state === "sending"}
-                  className="flex h-[50px] items-center justify-center rounded-[14px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+                  className="flex h-[54px] items-center justify-center rounded-[16px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
                 >
                   {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
-                </button>
+                </PressableButton>
               </form>
             ) : (
               <button
@@ -139,7 +140,7 @@ export default function LoginPage() {
         )}
       </div>
 
-      <p className="text-pretty text-center text-[12px] leading-[1.4] text-label-2">
+      <p className="text-center text-[12px] leading-[1.4] text-label-2">
         Nadie más que tú ve lo que registras aquí.
       </p>
     </main>
