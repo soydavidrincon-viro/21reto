@@ -1,19 +1,26 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Antídoto — tokens
-   Colores de sistema de iOS. Los valores viven en :root para que el tema
-   cambie en runtime; @theme inline solo los expone a Tailwind.
+   Antídoto — sistema visual
+   El color rellena tarjetas enteras, no solo bordes y botones. Los valores
+   viven en :root para que el tema cambie en runtime; @theme inline solo los
+   expone a Tailwind.
    --------------------------------------------------------------------------- */
 
 @theme inline {
-  --color-blue: var(--c-blue);
-  --color-orange: var(--c-orange);
-  --color-green: var(--c-green);
-  --color-yellow: var(--c-yellow);
-  --color-red: var(--c-red);
-  --color-purple: var(--c-purple);
-  --color-pink: var(--c-pink);
+  --color-azul: var(--c-azul);
+  --color-naranja: var(--c-naranja);
+  --color-menta: var(--c-menta);
+  --color-ambar: var(--c-ambar);
+  --color-lila: var(--c-lila);
+
+  /* Tinta de cada acento: el blanco sobre naranja, menta y ámbar no se lee al
+     sol, así que cada color trae su propio color de texto. */
+  --color-azul-tinta: var(--c-azul-tinta);
+  --color-naranja-tinta: var(--c-naranja-tinta);
+  --color-menta-tinta: var(--c-menta-tinta);
+  --color-ambar-tinta: var(--c-ambar-tinta);
+  --color-lila-tinta: var(--c-lila-tinta);
 
   --color-label: var(--c-label);
   --color-label-2: var(--c-label-2);
@@ -26,86 +33,90 @@
   --color-bar: var(--c-bar);
   --color-segment: var(--c-segment);
 
+  --font-display: var(--f-display);
   --font-ui: var(--f-ui);
-  --font-num: var(--f-num);
 }
 
 :root {
-  /* Tipografía. SF Pro no puede servirse como webfont: la licencia solo cubre
-     plataformas Apple. El system stack resuelve a SF Pro real en iPhone y Mac,
-     y cae en Roboto o Segoe UI fuera de ellas. */
-  --f-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
-    "Helvetica Neue", system-ui, sans-serif;
-  --f-num: ui-rounded, "SF Pro Rounded", -apple-system, "Segoe UI Variable Display",
-    Roboto, system-ui, sans-serif;
-
   /* Modo claro */
-  --c-blue: #007aff;
-  --c-orange: #ff9500;
-  --c-green: #34c759;
-  --c-yellow: #ffcc00;
-  --c-red: #ff3b30;
-  --c-purple: #af52de;
-  --c-pink: #ff2d55;
+  --c-azul: #2d5bff;
+  --c-naranja: #ff6b2c;
+  --c-menta: #00c9a7;
+  --c-ambar: #ffc53d;
+  --c-lila: #7b61ff;
 
-  --c-label: #000000;
-  --c-label-2: rgba(60, 60, 67, 0.6);
-  --c-label-3: rgba(60, 60, 67, 0.3);
-  --c-separator: rgba(60, 60, 67, 0.29);
-  --c-fill: rgba(120, 120, 128, 0.12);
+  --c-azul-tinta: #ffffff;
+  --c-naranja-tinta: #3d1a00;
+  --c-menta-tinta: #06382f;
+  --c-ambar-tinta: #4a3400;
+  --c-lila-tinta: #ffffff;
 
-  --c-grouped: #f2f2f7;
+  --c-label: #14161f;
+  --c-label-2: #6b7186;
+  --c-label-3: #a5abbd;
+  --c-separator: rgba(20, 22, 31, 0.1);
+  --c-fill: rgba(20, 22, 31, 0.05);
+
+  --c-grouped: #f4f6fb;
   --c-card: #ffffff;
-  --c-bar: rgba(249, 249, 249, 0.94);
-  /* Pastilla del control segmentado. No reusa --c-card porque en oscuro el
-     gris de tarjeta queda casi igual que el riel y no se ve qué está elegido. */
+  --c-bar: rgba(255, 255, 255, 0.88);
   --c-segment: #ffffff;
 
   color-scheme: light dark;
 }
 
+/* Los acentos suben luminosidad sobre fondo oscuro para no apagarse, y su
+   tinta se recalcula: lo que pedía texto oscuro en claro lo sigue pidiendo. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --c-blue: #0a84ff;
-    --c-orange: #ff9f0a;
-    --c-green: #30d158;
-    --c-yellow: #ffd60a;
-    --c-red: #ff453a;
-    --c-purple: #bf5af2;
-    --c-pink: #ff375f;
+    --c-azul: #5c82ff;
+    --c-naranja: #ff8a52;
+    --c-menta: #2ee0bf;
+    --c-ambar: #ffd166;
+    --c-lila: #9b85ff;
 
-    --c-label: #ffffff;
-    --c-label-2: rgba(235, 235, 245, 0.6);
-    --c-label-3: rgba(235, 235, 245, 0.3);
-    --c-separator: rgba(84, 84, 88, 0.65);
-    --c-fill: rgba(120, 120, 128, 0.24);
+    --c-azul-tinta: #06122e;
+    --c-naranja-tinta: #3d1a00;
+    --c-menta-tinta: #06382f;
+    --c-ambar-tinta: #4a3400;
+    --c-lila-tinta: #14103a;
 
-    --c-grouped: #000000;
-    --c-card: #1c1c1e;
-    --c-bar: rgba(22, 22, 24, 0.94);
-    --c-segment: #636366;
+    --c-label: #f7f8fc;
+    --c-label-2: #9aa0b5;
+    --c-label-3: #676d80;
+    --c-separator: rgba(255, 255, 255, 0.1);
+    --c-fill: rgba(255, 255, 255, 0.07);
+
+    --c-grouped: #0d0e14;
+    --c-card: #181a23;
+    --c-bar: rgba(13, 14, 20, 0.88);
+    --c-segment: #3a3d4d;
   }
 }
 
 :root[data-theme="dark"] {
-  --c-blue: #0a84ff;
-  --c-orange: #ff9f0a;
-  --c-green: #30d158;
-  --c-yellow: #ffd60a;
-  --c-red: #ff453a;
-  --c-purple: #bf5af2;
-  --c-pink: #ff375f;
+  --c-azul: #5c82ff;
+  --c-naranja: #ff8a52;
+  --c-menta: #2ee0bf;
+  --c-ambar: #ffd166;
+  --c-lila: #9b85ff;
 
-  --c-label: #ffffff;
-  --c-label-2: rgba(235, 235, 245, 0.6);
-  --c-label-3: rgba(235, 235, 245, 0.3);
-  --c-separator: rgba(84, 84, 88, 0.65);
-  --c-fill: rgba(120, 120, 128, 0.24);
+  --c-azul-tinta: #06122e;
+  --c-naranja-tinta: #3d1a00;
+  --c-menta-tinta: #06382f;
+  --c-ambar-tinta: #4a3400;
+  --c-lila-tinta: #14103a;
 
-  --c-grouped: #000000;
-  --c-card: #1c1c1e;
-  --c-bar: rgba(22, 22, 24, 0.94);
-  --c-segment: #636366;
+  --c-label: #f7f8fc;
+  --c-label-2: #9aa0b5;
+  --c-label-3: #676d80;
+  --c-separator: rgba(255, 255, 255, 0.1);
+  --c-fill: rgba(255, 255, 255, 0.07);
+
+  --c-grouped: #0d0e14;
+  --c-card: #181a23;
+  --c-bar: rgba(13, 14, 20, 0.88);
+  --c-segment: #3a3d4d;
 }
 
 body {
@@ -113,17 +124,22 @@ body {
   color: var(--c-label);
   font-family: var(--f-ui);
   -webkit-font-smoothing: antialiased;
-  /* La app se comporta como nativa: sin rebote de scroll ni selección de texto
-     accidental al mantener pulsado un control. */
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Entrada escalonada de la portada.
-   Va en CSS y no en JavaScript a propósito: con motion, el servidor mandaba el
-   texto con opacity:0 esperando la hidratación, así que una carga lenta o un
-   error de JS dejaba la pantalla vacía. Una animación CSS corre desde la hoja
-   de estilos y no puede dejar contenido invisible. */
+/* Los contadores que cambian a diario no deben bailar de ancho. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Movimiento
+   Todo va en CSS y no en JavaScript: con motion, el servidor mandaba el texto
+   con opacity:0 esperando la hidratación, así que una carga lenta dejaba la
+   pantalla vacía. Una animación CSS no puede dejar contenido invisible.
+   --------------------------------------------------------------------------- */
+
 @keyframes entrar {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: none; }
@@ -144,9 +160,49 @@ body {
   animation: llenar 1.1s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
-/* Los contadores que cambian a diario no deben bailar de ancho. */
-.tnum {
-  font-variant-numeric: tabular-nums;
+/* Los compañeros respiran y parpadean sin que pase nada en la pantalla. */
+@keyframes flotar {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
+}
+
+.flota {
+  animation: flotar 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes parpadear {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96%           { transform: scaleY(0.08); }
+}
+
+.parpadea {
+  animation: parpadear 5s infinite;
+  transform-origin: center 70px;
+}
+
+@keyframes saltar {
+  0%   { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(-18px) scale(1.06, 0.94); }
+  55%  { transform: translateY(0) scale(0.94, 1.06); }
+  75%  { transform: translateY(-6px) scale(1); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.salta {
+  animation: saltar 0.7s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Respuesta al toque. Va en CSS para que funcione en cada botón sin envolverlo
+   en un componente de cliente. */
+.pulsable {
+  transition:
+    transform 0.14s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.14s ease;
+}
+
+.pulsable:active:not(:disabled) {
+  transform: scale(0.96);
+  filter: brightness(0.94);
 }
 
 @media (prefers-reduced-motion: reduce) {

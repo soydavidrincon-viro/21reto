@@ -26,16 +26,30 @@ export type Profile = {
   timezone: string;
   theme: "system" | "light" | "dark";
   onboarded_at: string | null;
+  companion: "roco" | "chispa" | "brote" | "nube";
 };
 
-/** Hex de cada color de hábito, para los anillos SVG que no pasan por Tailwind. */
+/**
+ * Cada color de hábito con su tinta. El blanco sobre naranja, menta y ámbar no
+ * se lee al sol, así que el color no viaja solo: trae el texto que le toca.
+ */
+export const HABIT_SKIN: Record<HabitColor, { fondo: string; tinta: string }> = {
+  blue: { fondo: "var(--c-azul)", tinta: "var(--c-azul-tinta)" },
+  orange: { fondo: "var(--c-naranja)", tinta: "var(--c-naranja-tinta)" },
+  green: { fondo: "var(--c-menta)", tinta: "var(--c-menta-tinta)" },
+  yellow: { fondo: "var(--c-ambar)", tinta: "var(--c-ambar-tinta)" },
+  purple: { fondo: "var(--c-lila)", tinta: "var(--c-lila-tinta)" },
+  pink: { fondo: "var(--c-naranja)", tinta: "var(--c-naranja-tinta)" },
+};
+
+/** Los anillos SVG no pasan por Tailwind, así que necesitan el hex resuelto. */
 export const HABIT_HEX: Record<HabitColor, string> = {
-  blue: "#007AFF",
-  orange: "#FF9500",
-  green: "#34C759",
-  yellow: "#FFCC00",
-  purple: "#AF52DE",
-  pink: "#FF2D55",
+  blue: "#2D5BFF",
+  orange: "#FF6B2C",
+  green: "#00C9A7",
+  yellow: "#FFC53D",
+  purple: "#7B61FF",
+  pink: "#FF6B2C",
 };
 
 /**

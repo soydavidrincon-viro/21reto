@@ -43,8 +43,8 @@ export function MoodPicker({
             aria-label={mood.label}
             disabled={pending}
             onClick={() => pick(mood.key)}
-            className={`flex h-[46px] w-full items-center justify-center rounded-xl text-[26px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue ${
-              active ? "bg-blue/15 ring-2 ring-blue ring-inset" : ""
+            className={`flex h-[46px] w-full items-center justify-center rounded-xl text-[26px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+              active ? "bg-azul/15 ring-2 ring-azul ring-inset" : ""
             }`}
           >
             <span aria-hidden="true">{mood.emoji}</span>

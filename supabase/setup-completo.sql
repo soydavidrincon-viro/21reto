@@ -1,15 +1,3 @@
--- Antídoto — instalación completa en un solo archivo.
--- Pégalo entero en el SQL Editor de Supabase y dale Run.
--- Equivale a correr, en orden: migrations/0001, migrations/0002 y seed.sql.
--- Generado desde esos archivos; si cambias el esquema, regenera este con
--- el script de abajo en vez de editarlo a mano.
---
---   cat supabase/migrations/*.sql supabase/seed.sql > supabase/setup-completo.sql
-
-----------------------------------------------------------------------------
--- 1. Esquema, políticas RLS y funciones
-----------------------------------------------------------------------------
-
 -- Antídoto — esquema inicial
 --
 -- Regla que atraviesa todo el archivo: la fecha del día NUNCA se calcula con
@@ -360,11 +348,6 @@ as $$
   from pool p, pick
   where p.n = pick.n;
 $$;
-
-----------------------------------------------------------------------------
--- 2. Borrado de la propia cuenta
-----------------------------------------------------------------------------
-
 -- Borrar la propia cuenta sin pasar por la service_role key.
 --
 -- Eliminar de auth.users pide privilegios que el cliente no tiene, y la
@@ -395,11 +378,18 @@ $$;
 
 revoke all on function public.delete_own_account() from public;
 grant execute on function public.delete_own_account() to authenticated;
+-- El compañero que elige cada persona en el onboarding.
+--
+-- Va en profiles y no en habits: es de la persona, no del hábito. Quien lleva
+-- tres retos a la vez no quiere tres mascotas distintas mirándolo.
 
-----------------------------------------------------------------------------
--- 3. Frases del día
-----------------------------------------------------------------------------
+alter table public.profiles
+  add column if not exists companion text not null default 'brote'
+    check (companion in ('roco', 'chispa', 'brote', 'nube'));
 
+comment on column public.profiles.companion is
+  'Personaje que acompaña en la pantalla Hoy. Brote por defecto: es el que se
+   presenta como "para quien va empezando".';
 -- Frases del día. Tono deliberado: acompañan, no arengan. Nada de "tú puedes
 -- con todo" ni promesas de que será fácil — quien está dejando algo ya escuchó
 -- eso mil veces y no le sirvió.

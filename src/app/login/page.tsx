@@ -1,7 +1,6 @@
 "use client";
 
 import { GoogleLogo } from "@phosphor-icons/react";
-import { PressableButton } from "@/components/pressable";
 import { useState } from "react";
 import { detectTimeZone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/client";
@@ -87,14 +86,14 @@ export default function LoginPage() {
 
         {state !== "sent" && (
           <div className="flex flex-col gap-3">
-            <PressableButton
+            <button
               type="button"
               onClick={withGoogle}
-              className="flex h-[54px] items-center justify-center gap-2.5 rounded-[16px] bg-label text-[17px] font-semibold tracking-[-0.02em] text-grouped focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+              className="pulsable flex h-[54px] items-center justify-center gap-2.5 rounded-[16px] bg-label text-[17px] font-semibold tracking-[-0.02em] text-grouped focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               <GoogleLogo size={20} weight="bold" aria-hidden="true" />
               Continuar con Google
-            </PressableButton>
+            </button>
 
             {showEmail ? (
               <form onSubmit={withEmail} className="flex flex-col gap-3">
@@ -111,28 +110,28 @@ export default function LoginPage() {
                   placeholder="tu@correo.com"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="h-[50px] rounded-[14px] bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+                  className="h-[50px] rounded-[14px] bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
                 />
-                <PressableButton
+                <button
                   type="submit"
                   disabled={state === "sending"}
-                  className="flex h-[54px] items-center justify-center rounded-[16px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+                  className="pulsable flex h-[54px] items-center justify-center rounded-[16px] bg-azul text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
                 >
                   {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
-                </PressableButton>
+                </button>
               </form>
             ) : (
               <button
                 type="button"
                 onClick={() => setShowEmail(true)}
-                className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+                className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
               >
                 Prefiero un enlace a mi correo
               </button>
             )}
 
             {error && (
-              <p role="alert" className="text-center text-[13px] leading-[1.35] text-red">
+              <p role="alert" className="text-center text-[13px] leading-[1.35] text-red-500">
                 {error}
               </p>
             )}

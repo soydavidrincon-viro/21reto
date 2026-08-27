@@ -21,6 +21,8 @@ export type NewHabit = {
    * sirve para resolverla antes del primer check.
    */
   timezone?: string;
+  /** Compañero elegido en el onboarding. Va en el perfil, no en el hábito. */
+  companion?: string;
 };
 
 export async function createHabit(input: NewHabit) {
@@ -66,7 +68,10 @@ export async function createHabit(input: NewHabit) {
   if (input.finishOnboarding) {
     await supabase
       .from("profiles")
-      .update({ onboarded_at: new Date().toISOString() })
+      .update({
+        onboarded_at: new Date().toISOString(),
+        ...(input.companion ? { companion: input.companion } : {}),
+      })
       .eq("id", user.id);
   }
 

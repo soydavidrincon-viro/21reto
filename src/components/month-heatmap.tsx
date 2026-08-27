@@ -61,11 +61,11 @@ export function MonthHeatmap({
           const future = date > today;
 
           const tone = state === "success"
-            ? "bg-blue text-white"
+            ? "bg-azul text-white"
             : state === "relapse"
-              ? "bg-yellow text-[#4A3A00]"
+              ? "bg-ambar text-[#4A3A00]"
               : isToday
-                ? "bg-card text-blue ring-2 ring-blue ring-inset"
+                ? "bg-card text-azul ring-2 ring-azul ring-inset"
                 : "bg-fill text-label-3";
 
           return (
@@ -83,7 +83,7 @@ export function MonthHeatmap({
                       ? "por venir"
                       : "sin registro, tocar para marcar"
               }`}
-              className={`tnum flex h-[30px] items-center justify-center rounded-lg text-[11px] font-semibold transition-transform active:scale-90 disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue ${tone} ${
+              className={`tnum flex h-[30px] items-center justify-center rounded-lg text-[11px] font-semibold transition-transform active:scale-90 disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-azul ${tone} ${
                 future ? "opacity-40" : ""
               }`}
             >
@@ -100,21 +100,21 @@ export function MonthHeatmap({
             <button
               type="button"
               onClick={() => apply(editing, "success")}
-              className="h-10 flex-1 rounded-lg bg-blue text-[14px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+              className="h-10 flex-1 rounded-lg bg-azul text-[14px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               Limpio
             </button>
             <button
               type="button"
               onClick={() => apply(editing, "relapse")}
-              className="h-10 flex-1 rounded-lg bg-yellow text-[14px] font-semibold text-[#4A3A00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+              className="h-10 flex-1 rounded-lg bg-ambar text-[14px] font-semibold text-[#4A3A00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               Recaída
             </button>
             <button
               type="button"
               onClick={() => apply(editing, null)}
-              className="h-10 flex-1 rounded-lg bg-card text-[14px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+              className="h-10 flex-1 rounded-lg bg-card text-[14px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               Borrar
             </button>

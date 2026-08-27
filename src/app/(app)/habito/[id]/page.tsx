@@ -1,4 +1,5 @@
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr";
+import { HabitIcon } from "@/components/habit-icon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { HabitActions } from "@/components/habit-actions";
@@ -66,7 +67,7 @@ export default async function HabitoPage({
       <header className="sticky top-0 z-10 -mx-px flex h-11 items-center justify-between border-b border-separator bg-bar px-3 backdrop-blur-xl">
         <Link
           href="/hoy"
-          className="inline-flex items-center gap-0.5 text-[17px] tracking-[-0.02em] text-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+          className="inline-flex items-center gap-0.5 text-[17px] tracking-[-0.02em] text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         >
           <CaretLeft size={18} weight="bold" aria-hidden="true" />
           Hoy
@@ -78,8 +79,8 @@ export default async function HabitoPage({
       </header>
 
       <section className="mx-4 flex flex-col items-center gap-2 rounded-2xl bg-card px-4 py-6">
-        <span aria-hidden="true" className="text-[34px]">
-          {habit.icon}
+        <span className="flex size-14 items-center justify-center rounded-2xl bg-fill text-label">
+          <HabitIcon clave={habit.icon} size={30} />
         </span>
         <p className="flex items-baseline gap-2">
           <span className="tnum font-num text-[46px] font-bold leading-none tracking-[-0.04em] text-label">
@@ -119,11 +120,11 @@ export default async function HabitoPage({
           </h2>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
-              <span className="size-2.5 rounded-[3px] bg-blue" />
+              <span className="size-2.5 rounded-[3px] bg-azul" />
               Limpio
             </span>
             <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
-              <span className="size-2.5 rounded-[3px] bg-yellow" />
+              <span className="size-2.5 rounded-[3px] bg-ambar" />
               Recaída
             </span>
           </div>

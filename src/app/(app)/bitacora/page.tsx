@@ -34,7 +34,7 @@ export default async function BitacoraPage() {
       .from("habit_logs")
       .select("habit_id, log_date, status")
       .gte("log_date", since),
-    supabase.from("habits").select("id, name, icon"),
+    supabase.from("habits").select("id, name, icon, color"),
   ]);
 
   const habitById = new Map(

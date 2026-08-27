@@ -62,7 +62,7 @@ export function MoodLine({ points }: { points: Point[] }) {
             key={i}
             points={segment.map((p) => `${p.x},${p.y}`).join(" ")}
             fill="none"
-            className="stroke-blue"
+            className="stroke-azul"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -75,7 +75,7 @@ export function MoodLine({ points }: { points: Point[] }) {
             cx={point.x}
             cy={point.y!}
             r={point.date === last?.date ? 5 : 4}
-            className="fill-blue stroke-card"
+            className="fill-azul stroke-card"
             strokeWidth="2"
           >
             <title>

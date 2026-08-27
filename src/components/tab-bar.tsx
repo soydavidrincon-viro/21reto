@@ -39,17 +39,17 @@ export function TabBar() {
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className="flex w-full flex-col items-center gap-[3px] py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+            className="flex w-full flex-col items-center gap-[3px] py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
           >
             <Icon
               size={26}
               weight={active ? "fill" : "regular"}
-              className={active ? "text-blue" : "text-label-2"}
+              className={active ? "text-azul" : "text-label-2"}
               aria-hidden="true"
             />
             <span
               className={`text-[10px] tracking-[-0.01em] ${
-                active ? "font-semibold text-blue" : "font-medium text-label-2"
+                active ? "font-semibold text-azul" : "font-medium text-label-2"
               }`}
             >
               {label}
