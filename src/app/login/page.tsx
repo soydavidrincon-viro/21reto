@@ -33,8 +33,26 @@ export default function LoginPage() {
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * "Esto está tardando". Aparece a los seis segundos de tocar cualquiera de
+   * los dos botones.
+   *
+   * Está aquí porque pasó: el proyecto de Supabase se enfrió y las peticiones
+   * de auth tardaban veinte segundos. El botón se quedaba mudo, sin girar ni
+   * decir nada, y desde fuera eso no se distingue de un botón roto — la gente
+   * lo toca otra vez, recarga, y se va.
+   */
+  const [lento, setLento] = useState(false);
+
+  function empiezaAlgo() {
+    setLento(false);
+    const t = setTimeout(() => setLento(true), 6000);
+    return () => clearTimeout(t);
+  }
+
   async function withGoogle() {
     setError(null);
+    const listo = empiezaAlgo();
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -45,13 +63,18 @@ export default function LoginPage() {
       },
     });
 
-    if (error) setError("No pudimos abrir Google. Usa tu correo aquí abajo.");
+    listo();
+    if (error) {
+      setLento(false);
+      setError("No pudimos abrir Google. Usa tu correo aquí abajo.");
+    }
   }
 
   async function withEmail(event: React.FormEvent) {
     event.preventDefault();
     setState("sending");
     setError(null);
+    const listo = empiezaAlgo();
 
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
@@ -61,6 +84,9 @@ export default function LoginPage() {
         data: { timezone: detectTimeZone() },
       },
     });
+
+    listo();
+    setLento(false);
 
     if (error) {
       setError(
@@ -142,6 +168,16 @@ export default function LoginPage() {
                 {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
               </button>
             </form>
+
+            {lento && !error && (
+              <p
+                aria-live="polite"
+                className="text-pretty rounded-xl bg-fill px-3.5 py-2.5 text-center text-[13px] leading-[1.4] text-label-2"
+              >
+                Esto está tardando más de lo normal. Es el servidor, no tú —
+                espera un momento o vuelve a intentarlo en un minuto.
+              </p>
+            )}
 
             {error && (
               <p
