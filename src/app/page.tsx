@@ -1,8 +1,5 @@
-"use client";
-
-import { motion, useReducedMotion } from "motion/react";
+import Link from "next/link";
 import { ProgressRings } from "@/components/progress-rings";
-import { PressableLink } from "@/components/pressable";
 
 /**
  * La portada.
@@ -14,6 +11,12 @@ import { PressableLink } from "@/components/pressable";
  * Detrás va un resplandor difuso en los colores de los anillos. Sobre negro
  * puro la pantalla se ve muerta, y un degradado de lado a lado sería el cliché
  * de siempre; esto solo levanta el fondo alrededor del héroe.
+ *
+ * La entrada escalonada es CSS y no JavaScript. La primera versión usaba motion
+ * y el servidor mandaba el texto con opacity:0 esperando la hidratación: una
+ * carga lenta dejaba la pantalla con los anillos flotando en negro y nada más.
+ * Una animación CSS no puede dejar contenido invisible, así que esta pantalla
+ * ya no es un componente de cliente.
  */
 
 const RINGS = [
@@ -29,17 +32,6 @@ const CLAIMS = [
 ];
 
 export default function LandingPage() {
-  const reduced = useReducedMotion();
-
-  const enter = (delay: number) =>
-    reduced
-      ? {}
-      : {
-          initial: { opacity: 0, y: 14 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const },
-        };
-
   return (
     <main
       className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col overflow-hidden px-6 pb-10"
@@ -47,7 +39,7 @@ export default function LandingPage() {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[6%] size-[420px] -translate-x-1/2 rounded-full opacity-45 blur-[70px]"
+        className="pointer-events-none absolute left-1/2 top-[4%] size-[400px] -translate-x-1/2 rounded-full opacity-40 blur-[70px]"
         style={{
           background:
             "conic-gradient(from 210deg, var(--c-blue), var(--c-orange), var(--c-green), var(--c-blue))",
@@ -55,36 +47,32 @@ export default function LandingPage() {
       />
 
       <div className="relative flex flex-1 flex-col items-center justify-center gap-8">
-        <motion.div
-          initial={reduced ? false : { opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <ProgressRings rings={RINGS} size={196} />
-        </motion.div>
+        <div className="entrar">
+          <ProgressRings rings={RINGS} size={192} />
+        </div>
 
         <div className="flex flex-col items-center gap-3 text-center">
-          <motion.h1
-            {...enter(0.35)}
-            className="text-balance text-[42px] font-bold leading-[1.03] tracking-[-0.035em] text-label"
+          <h1
+            className="entrar text-balance text-[42px] font-bold leading-[1.03] tracking-[-0.035em] text-label"
+            style={{ animationDelay: "0.1s" }}
           >
             Un día a la vez
-          </motion.h1>
-          <motion.p
-            {...enter(0.45)}
-            className="text-pretty text-[17px] leading-[1.45] tracking-[-0.01em] text-label-2"
+          </h1>
+          <p
+            className="entrar text-pretty text-[17px] leading-[1.45] tracking-[-0.01em] text-label-2"
+            style={{ animationDelay: "0.18s" }}
           >
             Lleva la cuenta de los días que llevas sin eso. Marcas el día, anotas
             cómo te fue, y la racha crece sola.
-          </motion.p>
+          </p>
         </div>
 
         <ul className="flex w-full flex-col gap-2">
           {CLAIMS.map(([emoji, title, detail], i) => (
-            <motion.li
+            <li
               key={title}
-              {...enter(0.55 + i * 0.08)}
-              className="flex items-center gap-3 rounded-2xl bg-card px-4 py-3"
+              className="entrar flex items-center gap-3 rounded-2xl bg-card px-4 py-3"
+              style={{ animationDelay: `${0.26 + i * 0.07}s` }}
             >
               <span aria-hidden="true" className="text-[24px]">
                 {emoji}
@@ -95,19 +83,18 @@ export default function LandingPage() {
                 </span>
                 <span className="text-[13px] tracking-[-0.01em] text-label-2">{detail}</span>
               </span>
-            </motion.li>
+            </li>
           ))}
         </ul>
       </div>
 
-      <motion.div {...enter(0.8)} className="relative flex flex-col gap-3">
-        <PressableLink
-          href="/login"
-          className="flex h-[54px] items-center justify-center rounded-[16px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
-        >
-          Empezar
-        </PressableLink>
-      </motion.div>
+      <Link
+        href="/login"
+        className="entrar relative flex h-[54px] items-center justify-center rounded-[16px] bg-blue text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] transition-transform active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+        style={{ animationDelay: "0.5s" }}
+      >
+        Empezar
+      </Link>
     </main>
   );
 }

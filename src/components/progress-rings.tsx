@@ -1,6 +1,3 @@
-"use client";
-
-import { motion, useReducedMotion } from "motion/react";
 import { HABIT_HEX, type HabitColor } from "@/lib/types";
 
 type Ring = { color: HabitColor; value: number; goal: number; label: string };
@@ -10,8 +7,11 @@ type Ring = { color: HabitColor; value: number; goal: number; label: string };
  * avanzado por fuera. El trazo redondeado hace que un progreso de 1 de 21 se
  * siga viendo como algo empezado y no como un anillo vacío.
  *
- * Se llenan al entrar, escalonados. Es la única animación de la pantalla y por
- * eso puede permitirse ser lenta: es lo que la persona vino a ver.
+ * El llenado es CSS, no JavaScript. `stroke-dasharray` ya queda en el valor
+ * final, y la animación solo mueve `stroke-dashoffset` de ahí a cero: si el
+ * script no corre, el navegador usa el offset por defecto —cero— y los anillos
+ * aparecen llenos en vez de vacíos. La versión anterior los dibujaba en cero y
+ * esperaba a la hidratación para llenarlos.
  */
 export function ProgressRings({
   rings,
@@ -20,7 +20,6 @@ export function ProgressRings({
   rings: Ring[];
   size?: number;
 }) {
-  const reduced = useReducedMotion();
   const visible = rings.slice(0, 3);
   const width = 14;
   const gap = 2;
@@ -32,10 +31,7 @@ export function ProgressRings({
       viewBox="0 0 140 140"
       role="img"
       aria-label={visible
-        .map(
-          (ring) =>
-            `${ring.label}: ${ring.value} de ${ring.goal} días`,
-        )
+        .map((ring) => `${ring.label}: ${ring.value} de ${ring.goal} días`)
         .join(". ")}
       className="shrink-0"
     >
@@ -58,7 +54,8 @@ export function ProgressRings({
                 strokeOpacity={0.18}
                 strokeWidth={width}
               />
-              <motion.circle
+              <circle
+                className="llenar"
                 cx="70"
                 cy="70"
                 r={radius}
@@ -67,13 +64,12 @@ export function ProgressRings({
                 strokeWidth={width}
                 strokeLinecap="round"
                 strokeDasharray={`${filled} ${circumference}`}
-                initial={reduced ? false : { strokeDasharray: `0 ${circumference}` }}
-                animate={{ strokeDasharray: `${filled} ${circumference}` }}
-                transition={{
-                  duration: 1.1,
-                  delay: i * 0.12,
-                  ease: [0.32, 0.72, 0, 1],
-                }}
+                style={
+                  {
+                    "--dash": filled,
+                    animationDelay: `${i * 0.12}s`,
+                  } as React.CSSProperties
+                }
               />
             </g>
           );
