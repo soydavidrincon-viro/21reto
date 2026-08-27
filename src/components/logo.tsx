@@ -9,13 +9,21 @@ export function Isotipo({
   size = 32,
   fondo = "var(--c-azul)",
   gota = "var(--c-azul-tinta)",
+  className,
 }: {
   size?: number;
   fondo?: string;
   gota?: string;
+  className?: string;
 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 60 60" aria-hidden="true">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 60 60"
+      className={className}
+      aria-hidden="true"
+    >
       <rect width="60" height="60" rx="17" fill={fondo} />
       <path
         d="M30 12 C 40 22, 45 28, 45 35 a 15 15 0 0 1 -30 0 c 0 -7, 5 -13, 15 -23 Z"

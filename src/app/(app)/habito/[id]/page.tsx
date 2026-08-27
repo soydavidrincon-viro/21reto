@@ -83,7 +83,7 @@ export default async function HabitoPage({
           <HabitIcon clave={habit.icon} size={30} />
         </span>
         <p className="flex items-baseline gap-2">
-          <span className="tnum font-num text-[46px] font-bold leading-none tracking-[-0.04em] text-label">
+          <span className="tnum font-display text-[46px] font-bold leading-none tracking-[-0.04em] text-label">
             {stats.current_streak}
           </span>
           <span className="text-[15px] font-semibold text-label-2">
@@ -103,7 +103,7 @@ export default async function HabitoPage({
           [stats.relapses, stats.relapses === 1 ? "Recaída" : "Recaídas"],
         ].map(([value, label]) => (
           <div key={String(label)} className="flex w-full flex-col items-center gap-0.5">
-            <b className="tnum font-num text-[22px] font-bold tracking-[-0.03em] text-label">
+            <b className="tnum font-display text-[22px] font-bold tracking-[-0.03em] text-label">
               {value}
             </b>
             <small className="text-center text-[11.5px] tracking-[-0.01em] text-label-2">

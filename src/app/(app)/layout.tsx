@@ -1,24 +1,22 @@
 import { TabBar } from "@/components/tab-bar";
 
 /**
- * Shell de las pantallas con sesión. El padding inferior deja sitio a la tab
- * bar fija: 83px de barra más el safe area del iPhone.
+ * Shell de las pantallas con sesión.
+ *
+ * En teléfono es una columna con la barra abajo. En escritorio, el carril
+ * lateral empuja el contenido y la columna se ensancha: estirar la columna de
+ * 430px en una pantalla de 1400 era lo que hacía que se viera como una app de
+ * móvil abierta en el sitio equivocado.
  */
 export default function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
-      <main
-        className="mx-auto min-h-dvh w-full max-w-[430px]"
-        style={{
-          paddingTop: "max(env(safe-area-inset-top), 12px)",
-          paddingBottom: "calc(83px + env(safe-area-inset-bottom))",
-        }}
-      >
-        {children}
-      </main>
       <TabBar />
+      <main className="app-shell mx-auto w-full max-w-[430px] lg:ml-[232px] lg:max-w-none lg:px-8">
+        <div className="lg:mx-auto lg:max-w-[1180px]">{children}</div>
+      </main>
     </>
   );
 }

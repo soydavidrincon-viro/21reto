@@ -59,9 +59,9 @@ export default async function BitacoraPage() {
   const historial = entries ?? [];
 
   return (
-    <div className="flex flex-col gap-5 pt-11">
-      <header className="flex flex-col gap-0.5 px-5">
-        <h1 className="text-[34px] font-bold leading-[1.08] tracking-[-0.026em] text-label">
+    <div className="flex flex-col gap-5 pt-11 lg:pt-0">
+      <header className="flex flex-col gap-0.5 px-5 lg:px-0">
+        <h1 className="font-display text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-label lg:text-[34px]">
           Bitácora
         </h1>
         <p className="text-[15px] tracking-[-0.01em] text-label-2">
@@ -78,16 +78,16 @@ export default async function BitacoraPage() {
       </section>
 
       <section className="flex flex-col gap-[7px]">
-        <h2 className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
+        <h2 className="px-8 text-[13px] lg:px-0 font-semibold uppercase tracking-[0.02em] text-label-2">
           Historial
         </h2>
 
         {historial.length === 0 ? (
-          <p className="mx-4 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2">
+          <p className="mx-4 lg:mx-0 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2">
             Todavía no has escrito nada. Lo que guardes arriba aparece aquí.
           </p>
         ) : (
-          <ol className="mx-4 flex flex-col gap-2">
+          <ol className="mx-4 lg:mx-0 flex flex-col gap-2">
             {historial.map((entry) => {
               const date = entry.entry_date as string;
               const icons = cleanByDate.get(date) ?? [];

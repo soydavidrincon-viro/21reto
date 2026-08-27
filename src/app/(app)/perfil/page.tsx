@@ -23,9 +23,9 @@ export default async function PerfilPage() {
   if (!profile) redirect("/login");
 
   return (
-    <div className="flex flex-col gap-5 pt-11">
-      <header className="flex flex-col gap-0.5 px-5">
-        <h1 className="text-[34px] font-bold leading-[1.08] tracking-[-0.026em] text-label">
+    <div className="flex flex-col gap-5 pt-11 lg:pt-0">
+      <header className="flex flex-col gap-0.5 px-5 lg:px-0">
+        <h1 className="font-display text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-label lg:text-[34px]">
           Perfil
         </h1>
         <p className="text-[15px] tracking-[-0.01em] text-label-2">{user.email}</p>

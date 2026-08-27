@@ -1,3 +1,4 @@
+import { Plant } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 import { MoodLine } from "@/components/mood-line";
 import { WeeklyBars } from "@/components/weekly-bars";
@@ -88,23 +89,23 @@ export default async function ProgresoPage() {
   }));
 
   return (
-    <div className="flex flex-col gap-4 pt-11">
-      <header className="px-5">
-        <h1 className="text-[34px] font-bold leading-[1.08] tracking-[-0.026em] text-label">
+    <div className="flex flex-col gap-4 pt-11 lg:pt-0">
+      <header className="px-5 lg:px-0">
+        <h1 className="font-display text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-label lg:text-[34px]">
           Progreso
         </h1>
       </header>
 
-      <section className="mx-4 flex items-center gap-3.5 rounded-2xl bg-card px-4 py-4">
-        <span aria-hidden="true" className="shrink-0 text-[26px]">
-          🌱
+      <section className="mx-4 lg:mx-0 flex items-center gap-3.5 rounded-2xl bg-card px-4 py-4">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-menta text-menta-tinta">
+          <Plant size={24} weight="fill" aria-hidden="true" />
         </span>
         <div className="flex flex-1 flex-col gap-px">
           <span className="text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
             Total acumulado
           </span>
           <p className="flex items-baseline gap-2">
-            <span className="tnum font-num text-[34px] font-bold leading-[1.1] tracking-[-0.03em] text-label">
+            <span className="tnum font-display text-[34px] font-bold leading-[1.1] tracking-[-0.03em] text-label">
               {totalClean ?? 0}
             </span>
             <span className="text-[15px] font-medium tracking-[-0.01em] text-label-2">
@@ -118,12 +119,12 @@ export default async function ProgresoPage() {
       </section>
 
       <section className="flex flex-col gap-[7px]">
-        <h2 className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
+        <h2 className="px-8 text-[13px] lg:px-0 font-semibold uppercase tracking-[0.02em] text-label-2">
           Cumplimiento por semana
         </h2>
-        <div className="mx-4 flex flex-col gap-3.5 rounded-2xl bg-card px-3.5 py-4">
+        <div className="mx-4 lg:mx-0 flex flex-col gap-3.5 rounded-2xl bg-card px-3.5 py-4">
           <p className="flex items-baseline gap-1.5">
-            <span className="tnum font-num text-[26px] font-bold tracking-[-0.03em] text-label">
+            <span className="tnum font-display text-[26px] font-bold tracking-[-0.03em] text-label">
               {average === null ? "—" : `${average}%`}
             </span>
             <span className="text-[14px] tracking-[-0.01em] text-label-2">
@@ -137,10 +138,10 @@ export default async function ProgresoPage() {
       </section>
 
       <section className="flex flex-col gap-[7px]">
-        <h2 className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
+        <h2 className="px-8 text-[13px] lg:px-0 font-semibold uppercase tracking-[0.02em] text-label-2">
           Tu ánimo esta semana
         </h2>
-        <div className="mx-4 rounded-2xl bg-card px-3.5 py-4">
+        <div className="mx-4 lg:mx-0 rounded-2xl bg-card px-3.5 py-4">
           <MoodLine points={points} />
         </div>
       </section>

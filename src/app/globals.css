@@ -128,6 +128,21 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Márgenes del shell. Van en CSS y no en clases porque el safe-area del
+   iPhone se escribe con env() y hay que poder anularlo entero en escritorio,
+   donde no hay barra inferior que esquivar. */
+.app-shell {
+  padding-top: max(env(safe-area-inset-top), 12px);
+  padding-bottom: calc(83px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 1024px) {
+  .app-shell {
+    padding-top: 28px;
+    padding-bottom: 40px;
+  }
+}
+
 /* Los contadores que cambian a diario no deben bailar de ancho. */
 .tnum {
   font-variant-numeric: tabular-nums;

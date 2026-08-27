@@ -9,6 +9,7 @@ import {
   updateProfile,
   type Theme,
 } from "@/app/actions/profile";
+import { AvatarUploader } from "@/components/avatar-uploader";
 import { detectTimeZone } from "@/lib/dates";
 import type { Profile } from "@/lib/types";
 
@@ -86,6 +87,14 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <section className="mx-4 lg:mx-0 rounded-2xl bg-card p-4">
+        <AvatarUploader
+          userId={profile.id}
+          actual={profile.avatar_url}
+          nombre={profile.display_name ?? ""}
+        />
+      </section>
+
       <section className="flex flex-col gap-[7px]">
         <label
           htmlFor="nombre"

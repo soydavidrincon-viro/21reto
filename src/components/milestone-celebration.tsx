@@ -1,5 +1,6 @@
 "use client";
 
+import { Confetti } from "@phosphor-icons/react";
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
@@ -29,7 +30,7 @@ export function MilestoneCelebration({
         particleCount: 90,
         spread: 70,
         origin: { y: 0.35 },
-        colors: ["#007AFF", "#FF9500", "#34C759", "#FFCC00"],
+        colors: ["#2D5BFF", "#FF6B2C", "#00C9A7", "#FFC53D", "#7B61FF"],
         disableForReducedMotion: true,
       });
     }
@@ -54,8 +55,8 @@ export function MilestoneCelebration({
           style={{ top: "max(env(safe-area-inset-top), 16px)" }}
         >
           <div className="flex items-center gap-3">
-            <span aria-hidden="true" className="text-[30px]">
-              🎉
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ambar text-ambar-tinta">
+              <Confetti size={24} weight="fill" aria-hidden="true" />
             </span>
             <div className="flex flex-col gap-0.5">
               <span className="text-[17px] font-semibold tracking-[-0.02em] text-label">

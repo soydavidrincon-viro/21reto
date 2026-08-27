@@ -41,6 +41,26 @@ export async function setTheme(theme: Theme) {
   return { error: null };
 }
 
+/** Guarda la url de la foto, o la quita si llega null. */
+export async function setAvatar(url: string | null) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: url })
+    .eq("id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/", "layout");
+  return { error: null };
+}
+
 export async function updateProfile(patch: {
   display_name?: string;
   timezone?: string;
