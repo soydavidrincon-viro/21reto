@@ -39,11 +39,12 @@ export default async function HabitoPage({
 
   const today = todayIn(profile?.timezone ?? "UTC");
 
-  const [{ data: habit }, { data: statsRows }, { data: logs }] = await Promise.all([
-    supabase.from("habits").select("*").eq("id", id).maybeSingle(),
-    supabase.rpc("get_habit_stats", { p_habit_id: id, p_today: today }),
-    supabase.from("habit_logs").select("log_date, status").eq("habit_id", id),
-  ]);
+  const [{ data: habit }, { data: statsRows }, { data: logs }] =
+    await Promise.all([
+      supabase.from("habits").select("*").eq("id", id).maybeSingle(),
+      supabase.rpc("get_habit_stats", { p_habit_id: id, p_today: today }),
+      supabase.from("habit_logs").select("log_date, status").eq("habit_id", id),
+    ]);
 
   if (!habit) notFound();
 
@@ -56,7 +57,10 @@ export default async function HabitoPage({
   };
 
   const byDate = new Map<string, LogStatus>(
-    (logs ?? []).map((log) => [log.log_date as string, log.status as LogStatus]),
+    (logs ?? []).map((log) => [
+      log.log_date as string,
+      log.status as LogStatus,
+    ]),
   );
 
   const grid = monthGrid(today);
@@ -64,85 +68,99 @@ export default async function HabitoPage({
 
   return (
     <div className="flex flex-col gap-3.5">
-      <header className="sticky top-0 z-10 -mx-px flex h-11 items-center justify-between border-b border-separator bg-bar px-3 backdrop-blur-xl">
+      {/* La barra pegajosa con el título centrado es un patrón de teléfono. En
+          escritorio el carril lateral ya dice dónde estás, así que sobra: queda
+          solo el enlace de vuelta y el nombre pasa a ser un título de verdad. */}
+      <header className="sticky top-0 z-10 flex h-11 items-center justify-between border-b border-separator bg-bar px-3 backdrop-blur-xl lg:static lg:mx-0 lg:h-auto lg:flex-col lg:items-start lg:gap-1 lg:border-0 lg:bg-transparent lg:px-0 lg:backdrop-blur-none">
         <Link
           href="/hoy"
-          className="inline-flex items-center gap-0.5 text-[17px] tracking-[-0.02em] text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          className="inline-flex items-center gap-0.5 text-[17px] tracking-[-0.02em] text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:text-[14px] lg:font-semibold"
         >
           <CaretLeft size={18} weight="bold" aria-hidden="true" />
           Hoy
         </Link>
-        <h1 className="truncate text-[17px] font-semibold tracking-[-0.02em] text-label">
+        <h1 className="truncate text-[17px] font-semibold tracking-[-0.02em] text-label lg:font-display lg:text-[30px] lg:leading-none lg:tracking-[-0.01em]">
           {habit.name}
         </h1>
-        <span className="w-12" />
+        <span className="w-12 lg:hidden" />
       </header>
 
-      <section className="mx-4 flex flex-col items-center gap-2 rounded-2xl bg-card px-4 py-6">
-        <span className="flex size-14 items-center justify-center rounded-2xl bg-fill text-label">
-          <HabitIcon clave={habit.icon} size={30} />
-        </span>
-        <p className="flex items-baseline gap-2">
-          <span className="tnum font-display text-[46px] font-bold leading-none tracking-[-0.04em] text-label">
-            {stats.current_streak}
-          </span>
-          <span className="text-[15px] font-semibold text-label-2">
-            {stats.current_streak === 1 ? "día de racha" : "días de racha"}
-          </span>
-        </p>
-        <span className="text-[13px] tracking-[-0.01em] text-label-2">
-          Meta de {habit.target_days} días · {stats.clean_days} limpios
-        </span>
-      </section>
-
-      <section className="mx-4 flex rounded-2xl bg-card px-1.5 py-3.5">
-        {[
-          [stats.clean_days, "Días limpios"],
-          [stats.best_streak, "Mejor racha"],
-          [`${stats.completion_rate}%`, "Cumplimiento"],
-          [stats.relapses, stats.relapses === 1 ? "Recaída" : "Recaídas"],
-        ].map(([value, label]) => (
-          <div key={String(label)} className="flex w-full flex-col items-center gap-0.5">
-            <b className="tnum font-display text-[22px] font-bold tracking-[-0.03em] text-label">
-              {value}
-            </b>
-            <small className="text-center text-[11.5px] tracking-[-0.01em] text-label-2">
-              {label}
-            </small>
-          </div>
-        ))}
-      </section>
-
-      <section className="mx-4 flex flex-col gap-3 rounded-2xl bg-card px-3.5 py-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-label">
-            {monthName(today)}
-          </h2>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
-              <span className="size-2.5 rounded-[3px] bg-azul" />
-              Limpio
+      <div className="flex flex-col gap-3.5 lg:grid lg:grid-cols-[1fr_1.15fr] lg:items-start lg:gap-6">
+        <div className="flex flex-col gap-3.5">
+          <section className="mx-4 flex flex-col items-center gap-2 rounded-[22px] bg-card px-4 py-6 lg:mx-0 lg:py-8">
+            <span className="flex size-14 items-center justify-center rounded-2xl bg-fill text-label">
+              <HabitIcon clave={habit.icon} size={30} />
             </span>
-            <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
-              <span className="size-2.5 rounded-[3px] bg-ambar" />
-              Recaída
+            <p className="flex items-baseline gap-2">
+              <span className="tnum font-display text-[46px] font-bold leading-none tracking-[-0.04em] text-label">
+                {stats.current_streak}
+              </span>
+              <span className="text-[15px] font-semibold text-label-2">
+                {stats.current_streak === 1 ? "día de racha" : "días de racha"}
+              </span>
+            </p>
+            <span className="text-[13px] tracking-[-0.01em] text-label-2">
+              Meta de {habit.target_days} días · {stats.clean_days} limpios
             </span>
-          </div>
+          </section>
+
+          <section className="mx-4 flex rounded-[22px] bg-card px-1.5 py-3.5 lg:mx-0 lg:py-4">
+            {[
+              [stats.clean_days, "Días limpios"],
+              [stats.best_streak, "Mejor racha"],
+              [`${stats.completion_rate}%`, "Cumplimiento"],
+              [stats.relapses, stats.relapses === 1 ? "Recaída" : "Recaídas"],
+            ].map(([value, label]) => (
+              <div
+                key={String(label)}
+                className="flex w-full flex-col items-center gap-0.5"
+              >
+                <b className="tnum font-display text-[22px] font-bold tracking-[-0.03em] text-label">
+                  {value}
+                </b>
+                <small className="text-center text-[11.5px] tracking-[-0.01em] text-label-2">
+                  {label}
+                </small>
+              </div>
+            ))}
+          </section>
+
+          <HabitActions
+            habitId={habit.id}
+            today={today}
+            todayStatus={todayStatus}
+          />
         </div>
 
-        <MonthHeatmap
-          habitId={habit.id}
-          days={grid}
-          today={today}
-          initial={Object.fromEntries(byDate)}
-        />
+        <section className="mx-4 flex flex-col gap-3 rounded-[22px] bg-card px-3.5 py-4 lg:mx-0 lg:px-5 lg:py-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-label">
+              {monthName(today)}
+            </h2>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
+                <span className="size-2.5 rounded-[3px] bg-azul" />
+                Limpio
+              </span>
+              <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
+                <span className="size-2.5 rounded-[3px] bg-ambar" />
+                Recaída
+              </span>
+            </div>
+          </div>
 
-        <p className="text-[12px] leading-[1.35] text-label-2">
-          ¿Se te olvidó marcar un día? Tócalo y corrígelo.
-        </p>
-      </section>
+          <MonthHeatmap
+            habitId={habit.id}
+            days={grid}
+            today={today}
+            initial={Object.fromEntries(byDate)}
+          />
 
-      <HabitActions habitId={habit.id} today={today} todayStatus={todayStatus} />
+          <p className="text-[12px] leading-[1.35] text-label-2">
+            ¿Se te olvidó marcar un día? Tócalo y corrígelo.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }

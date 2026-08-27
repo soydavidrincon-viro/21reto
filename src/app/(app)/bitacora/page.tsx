@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { HabitIcon } from "@/components/habit-icon";
 import { JournalEditor } from "@/components/journal-editor";
 import { longDate, shiftISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
@@ -24,34 +25,49 @@ export default async function BitacoraPage() {
   const today = todayIn(profile?.timezone ?? "UTC");
   const since = shiftISO(today, -120);
 
-  const [{ data: entries }, { data: logs }, { data: habits }] = await Promise.all([
-    supabase
-      .from("journal_entries")
-      .select("entry_date, mood, note")
-      .gte("entry_date", since)
-      .order("entry_date", { ascending: false }),
-    supabase
-      .from("habit_logs")
-      .select("habit_id, log_date, status")
-      .gte("log_date", since),
-    supabase.from("habits").select("id, name, icon, color"),
-  ]);
+  const [{ data: entries }, { data: logs }, { data: habits }] =
+    await Promise.all([
+      supabase
+        .from("journal_entries")
+        .select("entry_date, mood, note")
+        .gte("entry_date", since)
+        .order("entry_date", { ascending: false }),
+      supabase
+        .from("habit_logs")
+        .select("habit_id, log_date, status")
+        .gte("log_date", since),
+      supabase.from("habits").select("id, name, icon, color"),
+    ]);
 
   const habitById = new Map(
     (habits ?? []).map((habit) => [habit.id as string, habit]),
   );
 
-  // Qué hábitos se cumplieron cada día, para colgarlos de su entrada.
-  const cleanByDate = new Map<string, string[]>();
+  // Qué hábitos se cumplieron cada día, para colgarlos de su entrada. Se
+  // guarda el hábito entero y no solo su icono: `icon` ahora es una clave
+  // ("azucar", "redes") y pintarla tal cual dejaba la palabra suelta ahí.
+  const cleanByDate = new Map<
+    string,
+    { id: string; name: string; icon: string }[]
+  >();
   for (const log of logs ?? []) {
     if (log.status !== "success") continue;
     const habit = habitById.get(log.habit_id as string);
     if (!habit) continue;
     const day = log.log_date as string;
-    cleanByDate.set(day, [...(cleanByDate.get(day) ?? []), habit.icon as string]);
+    cleanByDate.set(day, [
+      ...(cleanByDate.get(day) ?? []),
+      {
+        id: habit.id as string,
+        name: habit.name as string,
+        icon: habit.icon as string,
+      },
+    ]);
   }
 
-  const todayEntry = (entries ?? []).find((entry) => entry.entry_date === today);
+  const todayEntry = (entries ?? []).find(
+    (entry) => entry.entry_date === today,
+  );
 
   // La de hoy también va en el historial. Antes se excluía porque ya estaba en
   // el editor de arriba, pero eso hacía que al guardar no apareciera en ningún
@@ -59,76 +75,96 @@ export default async function BitacoraPage() {
   const historial = entries ?? [];
 
   return (
-    <div className="flex flex-col gap-5 pt-11 lg:pt-0">
-      <header className="flex flex-col gap-0.5 px-5 lg:px-0">
-        <h1 className="font-display text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-label lg:text-[34px]">
+    <div className="flex flex-col gap-4 pt-11 lg:pt-0">
+      <header className="entrar flex flex-col gap-0.5 px-5 lg:px-0">
+        <span className="text-[12.5px] font-semibold uppercase tracking-[0.06em] text-label-3">
+          {longDate(today)}
+        </span>
+        <h1 className="font-display text-[26px] font-semibold leading-none tracking-[-0.01em] text-label lg:text-[30px]">
           Bitácora
         </h1>
-        <p className="text-[15px] tracking-[-0.01em] text-label-2">
-          {longDate(today)}
-        </p>
       </header>
 
-      <section className="mx-4">
-        <JournalEditor
-          date={today}
-          initialMood={todayEntry?.mood ?? null}
-          initialNote={todayEntry?.note ?? null}
-        />
-      </section>
+      {/* En escritorio el editor se queda a la vista mientras se lee el
+          historial al lado; apilado ocupaba media pantalla y empujaba todo. */}
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-start lg:gap-6">
+        <section
+          className="entrar mx-4 lg:sticky lg:top-7 lg:mx-0"
+          style={{ animationDelay: "0.06s" }}
+        >
+          <JournalEditor
+            date={today}
+            initialMood={todayEntry?.mood ?? null}
+            initialNote={todayEntry?.note ?? null}
+          />
+        </section>
 
-      <section className="flex flex-col gap-[7px]">
-        <h2 className="px-8 text-[13px] lg:px-0 font-semibold uppercase tracking-[0.02em] text-label-2">
-          Historial
-        </h2>
+        <section
+          className="entrar flex flex-col gap-2.5"
+          style={{ animationDelay: "0.12s" }}
+        >
+          <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+            Historial
+          </h2>
 
-        {historial.length === 0 ? (
-          <p className="mx-4 lg:mx-0 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2">
-            Todavía no has escrito nada. Lo que guardes arriba aparece aquí.
-          </p>
-        ) : (
-          <ol className="mx-4 lg:mx-0 flex flex-col gap-2">
-            {historial.map((entry) => {
-              const date = entry.entry_date as string;
-              const icons = cleanByDate.get(date) ?? [];
+          {historial.length === 0 ? (
+            <p className="mx-4 lg:mx-0 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2">
+              Todavía no has escrito nada. Lo que guardes arriba aparece aquí.
+            </p>
+          ) : (
+            <ol className="mx-4 lg:mx-0 flex flex-col gap-2">
+              {historial.map((entry) => {
+                const date = entry.entry_date as string;
+                const cumplidos = cleanByDate.get(date) ?? [];
 
-              return (
-                <li
-                  key={date}
-                  className="flex gap-3 rounded-2xl bg-card px-4 py-3.5"
-                >
-                  <span
-                    aria-label={MOOD_BY_KEY.get(entry.mood as string)?.label ?? "Sin ánimo"}
-                    className="shrink-0 text-[26px] leading-none"
+                return (
+                  <li
+                    key={date}
+                    className="flex gap-3 rounded-2xl bg-card px-4 py-3.5"
                   >
-                    {MOOD_BY_KEY.get(entry.mood as string)?.emoji ?? "•"}
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
-                        {date === today ? "Hoy" : longDate(date)}
-                      </span>
-                      {icons.length > 0 && (
-                        <span
-                          aria-label={`${icons.length} ${icons.length === 1 ? "hábito cumplido" : "hábitos cumplidos"}`}
-                          className="shrink-0 text-[13px]"
-                        >
-                          {icons.join(" ")}
+                    <span
+                      aria-label={
+                        MOOD_BY_KEY.get(entry.mood as string)?.label ??
+                        "Sin ánimo"
+                      }
+                      className="shrink-0 text-[26px] leading-none"
+                    >
+                      {MOOD_BY_KEY.get(entry.mood as string)?.emoji ?? "•"}
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
+                          {date === today ? "Hoy" : longDate(date)}
                         </span>
+                        {cumplidos.length > 0 && (
+                          <span
+                            title={cumplidos.map((h) => h.name).join(", ")}
+                            aria-label={`${cumplidos.length} ${cumplidos.length === 1 ? "hábito cumplido" : "hábitos cumplidos"}: ${cumplidos.map((h) => h.name).join(", ")}`}
+                            className="flex shrink-0 items-center gap-1 text-menta"
+                          >
+                            {cumplidos.map((habit) => (
+                              <HabitIcon
+                                key={habit.id}
+                                clave={habit.icon}
+                                size={16}
+                              />
+                            ))}
+                          </span>
+                        )}
+                      </div>
+                      {entry.note && (
+                        <p className="whitespace-pre-line text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label-2">
+                          {entry.note}
+                        </p>
                       )}
                     </div>
-                    {entry.note && (
-                      <p className="whitespace-pre-line text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label-2">
-                        {entry.note}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        )}
-      </section>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

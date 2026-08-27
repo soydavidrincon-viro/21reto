@@ -58,7 +58,8 @@ export default async function ProgresoPage() {
     const end = shiftISO(start, 6);
 
     const inWeek = (logs ?? []).filter(
-      (log) => (log.log_date as string) >= start && (log.log_date as string) <= end,
+      (log) =>
+        (log.log_date as string) >= start && (log.log_date as string) <= end,
     );
     const success = inWeek.filter((log) => log.status === "success").length;
     const counted = inWeek.filter((log) => log.status !== "skipped").length;
@@ -75,11 +76,15 @@ export default async function ProgresoPage() {
     measured.length === 0
       ? null
       : Math.round(
-          measured.reduce((sum, week) => sum + week.value!, 0) / measured.length,
+          measured.reduce((sum, week) => sum + week.value!, 0) /
+            measured.length,
         );
 
   const moodByDate = new Map(
-    (entries ?? []).map((entry) => [entry.entry_date as string, entry.mood as string]),
+    (entries ?? []).map((entry) => [
+      entry.entry_date as string,
+      entry.mood as string,
+    ]),
   );
 
   const points = lastSevenDays(today).map((date) => ({
@@ -90,13 +95,19 @@ export default async function ProgresoPage() {
 
   return (
     <div className="flex flex-col gap-4 pt-11 lg:pt-0">
-      <header className="px-5 lg:px-0">
-        <h1 className="font-display text-[30px] font-semibold leading-[1.08] tracking-[-0.01em] text-label lg:text-[34px]">
+      <header className="entrar flex flex-col gap-0.5 px-5 lg:px-0">
+        <span className="text-[12.5px] font-semibold uppercase tracking-[0.06em] text-label-3">
+          Últimas {WEEKS} semanas
+        </span>
+        <h1 className="font-display text-[26px] font-semibold leading-none tracking-[-0.01em] text-label lg:text-[30px]">
           Progreso
         </h1>
       </header>
 
-      <section className="mx-4 lg:mx-0 flex items-center gap-3.5 rounded-2xl bg-card px-4 py-4">
+      <section
+        className="entrar mx-4 lg:mx-0 flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-4 lg:px-6 lg:py-5"
+        style={{ animationDelay: "0.06s" }}
+      >
         <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-menta text-menta-tinta">
           <Plant size={24} weight="fill" aria-hidden="true" />
         </span>
@@ -118,33 +129,43 @@ export default async function ProgresoPage() {
         </span>
       </section>
 
-      <section className="flex flex-col gap-[7px]">
-        <h2 className="px-8 text-[13px] lg:px-0 font-semibold uppercase tracking-[0.02em] text-label-2">
-          Cumplimiento por semana
-        </h2>
-        <div className="mx-4 lg:mx-0 flex flex-col gap-3.5 rounded-2xl bg-card px-3.5 py-4">
-          <p className="flex items-baseline gap-1.5">
-            <span className="tnum font-display text-[26px] font-bold tracking-[-0.03em] text-label">
-              {average === null ? "—" : `${average}%`}
-            </span>
-            <span className="text-[14px] tracking-[-0.01em] text-label-2">
-              {average === null
-                ? "todavía sin datos suficientes"
-                : `promedio de ${measured.length} ${measured.length === 1 ? "semana" : "semanas"}`}
-            </span>
-          </p>
-          <WeeklyBars weeks={weeks} />
-        </div>
-      </section>
+      {/* Dos gráficas en paralelo: en escritorio, apiladas dejaban una barra de
+          1100px de ancho por 90 de alto y media pantalla en blanco al lado. */}
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+        <section
+          className="entrar flex flex-col gap-2.5"
+          style={{ animationDelay: "0.12s" }}
+        >
+          <h2 className="px-6 text-[12.5px] lg:px-0 font-bold uppercase tracking-[0.08em] text-label-3">
+            Cumplimiento por semana
+          </h2>
+          <div className="mx-4 lg:mx-0 flex flex-col gap-3.5 rounded-[22px] bg-card px-3.5 py-4 lg:px-5 lg:py-5">
+            <p className="flex items-baseline gap-1.5">
+              <span className="tnum font-display text-[26px] font-bold tracking-[-0.03em] text-label">
+                {average === null ? "—" : `${average}%`}
+              </span>
+              <span className="text-[14px] tracking-[-0.01em] text-label-2">
+                {average === null
+                  ? "todavía sin datos suficientes"
+                  : `promedio de ${measured.length} ${measured.length === 1 ? "semana" : "semanas"}`}
+              </span>
+            </p>
+            <WeeklyBars weeks={weeks} />
+          </div>
+        </section>
 
-      <section className="flex flex-col gap-[7px]">
-        <h2 className="px-8 text-[13px] lg:px-0 font-semibold uppercase tracking-[0.02em] text-label-2">
-          Tu ánimo esta semana
-        </h2>
-        <div className="mx-4 lg:mx-0 rounded-2xl bg-card px-3.5 py-4">
-          <MoodLine points={points} />
-        </div>
-      </section>
+        <section
+          className="entrar flex flex-col gap-2.5"
+          style={{ animationDelay: "0.18s" }}
+        >
+          <h2 className="px-6 text-[12.5px] lg:px-0 font-bold uppercase tracking-[0.08em] text-label-3">
+            Tu ánimo esta semana
+          </h2>
+          <div className="mx-4 lg:mx-0 rounded-[22px] bg-card px-3.5 py-4 lg:px-5 lg:py-5">
+            <MoodLine points={points} />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

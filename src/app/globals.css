@@ -14,6 +14,13 @@
   --color-ambar: var(--c-ambar);
   --color-lila: var(--c-lila);
 
+  /* El único rojo del sistema. Vive aquí, y no como red-500 de Tailwind, para
+     que suba de luminosidad en oscuro como el resto de los acentos: el rojo
+     por defecto se hunde contra el fondo #0d0e14. Solo para lo destructivo y
+     para errores de formulario — la recaída va en ámbar. */
+  --color-rojo: var(--c-rojo);
+  --color-rojo-tinta: var(--c-rojo-tinta);
+
   /* Tinta de cada acento: el blanco sobre naranja, menta y ámbar no se lee al
      sol, así que cada color trae su propio color de texto. */
   --color-azul-tinta: var(--c-azul-tinta);
@@ -44,12 +51,14 @@
   --c-menta: #00c9a7;
   --c-ambar: #ffc53d;
   --c-lila: #7b61ff;
+  --c-rojo: #e0342a;
 
   --c-azul-tinta: #ffffff;
   --c-naranja-tinta: #3d1a00;
   --c-menta-tinta: #06382f;
   --c-ambar-tinta: #4a3400;
   --c-lila-tinta: #ffffff;
+  --c-rojo-tinta: #ffffff;
 
   --c-label: #14161f;
   --c-label-2: #6b7186;
@@ -74,12 +83,14 @@
     --c-menta: #2ee0bf;
     --c-ambar: #ffd166;
     --c-lila: #9b85ff;
+    --c-rojo: #ff6b61;
 
     --c-azul-tinta: #06122e;
     --c-naranja-tinta: #3d1a00;
     --c-menta-tinta: #06382f;
     --c-ambar-tinta: #4a3400;
     --c-lila-tinta: #14103a;
+    --c-rojo-tinta: #3d0603;
 
     --c-label: #f7f8fc;
     --c-label-2: #9aa0b5;
@@ -100,12 +111,14 @@
   --c-menta: #2ee0bf;
   --c-ambar: #ffd166;
   --c-lila: #9b85ff;
+  --c-rojo: #ff6b61;
 
   --c-azul-tinta: #06122e;
   --c-naranja-tinta: #3d1a00;
   --c-menta-tinta: #06382f;
   --c-ambar-tinta: #4a3400;
   --c-lila-tinta: #14103a;
+  --c-rojo-tinta: #3d0603;
 
   --c-label: #f7f8fc;
   --c-label-2: #9aa0b5;

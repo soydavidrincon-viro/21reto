@@ -75,7 +75,7 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
               // elegido se pone en negrita se ensancha y toda la fila se
               // reacomoda, saltando de tres columnas a dos.
               className={`inline-flex min-h-11 items-center gap-[7px] rounded-[22px] px-4 text-[15px] font-medium tracking-[-0.01em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-                active ? "bg-azul text-white" : "bg-card text-label"
+                active ? "bg-azul text-azul-tinta" : "bg-card text-label"
               }`}
             >
               <HabitIcon clave={option.icon} size={18} weight={active ? "fill" : "regular"} />
@@ -220,7 +220,7 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
 
       <div className="mt-auto flex flex-col gap-3 px-5 pt-4">
         {error && (
-          <p role="alert" className="text-center text-[13px] leading-[1.35] text-red-500">
+          <p role="alert" className="text-center text-[13px] leading-[1.35] text-rojo">
             {error}
           </p>
         )}
@@ -228,7 +228,7 @@ export function HabitForm({ finishOnboarding = false }: { finishOnboarding?: boo
           type="button"
           onClick={submit}
           disabled={!ready || pending}
-          className="pulsable flex h-[54px] items-center justify-center rounded-[16px] bg-azul text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] disabled:opacity-40 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          className="pulsable flex h-[54px] items-center justify-center rounded-[16px] bg-azul text-[17px] font-semibold tracking-[-0.02em] text-azul-tinta shadow-[0_8px_24px_-8px_var(--c-azul)] disabled:opacity-40 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         >
           {pending ? "Creando…" : "Empezar mi reto"}
         </button>

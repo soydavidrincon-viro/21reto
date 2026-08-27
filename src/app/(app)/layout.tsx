@@ -14,7 +14,10 @@ export default function AppLayout({
   return (
     <>
       <TabBar />
-      <main className="app-shell mx-auto w-full max-w-[430px] lg:ml-[232px] lg:max-w-none lg:px-8">
+      {/* `w-full` se anula en escritorio a propósito: con el margen de 232px del
+          carril, un ancho del 100% suma 1672px en una pantalla de 1440 y deja
+          barra de desplazamiento horizontal. `w-auto` llena lo que sobra. */}
+      <main className="app-shell mx-auto w-full max-w-[430px] lg:ml-[232px] lg:w-auto lg:max-w-none lg:px-8">
         <div className="lg:mx-auto lg:max-w-[1180px]">{children}</div>
       </main>
     </>

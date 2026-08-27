@@ -14,9 +14,15 @@ export function MoodLine({ points }: { points: Point[] }) {
   const bottom = 84;
 
   const coords = points.map((point, i) => {
-    const score = point.mood ? (MOOD_BY_KEY.get(point.mood)?.score ?? null) : null;
-    const x = 12 + (i * (width - 24)) / Math.max(points.length - 1, 1);
-    const y = score === null ? null : bottom - ((score - 1) / 4) * (bottom - top);
+    const score = point.mood
+      ? (MOOD_BY_KEY.get(point.mood)?.score ?? null)
+      : null;
+    // El punto se centra en su columna, igual que la cara de abajo. Repartirlos
+    // de borde a borde los desalineaba de la fila de caras, que sí es una
+    // rejilla de columnas iguales, y la gráfica parecía corrida medio día.
+    const x = (width * (i + 0.5)) / points.length;
+    const y =
+      score === null ? null : bottom - ((score - 1) / 4) * (bottom - top);
     return { ...point, score, x, y };
   });
 
@@ -69,6 +75,11 @@ export function MoodLine({ points }: { points: Point[] }) {
           />
         ))}
 
+        {/* Sin <title> aquí dentro: React 19 trata cualquier <title> como
+            metadato del documento y lo iza al <head>, así que el servidor
+            mandaba <title></title> vacío y el cliente lo rellenaba al hidratar
+            — mismatch de hidratación en cada carga. El texto del punto vive
+            abajo, en la fila de caras. */}
         {filled.map((point) => (
           <circle
             key={point.date}
@@ -77,28 +88,46 @@ export function MoodLine({ points }: { points: Point[] }) {
             r={point.date === last?.date ? 5 : 4}
             className="fill-azul stroke-card"
             strokeWidth="2"
-          >
-            <title>
-              {point.label}: {MOOD_BY_KEY.get(point.mood!)?.label}
-            </title>
-          </circle>
+          />
         ))}
       </svg>
 
-      <ol className="flex justify-between">
-        {points.map((point) => (
-          <li key={point.date} className="text-[17px]" title={point.label}>
-            {point.mood ? (
-              <span aria-label={MOOD_BY_KEY.get(point.mood)?.label}>
-                {MOOD_BY_KEY.get(point.mood)?.emoji}
+      <ol
+        className="grid text-center"
+        style={{
+          gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))`,
+        }}
+      >
+        {points.map((point) => {
+          const mood = point.mood ? MOOD_BY_KEY.get(point.mood) : null;
+          return (
+            <li
+              key={point.date}
+              className="flex flex-col items-center gap-0.5"
+              title={
+                mood
+                  ? `${point.label}: ${mood.label}`
+                  : `${point.label}: sin registro`
+              }
+            >
+              <span className="text-[17px] leading-none">
+                {mood ? (
+                  <span aria-label={mood.label}>{mood.emoji}</span>
+                ) : (
+                  <span aria-label="sin registro" className="text-label-3">
+                    ·
+                  </span>
+                )}
               </span>
-            ) : (
-              <span aria-label="sin registro" className="text-label-3">
-                ·
+              <span
+                aria-hidden="true"
+                className="text-[10.5px] font-medium text-label-3"
+              >
+                {point.label}
               </span>
-            )}
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ol>
     </div>
   );

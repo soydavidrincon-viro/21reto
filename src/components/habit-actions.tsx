@@ -31,7 +31,7 @@ export function HabitActions({
   }
 
   return (
-    <div className="mx-4 mt-1 flex flex-col gap-1">
+    <div className="mx-4 mt-1 flex flex-col gap-1 lg:mx-0 lg:mt-0">
       <button
         type="button"
         disabled={pending}
@@ -41,7 +41,7 @@ export function HabitActions({
           )
         }
         className={`flex h-[54px] items-center justify-center gap-2 rounded-[16px] text-[17px] font-semibold tracking-[-0.02em] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-          done ? "bg-fill text-label" : "bg-azul text-white"
+          done ? "bg-fill text-label" : "bg-azul text-azul-tinta"
         }`}
       >
         {!done && <Check size={19} weight="bold" aria-hidden="true" />}
@@ -59,7 +59,7 @@ export function HabitActions({
               type="button"
               disabled={pending}
               onClick={() => run(() => markDay(habitId, today, "relapse"))}
-              className="pulsable h-11 flex-1 rounded-xl bg-ambar text-[15px] font-semibold text-[#4A3A00] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              className="pulsable h-11 flex-1 rounded-xl bg-ambar text-[15px] font-semibold text-ambar-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               Sí, registrar
             </button>

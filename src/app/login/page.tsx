@@ -115,7 +115,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={state === "sending"}
-                  className="pulsable flex h-[54px] items-center justify-center rounded-[16px] bg-azul text-[17px] font-semibold tracking-[-0.02em] text-white shadow-[0_8px_24px_-8px_var(--c-blue)] disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                  className="pulsable flex h-[54px] items-center justify-center rounded-[16px] bg-azul text-[17px] font-semibold tracking-[-0.02em] text-azul-tinta shadow-[0_8px_24px_-8px_var(--c-azul)] disabled:opacity-50 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
                 >
                   {state === "sending" ? "Enviando…" : "Enviarme el enlace"}
                 </button>
@@ -131,7 +131,7 @@ export default function LoginPage() {
             )}
 
             {error && (
-              <p role="alert" className="text-center text-[13px] leading-[1.35] text-red-500">
+              <p role="alert" className="text-center text-[13px] leading-[1.35] text-rojo">
                 {error}
               </p>
             )}

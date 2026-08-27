@@ -46,7 +46,10 @@ export function MonthHeatmap({
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-7 gap-1.5" aria-hidden="true">
         {["L", "M", "M", "J", "V", "S", "D"].map((initialLetter, i) => (
-          <span key={i} className="text-center text-[10.5px] font-semibold text-label-2">
+          <span
+            key={i}
+            className="mx-auto w-full max-w-[42px] text-center text-[10.5px] font-semibold text-label-2"
+          >
             {initialLetter}
           </span>
         ))}
@@ -60,13 +63,14 @@ export function MonthHeatmap({
           const isToday = date === today;
           const future = date > today;
 
-          const tone = state === "success"
-            ? "bg-azul text-white"
-            : state === "relapse"
-              ? "bg-ambar text-[#4A3A00]"
-              : isToday
-                ? "bg-card text-azul ring-2 ring-azul ring-inset"
-                : "bg-fill text-label-3";
+          const tone =
+            state === "success"
+              ? "bg-azul text-azul-tinta"
+              : state === "relapse"
+                ? "bg-ambar text-[#4A3A00]"
+                : isToday
+                  ? "bg-card text-azul ring-2 ring-azul ring-inset"
+                  : "bg-fill text-label-3";
 
           return (
             <button
@@ -83,7 +87,7 @@ export function MonthHeatmap({
                       ? "por venir"
                       : "sin registro, tocar para marcar"
               }`}
-              className={`tnum flex h-[30px] items-center justify-center rounded-lg text-[11px] font-semibold transition-transform active:scale-90 disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-azul ${tone} ${
+              className={`tnum flex aspect-square w-full max-w-[42px] items-center justify-center justify-self-center rounded-lg text-[11px] font-semibold transition-transform active:scale-90 disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-azul ${tone} ${
                 future ? "opacity-40" : ""
               }`}
             >
@@ -95,12 +99,14 @@ export function MonthHeatmap({
 
       {editing && (
         <div className="flex flex-col gap-2 rounded-xl bg-fill p-3">
-          <span className="text-[13px] font-semibold text-label">{longDate(editing)}</span>
+          <span className="text-[13px] font-semibold text-label">
+            {longDate(editing)}
+          </span>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => apply(editing, "success")}
-              className="h-10 flex-1 rounded-lg bg-azul text-[14px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              className="h-10 flex-1 rounded-lg bg-azul text-[14px] font-semibold text-azul-tinta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               Limpio
             </button>

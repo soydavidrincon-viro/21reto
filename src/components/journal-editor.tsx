@@ -89,7 +89,7 @@ export function JournalEditor({
       />
 
       {error && (
-        <p role="alert" className="text-[13px] leading-[1.35] text-red-500">
+        <p role="alert" className="text-[13px] leading-[1.35] text-rojo">
           {error}
         </p>
       )}
