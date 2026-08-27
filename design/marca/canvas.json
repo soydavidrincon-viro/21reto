@@ -1,0 +1,16 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 900, "h": 700, "title": "Logo y paleta" },
+    { "file": "Companeros.dc.html", "x": 1000, "y": 0, "w": 900, "h": 700, "title": "Los compañeros" }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -190,
+      "w": 620,
+      "text": "Propuesta de identidad para Antídoto.\n\nNada de esto está aplicado a la app todavía — es para que digas sí, no, o qué cambiar.\n\nLos personajes son originales: las referencias que mandaste son de un estudio y no se pueden copiar, pero sí se toma su lógica de familia (mismo cuerpo, distinta oreja y color).\n\nEl cambio grande frente a lo que hay hoy: el color pasa de los bordes al relleno de tarjetas enteras."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
