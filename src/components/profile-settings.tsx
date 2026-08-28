@@ -15,6 +15,7 @@ import {
   Companion,
   type CompanionKey,
 } from "@/components/companion";
+import { aplicarTema } from "@/components/tema";
 import { detectTimeZone } from "@/lib/dates";
 import type { Profile } from "@/lib/types";
 
@@ -59,8 +60,19 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
     });
   }
 
+  /**
+   * El tema se pinta aquí mismo y solo después se guarda.
+   *
+   * Antes lo estampaba el servidor, así que tocar "Oscuro" no hacía nada
+   * visible hasta que volvía la acción y se revalidaba la ruta — con Supabase
+   * frío, eso eran segundos de botón marcado y pantalla sin cambiar. Ahora el
+   * atributo y la cookie se ponen al instante; la acción viaja detrás para
+   * dejarlo en el perfil, que es lo que hace que el tema te siga a otro
+   * dispositivo.
+   */
   function pickTheme(next: Theme) {
     setThemeState(next);
+    aplicarTema(next);
     startTransition(async () => {
       await setTheme(next);
     });

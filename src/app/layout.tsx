@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Fredoka } from "next/font/google";
-import { cookies } from "next/headers";
+import { TemaGuardia } from "@/components/tema";
 import "./globals.css";
 
 /**
@@ -57,17 +57,44 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({
+/**
+ * El tema se estampa desde un script en línea, no leyendo la cookie en el
+ * servidor.
+ *
+ * Leerla aquí con `cookies()` funcionaba, pero tenía un precio que no se veía:
+ * saca del prerenderizado **a toda la app**. Con eso, la portada y el login
+ * —que no dependen de ningún dato de quien mira— se renderizaban en un lambda
+ * en cada visita. Medido en producción: 0.2s con el lambda caliente y 2.2s con
+ * el lambda frío, que es de donde salía el LCP de casi tres segundos. Y el
+ * lambda se enfría solo, así que el que se lo come es justo el visitante que
+ * llega de nuevas.
+ *
+ * El script corre mientras el navegador parsea el HTML, o sea antes del primer
+ * pintado: no hay fogonazo claro, que era lo que el render en servidor venía a
+ * evitar. Sin cookie válida no se pone nada, y "nada" significa seguir al
+ * sistema — de eso ya se encarga el @media de globals.css.
+ */
+const TEMA_INMEDIATO = `(function(){try{var m=document.cookie.match(/(?:^|; )theme=(light|dark)/);if(m)document.documentElement.setAttribute("data-theme",m[1])}catch(e){}})()`;
+
+export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // El tema se estampa en el servidor desde la cookie. Hacerlo al hidratar
-  // dejaría ver un fogonazo claro antes de que la app se ponga oscura.
-  const theme = (await cookies()).get("theme")?.value;
-  const attr = theme === "light" || theme === "dark" ? theme : undefined;
-
   return (
-    <html lang="es" data-theme={attr} className={`${display.variable} ${ui.variable}`}>
-      <body>{children}</body>
+    // suppressHydrationWarning porque el script de arriba toca `data-theme`
+    // antes de que React hidrate: sin esto React vería el atributo que él no
+    // puso y trataría la diferencia como un error de hidratación.
+    <html
+      lang="es"
+      className={`${display.variable} ${ui.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: TEMA_INMEDIATO }} />
+      </head>
+      <body>
+        <TemaGuardia />
+        {children}
+      </body>
     </html>
   );
 }

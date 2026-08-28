@@ -10,10 +10,13 @@ export type Theme = "system" | "light" | "dark";
 /**
  * El tema se guarda en el perfil y además en una cookie.
  *
- * La cookie no es redundante: el layout raíz la lee para estampar `data-theme`
- * en el `<html>` durante el render del servidor. Sin ella la página saldría con
- * el tema del sistema y cambiaría de golpe al hidratar, que es el parpadeo
- * blanco clásico de las apps oscuras.
+ * La cookie no es redundante: es lo que lee el script en línea del layout raíz
+ * para estampar `data-theme` en el `<html>` antes del primer pintado. Sin ella
+ * la página saldría con el tema del sistema y cambiaría de golpe al cargar,
+ * que es el parpadeo blanco clásico de las apps oscuras.
+ *
+ * El perfil es la copia que viaja entre dispositivos; la cookie es la copia
+ * rápida de este navegador.
  */
 export async function setTheme(theme: Theme) {
   const supabase = await createClient();
@@ -35,9 +38,15 @@ export async function setTheme(theme: Theme) {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
     sameSite: "lax",
+    // Explícito porque de esto depende todo lo demás: el script del layout la
+    // lee con `document.cookie`, y con httpOnly la cookie existiría pero sería
+    // invisible desde JavaScript. El tema volvería a parpadear.
+    httpOnly: false,
   });
 
-  revalidatePath("/", "layout");
+  // Sin revalidatePath: el tema ya no cambia nada de lo que renderiza el
+  // servidor, así que tirar la caché de rutas solo obligaría a volver a
+  // construir la portada y el login para producir el mismo HTML.
   return { error: null };
 }
 
