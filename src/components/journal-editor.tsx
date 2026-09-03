@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle } from "@phosphor-icons/react";
+import { CheckCircle, LockSimple } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { saveJournal } from "@/app/(app)/hoy/actions";
 import { longDate } from "@/lib/dates";
@@ -15,10 +16,17 @@ export function JournalEditor({
   date,
   initialMood,
   initialNote,
+  pendientes,
 }: {
   date: string;
   initialMood: string | null;
   initialNote: string | null;
+  /**
+   * Hábitos sin marcar hoy. Mientras quede alguno, el día no está cerrado y la
+   * caja de escribir no se abre — la misma regla que en Hoy, y aquí también,
+   * porque esta caja escribe la entrada del mismo día.
+   */
+  pendientes: number;
 }) {
   const [mood, setMood] = useState(initialMood);
   const [note, setNote] = useState(initialNote ?? "");
@@ -35,6 +43,10 @@ export function JournalEditor({
   });
 
   const dirty = mood !== guardado.mood || note !== guardado.note;
+
+  /** Quien todavía no tiene hábitos no puede cerrar nada: para esa persona
+      la caja está abierta desde el primer día. */
+  const cerrado = pendientes === 0;
 
   function save() {
     setError(null);
@@ -94,10 +106,34 @@ export function JournalEditor({
         rows={4}
         maxLength={4000}
         value={note}
+        disabled={!cerrado}
         onChange={(event) => setNote(event.target.value)}
-        placeholder="¿Qué pasó hoy? ¿Qué lo hizo fácil o difícil?"
-        className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        placeholder={
+          cerrado
+            ? "¿Qué pasó hoy? ¿Qué lo hizo fácil o difícil?"
+            : "Marca tus hábitos en Hoy y se abre"
+        }
+        className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
       />
+
+      {!cerrado && (
+        <p className="flex flex-wrap items-start gap-x-1.5 gap-y-0.5 text-[12.5px] leading-[1.35] text-label-2">
+          <LockSimple
+            size={14}
+            weight="fill"
+            aria-hidden="true"
+            className="mt-px shrink-0"
+          />
+          Te {pendientes === 1 ? "falta" : "faltan"} {pendientes}{" "}
+          {pendientes === 1 ? "hábito" : "hábitos"} por marcar.{" "}
+          <Link
+            href="/hoy"
+            className="font-semibold text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          >
+            Ir a Hoy
+          </Link>
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="text-[13px] leading-[1.35] text-rojo">

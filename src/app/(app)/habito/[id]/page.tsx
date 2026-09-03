@@ -6,10 +6,12 @@ import { CompartirTarjeta } from "@/components/compartir-tarjeta";
 import { GestionDeReto } from "@/components/gestion-de-reto";
 import { HabitActions } from "@/components/habit-actions";
 import { MonthHeatmap } from "@/components/month-heatmap";
+import { VideosDelHabito } from "@/components/videos-del-habito";
 import { monthGrid, monthName, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
 import type { LogStatus, Profile } from "@/lib/types";
+import type { HabitVideo } from "@/lib/videos";
 
 export const dynamic = "force-dynamic";
 
@@ -40,11 +42,16 @@ export default async function HabitoPage({
 
   const today = todayIn(profile?.timezone ?? "UTC");
 
-  const [{ data: habit }, { data: statsRows }, { data: logs }] =
+  const [{ data: habit }, { data: statsRows }, { data: logs }, { data: videos }] =
     await Promise.all([
       supabase.from("habits").select("*").eq("id", id).maybeSingle(),
       supabase.rpc("get_habit_stats", { p_habit_id: id, p_today: today }),
       supabase.from("habit_logs").select("log_date, status").eq("habit_id", id),
+      supabase
+        .from("habit_videos")
+        .select("id, url, title")
+        .eq("habit_id", id)
+        .order("created_at", { ascending: true }),
     ]);
 
   if (!habit) notFound();
@@ -131,6 +138,18 @@ export default async function HabitoPage({
             today={today}
             todayStatus={todayStatus}
           />
+
+          {/* Solo en lo que se construye. En un hábito que se deja, la ayuda
+              que hace falta es aguantar, y para eso está el botón de
+              emergencia; una lista de videos ahí sería relleno. */}
+          {habit.kind === "build" && (
+            <div className="mx-4 lg:mx-0">
+              <VideosDelHabito
+                habitId={habit.id}
+                videos={(videos ?? []) as HabitVideo[]}
+              />
+            </div>
+          )}
 
           <div className="mx-4 lg:mx-0">
             <CompartirTarjeta habitId={habit.id} nombre={habit.name} />

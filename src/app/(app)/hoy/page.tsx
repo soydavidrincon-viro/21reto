@@ -77,6 +77,13 @@ export default async function HoyPage() {
   // cosa de la pantalla que pide una decisión.
   const cumplidos = habits.filter((h) => h.clean_days >= h.target_days);
 
+  // El botón de emergencia solo tiene sentido sobre lo que se deja.
+  const paraDejar = habits.filter((h) => h.kind === "quit");
+
+  // Cuántos hábitos siguen sin decidir hoy. Es lo que cierra —o no— el día, y
+  // con él la caja de escribir de la bitácora.
+  const pendientes = habits.filter((h) => h.today_status === null).length;
+
   /**
    * De qué humor está el compañero. Sale del estado real, no de un valor fijo:
    * un muñeco que se ve igual el día que llevas veinte seguidos y el día que
@@ -148,17 +155,6 @@ export default async function HoyPage() {
             </div>
           )}
 
-          {habits.length > 0 && (
-            <div className="px-4 lg:px-0">
-              <CravingButton
-                habits={habits}
-                companion={profile.companion ?? "brote"}
-                etapa={etapaDeRacha(rachaViva)}
-                hoy={antojosHoy.count ?? 0}
-              />
-            </div>
-          )}
-
           <RetoCarrusel
             habits={habits}
             companion={profile.companion ?? "brote"}
@@ -193,6 +189,25 @@ export default async function HoyPage() {
               </Link>
             </div>
           </section>
+
+          {/* Debajo de los hábitos, y no encima.
+              Arriba competía con lo que se abre a mirar todos los días —cómo va
+              el reto— y lo primero de la pantalla acababa siendo la salida de
+              emergencia. Aquí abajo se llega después de haber marcado, que es
+              el orden real: primero el día, y esto para cuando haga falta.
+
+              Solo si hay algo que dejar: en un hábito que se construye no hay
+              antojo que aguantar. */}
+          {paraDejar.length > 0 && (
+            <div className="px-4 lg:px-0">
+              <CravingButton
+                habits={paraDejar}
+                companion={profile.companion ?? "brote"}
+                etapa={etapaDeRacha(rachaViva)}
+                hoy={antojosHoy.count ?? 0}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-4">
@@ -305,6 +320,7 @@ export default async function HoyPage() {
                 today={today}
                 selected={entry.data?.mood ?? null}
                 nota={entry.data?.note ?? null}
+                pendientes={pendientes}
               />
             </div>
           </section>

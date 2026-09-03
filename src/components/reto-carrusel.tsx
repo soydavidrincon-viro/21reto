@@ -7,6 +7,16 @@ import {
 import { HABIT_SKIN, type DailyOverviewRow } from "@/lib/types";
 
 /**
+ * Hasta cuántos días se dibuja la barra casilla a casilla.
+ *
+ * Sale de medir: en la tarjeta más estrecha que existe —un iPhone SE, 320px de
+ * pantalla menos los márgenes— quedan unos 250px útiles. Con 30 casillas y 3px
+ * de hueco cada una mide 5px, que todavía se distingue. Con 60 baja de 1px y ya
+ * no es una cuenta de días, es una textura.
+ */
+const MAX_CASILLAS = 31;
+
+/**
  * Los retos activos, uno al lado del otro y con arrastre.
  *
  * Antes la tarjeta grande mostraba siempre el primer hábito y no había forma de
@@ -44,6 +54,7 @@ export function RetoCarrusel({
             100,
             (habit.clean_days / habit.target_days) * 100,
           );
+          const porDias = habit.target_days <= MAX_CASILLAS;
 
           return (
             <section
@@ -90,22 +101,52 @@ export function RetoCarrusel({
               </div>
 
               <div
-                className="mt-4 h-2.5 overflow-hidden rounded-full"
-                style={{ background: "rgba(0,0,0,0.16)" }}
+                className="mt-4"
                 role="progressbar"
                 aria-valuenow={habit.clean_days}
                 aria-valuemin={0}
                 aria-valuemax={habit.target_days}
-                aria-label={`Progreso de ${habit.name}`}
+                aria-label={`Progreso de ${habit.name}: ${habit.clean_days} de ${habit.target_days} días`}
               >
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${progreso}%`,
-                    background: skin.tinta,
-                    opacity: 0.9,
-                  }}
-                />
+                {porDias ? (
+                  // Una casilla por día. La barra lisa decía lo mismo, pero un
+                  // 62% no se siente como diecinueve días: la casilla que se
+                  // enciende mañana está ahí, a la vista y contable con el
+                  // dedo, y eso es lo que hace que valga la pena encenderla.
+                  <div className="flex gap-[3px]">
+                    {Array.from({ length: habit.target_days }, (_, dia) => (
+                      <span
+                        key={dia}
+                        className="h-3 flex-1 rounded-[2px]"
+                        style={{
+                          background: skin.tinta,
+                          // Sin opacity 0 en las que faltan: en un fondo de
+                          // color, transparente es invisible y la barra se
+                          // quedaría en solo la parte hecha, que es justo la
+                          // mitad que ya se sabe.
+                          opacity: dia < habit.clean_days ? 0.95 : 0.22,
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  // Con metas largas las casillas se vuelven rayas de menos de
+                  // dos píxeles en un teléfono: ahí no se cuenta nada y solo
+                  // queda un peine. Para eso sigue la barra lisa.
+                  <div
+                    className="h-3 overflow-hidden rounded-full"
+                    style={{ background: "rgba(0,0,0,0.16)" }}
+                  >
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${progreso}%`,
+                        background: skin.tinta,
+                        opacity: 0.9,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 flex items-end justify-between gap-3">

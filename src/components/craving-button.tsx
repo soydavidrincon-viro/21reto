@@ -11,21 +11,22 @@ import { CravingSheet } from "@/components/craving-sheet";
 import type { DailyOverviewRow } from "@/lib/types";
 
 /**
- * El botón de emergencia de la app.
+ * El botón de emergencia.
  *
- * Va arriba y en naranja, no escondido en un menú: el momento en que sirve es
- * el momento en que menos ganas hay de buscarlo. Y el compañero asoma detrás
- * porque este es el gesto que la app quiere premiar — aguantar es más trabajo
- * que marcar un día ya pasado.
+ * Se llamó "Ando flaqueando" y hubo que cambiarlo. "Flaquear" es de
+ * diccionario y la segunda línea lo explicaba, pero esto se lee en el peor
+ * momento del día: si alguien tiene que pararse a interpretar el nombre del
+ * botón, el botón ya falló. "Botón de emergencia" no hay que traducirlo, y dice
+ * a la vez qué es y cuándo se usa.
  *
- * "Ando flaqueando" y no "estoy cayendo": el botón es para el momento de
- * antes, cuando todavía no ha pasado nada. Ponerle nombre de derrota a ese
- * momento sería declarar perdido a quien justamente vino a no perderlo — y
- * además chocaría con el botón "Caí" que vive dentro de la hoja.
+ * Va en naranja y no escondido en un menú, por lo mismo. Y el compañero asoma
+ * detrás porque este es el gesto que la app quiere premiar: aguantar es más
+ * trabajo que marcar un día ya pasado.
  *
- * La segunda línea del primer estado explica la palabra. "Flaquear" es de
- * diccionario y se entiende en todas partes, pero esto se lee en el peor
- * momento del día y ahí nadie quiere ponerse a interpretar vocabulario.
+ * Solo se le enseña a quien tiene algo que dejar. Para un hábito que se
+ * construye no hay antojo que aguantar —lo que falta ahí es saber qué hacer, y
+ * eso son los videos del hábito—, así que ofrecerle este botón a quien solo
+ * trackea "Leer" es ruido en la pantalla que más se mira.
  */
 export function CravingButton({
   habits,
@@ -33,6 +34,7 @@ export function CravingButton({
   etapa,
   hoy,
 }: {
+  /** Solo los hábitos que se dejan. Los que se construyen no llegan aquí. */
   habits: DailyOverviewRow[];
   companion: CompanionKey;
   etapa: CompanionEtapa;
@@ -53,11 +55,11 @@ export function CravingButton({
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-px">
           <span className="font-display text-[17px] font-semibold tracking-[-0.01em] text-naranja-tinta">
-            Ando flaqueando
+            Botón de emergencia
           </span>
           <span className="text-[12.5px] font-medium text-naranja-tinta opacity-75">
             {hoy === 0
-              ? "Estás a punto y no has caído. Regístralo."
+              ? "Tócalo si te están dando ganas ahora mismo."
               : hoy === 1
                 ? "Ya aguantaste uno hoy. Este también pasa."
                 : `Van ${hoy} hoy. Cada uno cuenta.`}
