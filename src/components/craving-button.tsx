@@ -59,7 +59,7 @@ export function CravingButton({
           </span>
           <span className="text-[12.5px] font-medium text-naranja-tinta opacity-75">
             {hoy === 0
-              ? "Tócalo si te están dando ganas ahora mismo."
+              ? "Cuando sientas que estás por romper tu racha."
               : hoy === 1
                 ? "Ya aguantaste uno hoy. Este también pasa."
                 : `Van ${hoy} hoy. Cada uno cuenta.`}
@@ -78,11 +78,10 @@ export function CravingButton({
       {/* La línea que explica para qué es.
           El nombre dice cuándo se toca, pero no qué pasa después, y en un botón
           naranja que ocupa una tarjeta entera eso da miedo: parece que va a
-          llamar a alguien o a reiniciar la racha. Lo que hace es registrar el
-          momento, y decirlo aquí abajo cuesta una línea. */}
+          reiniciar la racha o a llamar a alguien. Así que lo primero que dice
+          es lo que NO hace, que es la duda que frena el dedo. */}
       <p className="mt-1.5 px-1 text-pretty text-[12.5px] leading-[1.4] text-label-2">
-        No pasa nada al tocarlo: anotas que te dio, y la app te dice con el
-        tiempo a qué horas y con qué te viene.
+        No rompe tu racha: solo queda anotado el momento.
       </p>
 
       {abierto && (
