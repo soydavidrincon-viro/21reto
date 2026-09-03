@@ -35,11 +35,7 @@ export default async function BitacoraPage() {
         .from("habit_logs")
         .select("habit_id, log_date, status")
         .gte("log_date", since),
-      // `status` viene para poder contar los que faltan por marcar hoy. Los
-      // archivados siguen viniendo a propósito: son el diccionario con el que
-      // se pintan el nombre y el icono de entradas viejas, y sin ellos una
-      // entrada de hace dos meses perdería de qué hábito era.
-      supabase.from("habits").select("id, name, icon, color, status"),
+      supabase.from("habits").select("id, name, icon, color"),
     ]);
 
   const habitById = new Map(
@@ -72,26 +68,6 @@ export default async function BitacoraPage() {
     (entry) => entry.entry_date === today,
   );
 
-  /**
-   * Cuántos hábitos siguen sin marcar hoy.
-   *
-   * Se cuenta aquí y no solo en Hoy porque el editor de esta pantalla escribe
-   * la misma entrada del mismo día. Si el candado viviera únicamente allá, para
-   * saltárselo bastaría con venir a Bitácora, y entonces no sería una regla
-   * sino un adorno de una pantalla.
-   *
-   * Solo los activos, igual que `get_daily_overview`: un hábito archivado no se
-   * marca, así que contarlo dejaría el día imposible de cerrar para siempre.
-   */
-  const marcadosHoy = new Set(
-    (logs ?? [])
-      .filter((log) => log.log_date === today)
-      .map((log) => log.habit_id as string),
-  );
-  const pendientes = (habits ?? []).filter(
-    (habit) => habit.status === "active" && !marcadosHoy.has(habit.id as string),
-  ).length;
-
   // La de hoy también va en el historial. Antes se excluía porque ya estaba en
   // el editor de arriba, pero eso hacía que al guardar no apareciera en ningún
   // lado y pareciera que no se había guardado.
@@ -119,7 +95,6 @@ export default async function BitacoraPage() {
             date={today}
             initialMood={todayEntry?.mood ?? null}
             initialNote={todayEntry?.note ?? null}
-            pendientes={pendientes}
           />
         </section>
 

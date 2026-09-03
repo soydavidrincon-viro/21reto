@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, LockSimple } from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { saveJournal } from "@/app/(app)/hoy/actions";
@@ -20,16 +20,16 @@ export function MoodPicker({
   today,
   selected,
   nota,
-  pendientes,
+  onGuardado,
+  enlaceABitacora = true,
 }: {
   today: string;
   selected: string | null;
   nota: string | null;
-  /**
-   * Cuántos hábitos siguen sin marcar hoy. Con uno solo pendiente, el día no
-   * está cerrado y la nota no se abre.
-   */
-  pendientes: number;
+  /** Aviso de que la entrada quedó guardada. Lo usa el cierre del día. */
+  onGuardado?: () => void;
+  /** El enlace a la bitácora sobra dentro de una hoja modal. */
+  enlaceABitacora?: boolean;
 }) {
   const [mood, setMood] = useState(selected);
   const [note, setNote] = useState(nota ?? "");
@@ -40,15 +40,6 @@ export function MoodPicker({
   const [pending, startTransition] = useTransition();
 
   const sucio = mood !== guardado.mood || note !== guardado.note;
-
-  /**
-   * El día está cerrado cuando no queda ningún hábito sin marcar.
-   *
-   * Quien todavía no tiene hábitos no puede cerrar nada, así que para esa
-   * persona la nota está abierta: si no, el primer día en la app sería una
-   * pantalla con un candado y ninguna forma de quitarlo.
-   */
-  const cerrado = pendientes === 0;
 
   /**
    * La cara y la nota son la misma entrada del día, así que van en la misma
@@ -63,6 +54,7 @@ export function MoodPicker({
         note: limpia,
       });
       setGuardado({ mood: siguienteMood, note: limpia ?? "" });
+      onGuardado?.();
     });
   }
 
@@ -110,34 +102,10 @@ export function MoodPicker({
         rows={2}
         maxLength={4000}
         value={note}
-        disabled={!cerrado}
         onChange={(event) => setNote(event.target.value)}
-        placeholder={
-          cerrado
-            ? "¿Qué pasó hoy? (opcional)"
-            : "Marca tus hábitos y se abre"
-        }
-        className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        placeholder="¿Qué pasó hoy? (opcional)"
+        className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
       />
-
-      {/* La cara sigue tocable; lo único que espera es la escritura.
-          Elegir un emoji es un toque y se puede hacer a cualquier hora del día;
-          escribir cómo fue el día antes de haberlo cerrado es contarlo a
-          medias. Y esto no es un candado con moraleja: dice cuántos faltan, así
-          que se sabe exactamente qué hacer para abrirlo. */}
-      {!cerrado && (
-        <p className="flex items-start gap-1.5 px-0.5 text-[12.5px] leading-[1.35] text-label-2">
-          <LockSimple
-            size={14}
-            weight="fill"
-            aria-hidden="true"
-            className="mt-px shrink-0"
-          />
-          Te {pendientes === 1 ? "falta" : "faltan"} {pendientes}{" "}
-          {pendientes === 1 ? "hábito" : "hábitos"} por marcar para cerrar el
-          día.
-        </p>
-      )}
 
       <div className="flex items-center justify-between gap-2">
         {sucio || pending ? (
@@ -167,12 +135,14 @@ export function MoodPicker({
                 </>
               )}
             </span>
-            <Link
-              href="/bitacora"
-              className="shrink-0 text-[12.5px] font-semibold text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-            >
-              Ver la bitácora
-            </Link>
+            {enlaceABitacora && (
+              <Link
+                href="/bitacora"
+                className="shrink-0 text-[12.5px] font-semibold text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              >
+                Ver la bitácora
+              </Link>
+            )}
           </>
         )}
       </div>

@@ -75,6 +75,16 @@ export function CravingButton({
         />
       </button>
 
+      {/* La línea que explica para qué es.
+          El nombre dice cuándo se toca, pero no qué pasa después, y en un botón
+          naranja que ocupa una tarjeta entera eso da miedo: parece que va a
+          llamar a alguien o a reiniciar la racha. Lo que hace es registrar el
+          momento, y decirlo aquí abajo cuesta una línea. */}
+      <p className="mt-1.5 px-1 text-pretty text-[12.5px] leading-[1.4] text-label-2">
+        No pasa nada al tocarlo: anotas que te dio, y la app te dice con el
+        tiempo a qué horas y con qué te viene.
+      </p>
+
       {abierto && (
         <CravingSheet habits={habits} onClose={() => setAbierto(false)} />
       )}

@@ -2,8 +2,8 @@ import { Plus } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CierreDeReto } from "@/components/cierre-de-reto";
+import { CierreDelDia } from "@/components/cierre-del-dia";
 import { CravingButton } from "@/components/craving-button";
-import { HabitCard } from "@/components/habit-card";
 import { RetoCarrusel } from "@/components/reto-carrusel";
 import { Isotipo } from "@/components/logo";
 import { MoodPicker } from "@/components/mood-picker";
@@ -67,7 +67,18 @@ export default async function HoyPage() {
   const habits = (overview.data ?? []) as DailyOverviewRow[];
   const frase = ((quote.data ?? []) as Quote[])[0];
   const firstName = profile.display_name?.split(" ")[0] ?? "";
+
+  /**
+   * El día se cuenta sobre lo que toca hoy, no sobre todo lo que existe.
+   *
+   * Con hábitos de días sueltos, "2 de 5 marcados" era una nota mala todos los
+   * días para alguien que estaba cumpliendo exactamente lo que se propuso. El
+   * denominador son los de hoy; los marcados incluyen los de un día libre,
+   * porque si alguien fue al gimnasio un miércoles que no tocaba, eso cuenta.
+   */
+  const deHoy = habits.filter((h) => h.toca_hoy);
   const marcadosHoy = habits.filter((h) => h.today_status === "success").length;
+  const totalDeHoy = Math.max(deHoy.length, marcadosHoy);
   const rachaViva = habits.reduce(
     (max, h) => Math.max(max, h.current_streak),
     0,
@@ -79,10 +90,6 @@ export default async function HoyPage() {
 
   // El botón de emergencia solo tiene sentido sobre lo que se deja.
   const paraDejar = habits.filter((h) => h.kind === "quit");
-
-  // Cuántos hábitos siguen sin decidir hoy. Es lo que cierra —o no— el día, y
-  // con él la caja de escribir de la bitácora.
-  const pendientes = habits.filter((h) => h.today_status === null).length;
 
   /**
    * De qué humor está el compañero. Sale del estado real, no de un valor fijo:
@@ -137,7 +144,7 @@ export default async function HoyPage() {
           </h1>
         </div>
         <span className="hidden text-[14px] font-medium text-label-2 lg:block">
-          {marcadosHoy} de {habits.length} marcados hoy
+          {marcadosHoy} de {totalDeHoy} marcados hoy
         </span>
       </header>
 
@@ -168,14 +175,14 @@ export default async function HoyPage() {
             </h2>
 
             <div className="flex flex-col gap-2.5 px-4 lg:px-0">
-              {habits.map((habit, i) => (
-                <HabitCard
-                  key={habit.habit_id}
-                  habit={habit}
-                  today={today}
-                  delay={0.18 + i * 0.06}
-                />
-              ))}
+              <CierreDelDia
+                habits={habits}
+                today={today}
+                moodDeHoy={entry.data?.mood ?? null}
+                notaDeHoy={entry.data?.note ?? null}
+                companion={profile.companion ?? "brote"}
+                etapa={etapaDeRacha(rachaViva)}
+              />
 
               <Link
                 href="/habito/nuevo"
@@ -225,8 +232,8 @@ export default async function HoyPage() {
                     Hoy
                   </span>
                   <span className="tnum text-[13px] font-semibold text-label-2">
-                    {marcadosHoy} de {habits.length}{" "}
-                    {habits.length === 1 ? "marcado" : "marcados"}
+                    {marcadosHoy} de {totalDeHoy}{" "}
+                    {totalDeHoy === 1 ? "marcado" : "marcados"}
                   </span>
                 </div>
                 <div
@@ -234,21 +241,26 @@ export default async function HoyPage() {
                   role="progressbar"
                   aria-valuenow={marcadosHoy}
                   aria-valuemin={0}
-                  aria-valuemax={habits.length}
+                  aria-valuemax={totalDeHoy}
                   aria-label="Hábitos marcados hoy"
                 >
-                  {habits.map((habit) => (
-                    <span
-                      key={habit.habit_id}
-                      className={`h-2.5 flex-1 rounded-full ${
-                        habit.today_status === "success"
-                          ? "bg-menta"
-                          : habit.today_status === "relapse"
-                            ? "bg-ambar"
-                            : "bg-fill"
-                      }`}
-                    />
-                  ))}
+                  {/* Solo los de hoy, más cualquiera de un día libre que se
+                      haya marcado igual. Un hábito de martes y jueves no debe
+                      dejar un hueco gris en la barra cada domingo. */}
+                  {habits
+                    .filter((h) => h.toca_hoy || h.today_status !== null)
+                    .map((habit) => (
+                      <span
+                        key={habit.habit_id}
+                        className={`h-2.5 flex-1 rounded-full ${
+                          habit.today_status === "success"
+                            ? "bg-menta"
+                            : habit.today_status === "relapse"
+                              ? "bg-ambar"
+                              : "bg-fill"
+                        }`}
+                      />
+                    ))}
                 </div>
               </div>
 
@@ -320,7 +332,6 @@ export default async function HoyPage() {
                 today={today}
                 selected={entry.data?.mood ?? null}
                 nota={entry.data?.note ?? null}
-                pendientes={pendientes}
               />
             </div>
           </section>

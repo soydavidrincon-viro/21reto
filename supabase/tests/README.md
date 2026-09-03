@@ -23,20 +23,20 @@ psql "$DATABASE_URL" -f supabase/tests/00-shim-supabase.sql \
                      -f supabase/migrations/0002_borrar_cuenta.sql \
                      -f supabase/migrations/0003_companero.sql \
                      -f supabase/migrations/0005_antojos.sql \
-                     -f supabase/migrations/0006_videos.sql \
+                     -f supabase/migrations/0006_dias_del_habito.sql \
                      -f supabase/seed.sql \
                      -f supabase/tests/01-esquema.sql \
                      -f supabase/tests/02-antojos.sql \
-                     -f supabase/tests/03-videos.sql
+                     -f supabase/tests/03-dias-del-habito.sql
 ```
 
 `0004_avatares.sql` se queda fuera a propósito: solo crea el bucket de Storage,
 y el esquema `storage` no existe fuera de Supabase.
 
-`02-antojos.sql` y `03-videos.sql` corren después de `01-esquema.sql` y
+`02-antojos.sql` y `03-dias-del-habito.sql` corren después de `01-esquema.sql` y
 reutilizan el rol `app_user` que aquel deja creado. Los usuarios sí son propios
-de cada fichero: los dos anteriores terminan probando cascadas de borrado, así
-que sus usuarios ya no existen cuando arranca el siguiente.
+de cada fichero: los anteriores terminan probando cascadas de borrado, así que
+sus usuarios ya no existen cuando arranca el siguiente.
 
 Los casos que fallan cortan la corrida con `raise exception`. Los que pasan
 imprimen `OK:` o la tabla con el valor esperado escrito al lado en el `\echo`.
@@ -52,7 +52,9 @@ límites del esquema (intensidad fuera de 1..5, disparador inventado) y las dos
 cascadas: borrar el hábito se lleva sus antojos y deja vivos los sueltos;
 borrar la cuenta se los lleva todos.
 
-`03-videos.sql` lo repite una tercera vez con los videos de un hábito, y añade
-lo suyo: que el `check` de `url` rechace un `javascript:` —esa columna acaba en
-un `href` que la app pinta como enlace— y que un video no pueda existir sin
-hábito, al revés que un antojo suelto.
+`03-dias-del-habito.sql` prueba lo único que hace falta probar de los días de la
+semana: que a quien va al gimnasio lunes, miércoles y viernes no se le rompa la
+racha el martes, y que sí se le rompa cuando falta un lunes. Incluye el caso de
+regresión que importa —un hábito de todos los días se comporta exactamente igual
+que antes de la migración— porque de eso depende que nadie pierda una racha por
+haber actualizado.

@@ -3,15 +3,14 @@ import { HabitIcon } from "@/components/habit-icon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CompartirTarjeta } from "@/components/compartir-tarjeta";
+import { DiasDelHabito } from "@/components/dias-del-habito";
 import { GestionDeReto } from "@/components/gestion-de-reto";
 import { HabitActions } from "@/components/habit-actions";
 import { MonthHeatmap } from "@/components/month-heatmap";
-import { VideosDelHabito } from "@/components/videos-del-habito";
 import { monthGrid, monthName, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
 import type { LogStatus, Profile } from "@/lib/types";
-import type { HabitVideo } from "@/lib/videos";
 
 export const dynamic = "force-dynamic";
 
@@ -42,16 +41,11 @@ export default async function HabitoPage({
 
   const today = todayIn(profile?.timezone ?? "UTC");
 
-  const [{ data: habit }, { data: statsRows }, { data: logs }, { data: videos }] =
+  const [{ data: habit }, { data: statsRows }, { data: logs }] =
     await Promise.all([
       supabase.from("habits").select("*").eq("id", id).maybeSingle(),
       supabase.rpc("get_habit_stats", { p_habit_id: id, p_today: today }),
       supabase.from("habit_logs").select("log_date, status").eq("habit_id", id),
-      supabase
-        .from("habit_videos")
-        .select("id, url, title")
-        .eq("habit_id", id)
-        .order("created_at", { ascending: true }),
     ]);
 
   if (!habit) notFound();
@@ -139,14 +133,14 @@ export default async function HabitoPage({
             todayStatus={todayStatus}
           />
 
-          {/* Solo en lo que se construye. En un hábito que se deja, la ayuda
-              que hace falta es aguantar, y para eso está el botón de
-              emergencia; una lista de videos ahí sería relleno. */}
+          {/* Solo en lo que se construye: lo que se deja se deja todos los
+              días, y ofrecer días libres ahí sería ofrecer una excusa con
+              forma de ajuste. */}
           {habit.kind === "build" && (
             <div className="mx-4 lg:mx-0">
-              <VideosDelHabito
+              <DiasDelHabito
                 habitId={habit.id}
-                videos={(videos ?? []) as HabitVideo[]}
+                inicial={habit.active_dows ?? [0, 1, 2, 3, 4, 5, 6]}
               />
             </div>
           )}

@@ -10,7 +10,13 @@ import {
 import { useState, useTransition } from "react";
 import { createHabit } from "@/app/actions/habits";
 import { detectTimeZone } from "@/lib/dates";
-import type { HabitColor } from "@/lib/types";
+import {
+  comoSeLeenLosDias,
+  DOW_INICIALES,
+  DOW_LABELS,
+  TODOS_LOS_DIAS,
+  type HabitColor,
+} from "@/lib/types";
 
 type Preset = { name: string; icon: string; color: HabitColor };
 
@@ -59,14 +65,25 @@ export function HabitForm({
   const [preset, setPreset] = useState<Preset | null>(null);
   const [custom, setCustom] = useState("");
   const [targetDays, setTargetDays] = useState(21);
+
+  /**
+   * En qué días de la semana toca.
+   *
+   * Arranca en los siete, que es como se ha comportado la app siempre. Solo se
+   * pregunta en lo que se construye: dejar de beber no tiene días libres, y
+   * ofrecer "elige tus días" ahí sería ofrecer una excusa con forma de ajuste.
+   */
+  const [dows, setDows] = useState<number[]>(TODOS_LOS_DIAS);
   const [policy, setPolicy] = useState<"reset" | "continue">("continue");
   const [companion, setCompanion] = useState<CompanionKey>("brote");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const name = preset?.name ?? custom;
-  const ready = name.trim().length > 0;
   const dejar = kind === "quit";
+  // Un hábito sin ningún día no se puede marcar nunca. El esquema lo rechaza;
+  // aquí simplemente no se deja llegar hasta allá.
+  const ready = name.trim().length > 0 && (dejar || dows.length > 0);
   const presets = dejar ? DEJAR : EMPEZAR;
 
   function submit() {
@@ -78,6 +95,10 @@ export function HabitForm({
         icon: preset?.icon ?? "otro",
         color: preset?.color ?? "blue",
         targetDays,
+        // Lo que se deja se deja todos los días, se haya tocado el selector o
+        // no: si alguien elige "empezar", pica días y luego cambia a "dejar",
+        // los días elegidos no deben viajar con él.
+        activeDows: dejar ? TODOS_LOS_DIAS : dows,
         relapsePolicy: policy,
         finishOnboarding,
         timezone: detectTimeZone(),
@@ -200,6 +221,57 @@ export function HabitForm({
           })}
         </div>
       </div>
+
+      {/* Solo en lo que se construye.
+          "Sin alcohol los lunes, miércoles y viernes" no es un reto, así que
+          preguntarlo ahí sería abrir una puerta que no debería existir. */}
+      {!dejar && (
+        <div className="flex flex-col gap-[7px]">
+          <div className="flex items-baseline justify-between gap-2 px-8">
+            <span className="text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
+              ¿Qué días?
+            </span>
+            <span className="text-[13px] text-label-3">
+              {dows.length === 0 ? "Elige al menos uno" : comoSeLeenLosDias(dows)}
+            </span>
+          </div>
+          <div
+            role="group"
+            aria-label="Días de la semana en que toca"
+            className="mx-4 flex gap-1.5"
+          >
+            {/* Empieza en lunes y el domingo va al final: es como se lee una
+                semana en español, aunque por dentro el domingo sea el 0. */}
+            {[1, 2, 3, 4, 5, 6, 0].map((dow) => {
+              const activo = dows.includes(dow);
+              return (
+                <button
+                  key={dow}
+                  type="button"
+                  aria-pressed={activo}
+                  aria-label={DOW_LABELS[dow]}
+                  onClick={() =>
+                    setDows((antes) =>
+                      antes.includes(dow)
+                        ? antes.filter((d) => d !== dow)
+                        : [...antes, dow],
+                    )
+                  }
+                  className={`pulsable flex h-11 w-full items-center justify-center rounded-[14px] text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+                    activo ? "bg-azul text-azul-tinta" : "bg-card text-label-3"
+                  }`}
+                >
+                  {DOW_INICIALES[dow]}
+                </button>
+              );
+            })}
+          </div>
+          <p className="px-8 text-[12.5px] leading-[1.4] text-label-2">
+            Los días que no elijas no cuentan: no te piden marcar y no te rompen
+            la racha.
+          </p>
+        </div>
+      )}
 
       {finishOnboarding && (
         <div className="flex flex-col gap-[7px]">

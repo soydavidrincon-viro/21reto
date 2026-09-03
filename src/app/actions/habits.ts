@@ -16,6 +16,11 @@ export type NewHabit = {
   icon: string;
   color: HabitColor;
   targetDays: number;
+  /**
+   * Días de la semana en que toca, 0 = domingo. Los hábitos que se dejan
+   * mandan siempre los siete.
+   */
+  activeDows: number[];
   relapsePolicy: "reset" | "continue";
   /** Solo en el alta inicial: cierra el onboarding al crear el primer hábito. */
   finishOnboarding?: boolean;
@@ -41,6 +46,16 @@ export async function createHabit(input: NewHabit) {
   const name = input.name.trim();
   if (!name) return { error: "Ponle un nombre al hábito." };
 
+  // Se limpia aquí y no se confía en lo que llegue: el esquema también lo
+  // comprueba, pero un array vacío que llegue hasta allá vuelve como un error
+  // de Postgres, y eso no es un mensaje para nadie.
+  const dows = [...new Set(input.activeDows)]
+    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+    .sort((a, b) => a - b);
+  if (dows.length === 0) {
+    return { error: "Elige al menos un día de la semana." };
+  }
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("timezone")
@@ -65,6 +80,7 @@ export async function createHabit(input: NewHabit) {
     icon: input.icon,
     color: input.color,
     target_days: input.targetDays,
+    active_dows: dows,
     relapse_policy: input.relapsePolicy,
     start_date: startDate,
   });
@@ -83,6 +99,45 @@ export async function createHabit(input: NewHabit) {
 
   revalidatePath("/hoy");
   redirect("/hoy");
+}
+
+/**
+ * Cambiar los días en que toca un hábito.
+ *
+ * No se toca ningún registro: los días ya marcados siguen contando. Lo que
+ * cambia es de aquí en adelante, y también hacia atrás en el cálculo de la
+ * racha, porque la racha se cuenta sobre los días en que toca y esos acaban de
+ * cambiar. Es el comportamiento correcto: si alguien pasa de todos los días a
+ * lunes, miércoles y viernes, su racha refleja el hábito que tiene ahora, no el
+ * que tenía.
+ */
+export async function setHabitDows(habitId: string, dows: number[]) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  const limpios = [...new Set(dows)]
+    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+    .sort((a, b) => a - b);
+
+  if (limpios.length === 0) {
+    return { error: "Elige al menos un día de la semana." };
+  }
+
+  const { error } = await supabase
+    .from("habits")
+    .update({ active_dows: limpios })
+    .eq("id", habitId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/hoy");
+  revalidatePath(`/habito/${habitId}`);
+  return { error: null };
 }
 
 /**

@@ -10,6 +10,10 @@ export type DailyOverviewRow = {
   target_days: number;
   start_date: string;
   relapse_policy: "reset" | "continue";
+  /** Días de la semana en que toca, 0 = domingo. Por defecto, los siete. */
+  active_dows: number[];
+  /** Si hoy es uno de esos días. Lo resuelve el servidor con la fecha local. */
+  toca_hoy: boolean;
   today_status: LogStatus | null;
   today_note: string | null;
   clean_days: number;
@@ -108,6 +112,33 @@ export const CRAVING_BLOCKS = [
 ];
 
 export const DOW_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+/** Una letra por día, para el selector de días. El índice es el `dow`. */
+export const DOW_INICIALES = ["D", "L", "M", "M", "J", "V", "S"];
+
+export const TODOS_LOS_DIAS = [0, 1, 2, 3, 4, 5, 6];
+
+/**
+ * Cómo se leen los días de un hábito: "Todos los días", "Lun, Mié y Vie".
+ *
+ * Los dos casos con nombre propio existen porque son los dos que más se eligen
+ * y porque "Lun, Mar, Mié, Jue y Vie" ocupa media tarjeta para decir algo que
+ * cabe en dos palabras.
+ */
+export function comoSeLeenLosDias(dows: number[]): string {
+  const dias = [...dows].sort((a, b) => a - b);
+  if (dias.length === 7) return "Todos los días";
+  if (dias.length === 5 && dias.every((d) => d >= 1 && d <= 5)) {
+    return "Entre semana";
+  }
+  if (dias.length === 2 && dias[0] === 0 && dias[1] === 6) {
+    return "Fines de semana";
+  }
+
+  const nombres = dias.map((d) => DOW_LABELS[d]);
+  if (nombres.length === 1) return nombres[0];
+  return `${nombres.slice(0, -1).join(", ")} y ${nombres[nombres.length - 1]}`;
+}
 
 export type CravingGridCell = {
   dow: number;
