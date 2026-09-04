@@ -2,9 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { todayIn } from "@/lib/dates";
+import { esZonaValida, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
-import type { HabitColor, Profile } from "@/lib/types";
+import {
+  COMPANION_KEYS,
+  HABIT_COLORS,
+  MAX_TARGET_DAYS,
+  type HabitColor,
+  type Profile,
+} from "@/lib/types";
 
 /**
  * ¿Falló porque la base todavía no tiene la columna de los días?
@@ -26,6 +32,18 @@ function faltaLaColumnaDeDias(error: { code?: string; message?: string } | null)
     error.code === "42703" ||
     (error.message ?? "").includes("active_dows")
   );
+}
+
+/** Los días de la semana limpios: sin repetidos, sin nada fuera de 0..6. */
+function limpiarDias(dows: unknown): number[] {
+  if (!Array.isArray(dows)) return [];
+  return [...new Set(dows)]
+    .filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6)
+    .sort((a, b) => a - b);
+}
+
+function metaValida(dias: unknown): dias is number {
+  return Number.isInteger(dias) && (dias as number) >= 1 && (dias as number) <= MAX_TARGET_DAYS;
 }
 
 export type NewHabit = {
@@ -65,15 +83,33 @@ export async function createHabit(input: NewHabit) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  const name = input.name.trim();
+  const name = typeof input.name === "string" ? input.name.trim() : "";
   if (!name) return { error: "Ponle un nombre al hábito." };
+  if (name.length > 80) return { error: "El nombre es demasiado largo." };
 
-  // Se limpia aquí y no se confía en lo que llegue: el esquema también lo
-  // comprueba, pero un array vacío que llegue hasta allá vuelve como un error
-  // de Postgres, y eso no es un mensaje para nadie.
-  const dows = [...new Set(input.activeDows)]
-    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
-    .sort((a, b) => a - b);
+  /*
+   * Todo lo que tiene lista cerrada se comprueba aquí, antes de Postgres. El
+   * esquema lo rechazaría igual, pero con un texto en inglés y nombres de
+   * columna que acabarían en rojo debajo del botón.
+   */
+  if (input.kind !== "quit" && input.kind !== "build") {
+    return { error: "Elige si quieres dejar algo o empezar algo." };
+  }
+  if (!HABIT_COLORS.includes(input.color)) return { error: "Ese color no existe." };
+  if (input.relapsePolicy !== "reset" && input.relapsePolicy !== "continue") {
+    return { error: "Elige qué pasa si tienes una recaída." };
+  }
+  if (!metaValida(input.targetDays)) {
+    return { error: `La meta va de 1 a ${MAX_TARGET_DAYS} días.` };
+  }
+  const icon =
+    typeof input.icon === "string" && input.icon.length > 0 && input.icon.length <= 32
+      ? input.icon
+      : "otro";
+
+  // Un array vacío que llegue hasta Postgres vuelve como un error de CHECK, y
+  // eso no es un mensaje para nadie.
+  const dows = limpiarDias(input.activeDows);
   if (dows.length === 0) {
     return { error: "Elige al menos un día de la semana." };
   }
@@ -85,11 +121,15 @@ export async function createHabit(input: NewHabit) {
     .single<Pick<Profile, "timezone">>();
 
   // Solo se siembra si el perfil sigue en el valor por defecto: si la persona
-  // ya la corrigió a mano en Perfil, el navegador no debe pisarla.
+  // ya la corrigió a mano en Perfil, el navegador no debe pisarla. Y solo si
+  // es una zona de verdad: con una inventada, cada pantalla daría 500.
   let zone = profile?.timezone ?? "UTC";
-  if (input.timezone && zone === "UTC") {
-    await supabase.from("profiles").update({ timezone: input.timezone }).eq("id", user.id);
-    zone = input.timezone;
+  if (zone === "UTC" && esZonaValida(input.timezone) && input.timezone !== "UTC") {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ timezone: input.timezone })
+      .eq("id", user.id);
+    if (!error) zone = input.timezone;
   }
 
   // El reto arranca hoy según el reloj del usuario, no el del servidor.
@@ -99,7 +139,7 @@ export async function createHabit(input: NewHabit) {
     user_id: user.id,
     name,
     kind: input.kind,
-    icon: input.icon,
+    icon,
     color: input.color,
     target_days: input.targetDays,
     relapse_policy: input.relapsePolicy,
@@ -121,16 +161,18 @@ export async function createHabit(input: NewHabit) {
   if (error) return { error: error.message };
 
   if (input.finishOnboarding) {
+    const companion = COMPANION_KEYS.find((c) => c === input.companion);
     await supabase
       .from("profiles")
       .update({
         onboarded_at: new Date().toISOString(),
-        ...(input.companion ? { companion: input.companion } : {}),
+        ...(companion ? { companion } : {}),
       })
       .eq("id", user.id);
   }
 
   revalidatePath("/hoy");
+  revalidatePath("/progreso");
   redirect("/hoy");
 }
 
@@ -152,10 +194,7 @@ export async function setHabitDows(habitId: string, dows: number[]) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  const limpios = [...new Set(dows)]
-    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
-    .sort((a, b) => a - b);
-
+  const limpios = limpiarDias(dows);
   if (limpios.length === 0) {
     return { error: "Elige al menos un día de la semana." };
   }
@@ -175,6 +214,7 @@ export async function setHabitDows(habitId: string, dows: number[]) {
   if (error) return { error: error.message };
 
   revalidatePath("/hoy");
+  revalidatePath("/progreso");
   revalidatePath(`/habito/${habitId}`);
   return { error: null };
 }
@@ -199,14 +239,17 @@ export async function extendHabit(habitId: string, nuevaMeta: number) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  if (!Number.isInteger(nuevaMeta) || nuevaMeta < 1 || nuevaMeta > 3650) {
-    return { error: "Esa meta no es válida." };
+  // El tope es el del esquema. Antes aquí se aceptaba hasta 3650 y Postgres
+  // cortaba en 365 con su propio texto.
+  if (!metaValida(nuevaMeta)) {
+    return { error: `La meta va de 1 a ${MAX_TARGET_DAYS} días.` };
   }
 
   const { data: actual } = await supabase
     .from("habits")
     .select("target_days")
     .eq("id", habitId)
+    .eq("user_id", user.id)
     .maybeSingle<{ target_days: number }>();
 
   if (!actual) return { error: "No encontramos ese hábito." };
@@ -217,11 +260,13 @@ export async function extendHabit(habitId: string, nuevaMeta: number) {
   const { error } = await supabase
     .from("habits")
     .update({ target_days: nuevaMeta })
-    .eq("id", habitId);
+    .eq("id", habitId)
+    .eq("user_id", user.id);
 
   if (error) return { error: error.message };
 
   revalidatePath("/hoy");
+  revalidatePath("/progreso");
   revalidatePath(`/habito/${habitId}`);
   return { error: null };
 }
@@ -260,19 +305,28 @@ export async function deleteHabit(habitId: string) {
 
   revalidatePath("/hoy");
   revalidatePath("/progreso");
+  revalidatePath("/bitacora");
   redirect("/hoy");
 }
 
 export async function archiveHabit(habitId: string) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  // Mismo doble cerrojo que al borrar.
   const { error } = await supabase
     .from("habits")
     .update({ status: "archived" })
-    .eq("id", habitId);
+    .eq("id", habitId)
+    .eq("user_id", user.id);
 
   if (error) return { error: error.message };
 
   revalidatePath("/hoy");
+  revalidatePath("/progreso");
   redirect("/hoy");
 }

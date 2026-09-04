@@ -59,8 +59,6 @@ const REGISTRO: Record<string, IconoPhosphor> = {
   otro: Target,
 };
 
-export const CLAVES_DE_ICONO = Object.keys(REGISTRO);
-
 export function HabitIcon({
   clave,
   size = 22,

@@ -1,6 +1,18 @@
 export type HabitColor = "blue" | "orange" | "green" | "yellow" | "purple" | "pink";
 export type LogStatus = "success" | "relapse" | "skipped";
 
+/*
+ * Las listas cerradas del esquema, para comprobarlas en las acciones antes de
+ * que lleguen a Postgres. El CHECK de la tabla las rechaza igual, pero devuelve
+ * un error en inglés con nombres de columna, y eso no es un mensaje para nadie.
+ */
+export const HABIT_COLORS: HabitColor[] = ["blue", "orange", "green", "yellow", "purple", "pink"];
+export const LOG_STATUSES: LogStatus[] = ["success", "relapse", "skipped"];
+export const COMPANION_KEYS = ["roco", "chispa", "brote", "nube"] as const;
+
+/** El tope del esquema: `target_days between 1 and 365`. */
+export const MAX_TARGET_DAYS = 365;
+
 export type DailyOverviewRow = {
   habit_id: string;
   name: string;
@@ -15,7 +27,6 @@ export type DailyOverviewRow = {
   /** Si hoy es uno de esos días. Lo resuelve el servidor con la fecha local. */
   toca_hoy: boolean;
   today_status: LogStatus | null;
-  today_note: string | null;
   clean_days: number;
   current_streak: number;
   best_streak: number;
@@ -57,7 +68,7 @@ export type Profile = {
   timezone: string;
   theme: "system" | "light" | "dark";
   onboarded_at: string | null;
-  companion: "roco" | "chispa" | "brote" | "nube";
+  companion: (typeof COMPANION_KEYS)[number];
   /** Hora local del recordatorio del día. null = avisos apagados. */
   reminder_hour: number | null;
   avisa_racha: boolean;

@@ -3,9 +3,13 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { esZonaValida } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { COMPANION_KEYS, type Profile } from "@/lib/types";
 
 export type Theme = "system" | "light" | "dark";
+
+const THEMES: Theme[] = ["system", "light", "dark"];
 
 /**
  * El tema se guarda en el perfil y además en una cookie.
@@ -19,6 +23,8 @@ export type Theme = "system" | "light" | "dark";
  * rápida de este navegador.
  */
 export async function setTheme(theme: Theme) {
+  if (!THEMES.includes(theme)) return { error: "Ese tema no existe." };
+
   const supabase = await createClient();
 
   const {
@@ -59,6 +65,14 @@ export async function setAvatar(url: string | null) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
+  // Solo fotos que subió esta cuenta a su carpeta del bucket. Sin esto, la
+  // columna aceptaba cualquier URL, y una URL ajena en un `<img>` de la app es
+  // una forma de meter contenido que nadie subió.
+  const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatares/${user.id}/`;
+  if (url !== null && !url.startsWith(base)) {
+    return { error: "Esa foto no es de esta cuenta." };
+  }
+
   const { error } = await supabase
     .from("profiles")
     .update({ avatar_url: url })
@@ -70,10 +84,19 @@ export async function setAvatar(url: string | null) {
   return { error: null };
 }
 
+/**
+ * Lo que la persona puede cambiar de su perfil desde Ajustes.
+ *
+ * Se copia campo a campo y no se pasa el objeto entero al `update`: una acción
+ * de servidor la puede llamar cualquiera con sesión mandando lo que quiera, y
+ * antes eso llegaba tal cual a Postgres. La zona horaria además se comprueba,
+ * porque una inválida no rompe una fila: rompe cada pantalla que calcula qué
+ * día es hoy.
+ */
 export async function updateProfile(patch: {
   display_name?: string;
   timezone?: string;
-  companion?: string;
+  companion?: Profile["companion"];
 }) {
   const supabase = await createClient();
 
@@ -82,7 +105,32 @@ export async function updateProfile(patch: {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
+  const cambios: Partial<Pick<Profile, "display_name" | "timezone" | "companion">> = {};
+
+  if (patch.display_name !== undefined) {
+    if (typeof patch.display_name !== "string" || patch.display_name.length > 60) {
+      return { error: "El nombre es demasiado largo." };
+    }
+    cambios.display_name = patch.display_name.trim() || null;
+  }
+
+  if (patch.timezone !== undefined) {
+    if (!esZonaValida(patch.timezone)) {
+      return { error: "Esa zona horaria no existe." };
+    }
+    cambios.timezone = patch.timezone;
+  }
+
+  if (patch.companion !== undefined) {
+    if (!COMPANION_KEYS.includes(patch.companion)) {
+      return { error: "Ese compañero no existe." };
+    }
+    cambios.companion = patch.companion;
+  }
+
+  if (Object.keys(cambios).length === 0) return { error: null };
+
+  const { error } = await supabase.from("profiles").update(cambios).eq("id", user.id);
   if (error) return { error: error.message };
 
   revalidatePath("/", "layout");

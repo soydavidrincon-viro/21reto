@@ -324,7 +324,11 @@ export function HabitForm({
         <span className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
           {dejar ? "Si tengo una recaída" : "Si me salto un día"}
         </span>
-        <div className="mx-4 overflow-hidden rounded-2xl bg-card">
+        <div
+          role="radiogroup"
+          aria-label={dejar ? "Si tengo una recaída" : "Si me salto un día"}
+          className="mx-4 overflow-hidden rounded-2xl bg-card"
+        >
           {(
             [
               [

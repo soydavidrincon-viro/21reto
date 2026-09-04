@@ -4,7 +4,7 @@ import { CaretLeft, CaretRight, Lightning } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
 import { longDate, monthGrid, monthName } from "@/lib/dates";
-import { TRIGGER_BY_KEY, type LogStatus } from "@/lib/types";
+import { DOW_INICIALES, TRIGGER_BY_KEY, type LogStatus } from "@/lib/types";
 
 export type ImpulsoDelDia = {
   local_date: string;
@@ -14,6 +14,9 @@ export type ImpulsoDelDia = {
   resisted: boolean;
   note: string | null;
 };
+
+/** Lunes primero, domingo al final: como se lee una semana en español. */
+const SEMANA = [1, 2, 3, 4, 5, 6, 0];
 
 /**
  * El calendario del hábito: se navega por meses y se puede entrar en un día.
@@ -33,6 +36,7 @@ export type ImpulsoDelDia = {
  */
 export function MonthHeatmap({
   habitId,
+  kind,
   today,
   startDate,
   initial,
@@ -40,6 +44,8 @@ export function MonthHeatmap({
   impulsos,
 }: {
   habitId: string;
+  /** Lo que se deja tiene recaídas; lo que se construye, días saltados. */
+  kind: "quit" | "build";
   today: string;
   /** El día en que arrancó el reto: el tope de hasta dónde se puede ir atrás. */
   startDate: string;
@@ -48,11 +54,28 @@ export function MonthHeatmap({
   notas: Record<string, string>;
   impulsos: ImpulsoDelDia[];
 }) {
-  const [status, setStatus] = useState(initial);
+  /**
+   * Lo que diga el servidor manda.
+   *
+   * Lo local son solo los cambios que aún no han vuelto del servidor, encima
+   * de lo que llegó por props. Antes se copiaba `initial` a un estado al
+   * montar y ahí se quedaba: cuando la acción revalidaba la página y llegaban
+   * registros nuevos —la recaída escrita desde el botón de emergencia, por
+   * ejemplo— el calendario seguía enseñando su copia vieja hasta recargar.
+   */
+  const [pendientes, setPendientes] = useState<Record<string, LogStatus | null>>({});
   const [editing, setEditing] = useState<string | null>(null);
   const [mes, setMes] = useState(today);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const status: Record<string, LogStatus> = { ...initial };
+  for (const [fecha, estado] of Object.entries(pendientes)) {
+    if (estado === null) delete status[fecha];
+    else status[fecha] = estado;
+  }
+
+  const recaida = kind === "build" ? "Saltado" : "Recaída";
   const days = monthGrid(mes);
 
   // Se compara por año-mes, no por fecha completa: el día 20 de septiembre es
@@ -71,17 +94,29 @@ export function MonthHeatmap({
     setEditing(null);
   }
 
+  /**
+   * Se pinta primero y se guarda después. Si el guardado falla, se vuelve a lo
+   * que había y se dice por qué: antes el resultado se tiraba y un día que no
+   * llegó a escribirse se quedaba azul en pantalla hasta la siguiente carga.
+   */
   function apply(date: string, next: LogStatus | null) {
-    setStatus((current) => {
-      const copy = { ...current };
-      if (next === null) delete copy[date];
-      else copy[date] = next;
-      return copy;
-    });
+    setError(null);
+    setPendientes((current) => ({ ...current, [date]: next }));
 
     startTransition(async () => {
-      if (next === null) await clearDay(habitId, date);
-      else await markDay(habitId, date, next);
+      const result =
+        next === null
+          ? await clearDay(habitId, date)
+          : await markDay(habitId, date, next);
+      if (result.error) setError(result.error);
+      // Con éxito, la página ya se revalidó y `initial` trae el cambio; con
+      // error, lo que había en `initial` sigue siendo la verdad. En los dos
+      // casos el parche local sobra.
+      setPendientes((current) => {
+        const copy = { ...current };
+        delete copy[date];
+        return copy;
+      });
     });
   }
 
@@ -97,7 +132,7 @@ export function MonthHeatmap({
           disabled={!hayAnterior}
           onClick={() => moverMes(-1)}
           aria-label="Mes anterior"
-          className="pulsable flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          className="pulsable flex size-11 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         >
           <CaretLeft size={16} weight="bold" aria-hidden="true" />
         </button>
@@ -117,19 +152,19 @@ export function MonthHeatmap({
           disabled={!haySiguiente}
           onClick={() => moverMes(1)}
           aria-label="Mes siguiente"
-          className="pulsable flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          className="pulsable flex size-11 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         >
           <CaretRight size={16} weight="bold" aria-hidden="true" />
         </button>
       </div>
 
       <div className="grid grid-cols-7 gap-1.5" aria-hidden="true">
-        {["L", "M", "M", "J", "V", "S", "D"].map((initialLetter, i) => (
+        {SEMANA.map((dow) => (
           <span
-            key={i}
+            key={dow}
             className="mx-auto w-full max-w-[42px] text-center text-[10.5px] font-semibold text-label-2"
           >
-            {initialLetter}
+            {DOW_INICIALES[dow]}
           </span>
         ))}
       </div>
@@ -148,7 +183,7 @@ export function MonthHeatmap({
             state === "success"
               ? "bg-azul text-azul-tinta"
               : state === "relapse"
-                ? "bg-ambar text-[#4A3A00]"
+                ? "bg-ambar text-ambar-tinta"
                 : isToday
                   ? "bg-card text-azul ring-2 ring-azul ring-inset"
                   : "bg-fill text-label-3";
@@ -163,7 +198,7 @@ export function MonthHeatmap({
                 state === "success"
                   ? "limpio"
                   : state === "relapse"
-                    ? "recaída"
+                    ? recaida.toLowerCase()
                     : future
                       ? "por venir"
                       : "sin registro"
@@ -187,6 +222,12 @@ export function MonthHeatmap({
         })}
       </div>
 
+      {error && (
+        <p role="alert" className="text-[13px] leading-[1.35] text-rojo">
+          {error}
+        </p>
+      )}
+
       {editing && (
         <div className="flex flex-col gap-2.5 rounded-xl bg-fill p-3">
           <div className="flex items-baseline justify-between gap-2">
@@ -197,7 +238,7 @@ export function MonthHeatmap({
               {status[editing] === "success"
                 ? "Limpio"
                 : status[editing] === "relapse"
-                  ? "Recaída"
+                  ? recaida
                   : "Sin registro"}
             </span>
           </div>
@@ -247,21 +288,21 @@ export function MonthHeatmap({
             <button
               type="button"
               onClick={() => apply(editing, "success")}
-              className="h-10 flex-1 rounded-lg bg-azul text-[14px] font-semibold text-azul-tinta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              className="h-11 flex-1 rounded-lg bg-azul text-[14px] font-semibold text-azul-tinta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               Limpio
             </button>
             <button
               type="button"
               onClick={() => apply(editing, "relapse")}
-              className="h-10 flex-1 rounded-lg bg-ambar text-[14px] font-semibold text-[#4A3A00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              className="h-11 flex-1 rounded-lg bg-ambar text-[14px] font-semibold text-ambar-tinta focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
-              Recaída
+              {recaida}
             </button>
             <button
               type="button"
               onClick={() => apply(editing, null)}
-              className="h-10 flex-1 rounded-lg bg-card text-[14px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              className="h-11 flex-1 rounded-lg bg-card text-[14px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               Borrar
             </button>

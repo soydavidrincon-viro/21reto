@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { zonedNow } from "@/lib/dates";
-import type { Profile } from "@/lib/types";
+import { TRIGGER_BY_KEY, type Profile } from "@/lib/types";
 
 export type NuevoImpulso = {
   habitId: string | null;
@@ -31,8 +31,18 @@ export async function logCraving(input: NuevoImpulso) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  if (input.intensity < 1 || input.intensity > 5) {
+  if (
+    !Number.isInteger(input.intensity) ||
+    input.intensity < 1 ||
+    input.intensity > 5
+  ) {
     return { error: "La intensidad va del 1 al 5." };
+  }
+  if (input.triggerKey !== null && !TRIGGER_BY_KEY.has(input.triggerKey)) {
+    return { error: "Ese disparador no existe." };
+  }
+  if (input.note !== null && (typeof input.note !== "string" || input.note.length > 500)) {
+    return { error: "La nota es demasiado larga." };
   }
 
   const { data: profile } = await supabase
@@ -79,5 +89,9 @@ export async function logCraving(input: NuevoImpulso) {
 
   revalidatePath("/hoy");
   revalidatePath("/progreso");
+  // La bitácora lista los impulsos del día, y el detalle del hábito enseña la
+  // recaída que acaba de escribirse y el punto naranja en el calendario.
+  revalidatePath("/bitacora");
+  if (input.habitId) revalidatePath(`/habito/${input.habitId}`);
   return { error: null };
 }

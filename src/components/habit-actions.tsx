@@ -11,23 +11,30 @@ import type { LogStatus } from "@/lib/types";
  */
 export function HabitActions({
   habitId,
+  kind,
   today,
   todayStatus,
 }: {
   habitId: string;
+  /** Lo que se deja tiene recaídas; lo que se construye, días saltados. */
+  kind: "quit" | "build";
   today: string;
   todayStatus: LogStatus | null;
 }) {
+  const construye = kind === "build";
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Igual que en la tarjeta de Hoy: marcar cuesta un toque, desmarcar dos.
   const [deshaciendo, setDeshaciendo] = useState(false);
   const done = todayStatus === "success";
   const relapsed = todayStatus === "relapse";
 
-  function run(action: () => Promise<unknown>) {
+  function run(action: () => Promise<{ error: string | null }>) {
+    setError(null);
     startTransition(async () => {
-      await action();
+      const result = await action();
+      if (result.error) setError(result.error);
       setConfirming(false);
     });
   }
@@ -64,14 +71,17 @@ export function HabitActions({
           ? "Toca otra vez para quitarlo"
           : done
             ? "Hoy ya está marcado"
-            : "Marcar hoy como limpio"}
+            : construye
+              ? "Marcar hoy como hecho"
+              : "Marcar hoy como limpio"}
       </button>
 
       {confirming ? (
         <div className="flex flex-col gap-2 rounded-[14px] bg-card p-4">
           <p className="text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label">
-            Registrar una recaída de hoy. Queda como parte de tu historial, no
-            borra los días que ya llevas.
+            {construye
+              ? "Registrar que hoy te lo saltaste. Queda como parte de tu historial, no borra los días que ya llevas."
+              : "Registrar una recaída de hoy. Queda como parte de tu historial, no borra los días que ya llevas."}
           </p>
           <div className="flex gap-2">
             <button
@@ -100,8 +110,20 @@ export function HabitActions({
           }
           className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-label-2 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         >
-          {relapsed ? "Quitar la recaída de hoy" : "Registrar una recaída"}
+          {relapsed
+            ? construye
+              ? "Quitar el día saltado"
+              : "Quitar la recaída de hoy"
+            : construye
+              ? "Registrar que hoy me lo salté"
+              : "Registrar una recaída"}
         </button>
+      )}
+
+      {error && (
+        <p role="alert" className="text-center text-[13px] leading-[1.35] text-rojo">
+          {error}
+        </p>
       )}
     </div>
   );

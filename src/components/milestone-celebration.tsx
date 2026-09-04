@@ -5,6 +5,10 @@ import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
 import { milestoneCopy } from "@/lib/milestones";
+import { HABIT_HEX } from "@/lib/types";
+
+/** Los cinco acentos de la app, una vez cada uno. `pink` repite el naranja. */
+const COLORES = [...new Set(Object.values(HABIT_HEX))];
 
 /**
  * Se muestra al alcanzar un hito y se va sola.
@@ -30,7 +34,7 @@ export function MilestoneCelebration({
         particleCount: 90,
         spread: 70,
         origin: { y: 0.35 },
-        colors: ["#2D5BFF", "#FF6B2C", "#00C9A7", "#FFC53D", "#7B61FF"],
+        colors: COLORES,
         disableForReducedMotion: true,
       });
     }

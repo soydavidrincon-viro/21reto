@@ -6,6 +6,24 @@ import { useState } from "react";
 import { Logo } from "@/components/logo";
 import { detectTimeZone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/client";
+import { COOKIE_DESTINO, destinoSeguro } from "@/lib/supabase/destino";
+
+/**
+ * Guarda a dónde volver después de entrar, si el proxy lo dijo.
+ *
+ * Se lee de `window.location` al tocar el botón y no con `useSearchParams`:
+ * eso obligaría a envolver la página en Suspense para poder prerenderizarla,
+ * y la razón de que esta página sea estática es que cargue rápido en frío.
+ * Diez minutos bastan para abrir el correo; si se pasa, se cae a Hoy y ya.
+ */
+function recordarDestino() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  const destino = destinoSeguro(next);
+  if (destino === "/hoy") return;
+  // Sin codificar: `destinoSeguro` ya garantiza que solo lleva caracteres de
+  // ruta, y la ruta de retorno lo lee tal cual.
+  document.cookie = `${COOKIE_DESTINO}=${destino}; path=/; max-age=600; samesite=lax`;
+}
 
 /**
  * Dos formas de entrar, y las dos a la vista.
@@ -53,6 +71,7 @@ export default function LoginPage() {
   async function withGoogle() {
     setError(null);
     const listo = empiezaAlgo();
+    recordarDestino();
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -75,6 +94,7 @@ export default function LoginPage() {
     setState("sending");
     setError(null);
     const listo = empiezaAlgo();
+    recordarDestino();
 
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({

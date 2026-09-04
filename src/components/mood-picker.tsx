@@ -37,6 +37,7 @@ export function MoodPicker({
     mood: selected,
     note: nota ?? "",
   });
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const sucio = mood !== guardado.mood || note !== guardado.note;
@@ -45,14 +46,23 @@ export function MoodPicker({
    * La cara y la nota son la misma entrada del día, así que van en la misma
    * llamada. Con dos guardados por separado, escribir la nota después de elegir
    * la cara pisaba una de las dos según cuál llegara última.
+   *
+   * Y si el guardado falla, se dice. Antes el resultado de `saveJournal` se
+   * tiraba y la pantalla ponía "Guardado" en verde con la fila sin escribir —
+   * la hoja del cierre del día se cerraba encima, y nadie se enteraba.
    */
   function guardar(siguienteMood: string | null, siguienteNota: string) {
+    setError(null);
     startTransition(async () => {
       const limpia = siguienteNota.trim() === "" ? null : siguienteNota.trim();
-      await saveJournal(today, {
+      const result = await saveJournal(today, {
         mood: siguienteMood ?? undefined,
         note: limpia,
       });
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
       setGuardado({ mood: siguienteMood, note: limpia ?? "" });
       onGuardado?.();
     });
@@ -106,6 +116,12 @@ export function MoodPicker({
         placeholder="¿Qué pasó hoy? (opcional)"
         className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
       />
+
+      {error && (
+        <p role="alert" className="text-[13px] leading-[1.35] text-rojo">
+          {error}
+        </p>
+      )}
 
       <div className="flex items-center justify-between gap-2">
         {sucio || pending ? (

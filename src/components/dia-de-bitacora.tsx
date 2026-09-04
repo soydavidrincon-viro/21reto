@@ -7,7 +7,12 @@ import { HabitIcon } from "@/components/habit-icon";
 import { longDate } from "@/lib/dates";
 import { MOOD_BY_KEY, MOODS, TRIGGER_BY_KEY } from "@/lib/types";
 
-export type HabitoDelDia = { id: string; name: string; icon: string };
+export type HabitoDelDia = {
+  id: string;
+  name: string;
+  icon: string;
+  kind: "quit" | "build";
+};
 
 export type ImpulsoDeBitacora = {
   hora: number;
@@ -65,6 +70,12 @@ export function DiaDeBitacora({
   const hayDetalle =
     dia.cumplidos.length + dia.recaidas.length + dia.impulsos.length > 0;
 
+  // Un día saltado en algo que se construye no es una recaída, y la palabra
+  // importa: es la diferencia entre "no fui a correr" y "volví a beber".
+  const soloSaltados =
+    dia.recaidas.length > 0 && dia.recaidas.every((h) => h.kind === "build");
+  const tituloRecaidas = soloSaltados ? "Saltados" : "Recaídas";
+
   const resumen: string[] = [];
   if (dia.cumplidos.length > 0) {
     resumen.push(
@@ -72,8 +83,11 @@ export function DiaDeBitacora({
     );
   }
   if (dia.recaidas.length > 0) {
+    const n = dia.recaidas.length;
     resumen.push(
-      `${dia.recaidas.length} ${dia.recaidas.length === 1 ? "recaída" : "recaídas"}`,
+      soloSaltados
+        ? `${n} ${n === 1 ? "saltado" : "saltados"}`
+        : `${n} ${n === 1 ? "recaída" : "recaídas"}`,
     );
   }
   if (dia.impulsos.length > 0) {
@@ -188,7 +202,7 @@ export function DiaDeBitacora({
             <Lista titulo="Cumplidos" habitos={dia.cumplidos} tono="text-menta" />
           )}
           {dia.recaidas.length > 0 && (
-            <Lista titulo="Recaídas" habitos={dia.recaidas} tono="text-ambar" />
+            <Lista titulo={tituloRecaidas} habitos={dia.recaidas} tono="text-ambar" />
           )}
 
           {dia.impulsos.length > 0 && (

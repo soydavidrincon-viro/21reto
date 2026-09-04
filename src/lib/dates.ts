@@ -1,5 +1,6 @@
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
+import { DOW_INICIALES } from "@/lib/types";
 
 /**
  * Qué día es "hoy" para este usuario.
@@ -49,6 +50,36 @@ export function detectTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
+/**
+ * ¿Esta zona horaria existe?
+ *
+ * Se comprueba con el mismo motor que después la usa: `todayIn` llama a
+ * `Intl`, y `Intl` lanza `RangeError` con una zona que no conoce. Antes esto
+ * no se preguntaba en ningún sitio, así que un perfil con "Marte/Olympus"
+ * —por un navegador raro o por una petición hecha a mano— dejaba a esa persona
+ * con un 500 en cada pantalla que calcula qué día es hoy. Y el esquema tiene
+ * la misma comprobación del lado de Postgres, porque los recordatorios de
+ * TODO EL MUNDO pasan por la zona de cada perfil.
+ */
+export function esZonaValida(timeZone: unknown): timeZone is string {
+  if (typeof timeZone !== "string" || timeZone.length === 0 || timeZone.length > 64) {
+    return false;
+  }
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** ¿Es una fecha con la forma exacta que guarda la app, yyyy-MM-dd, y existe? */
+export function esFechaISO(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = parseISO(value);
+  return !Number.isNaN(date.getTime()) && format(date, "yyyy-MM-dd") === value;
+}
+
 /** Días transcurridos entre dos fechas ISO (yyyy-MM-dd), sin horas de por medio. */
 export function daysBetween(fromISO: string, toISO: string): number {
   return differenceInCalendarDays(parseISO(toISO), parseISO(fromISO));
@@ -72,16 +103,9 @@ export function lastSevenDays(todayISO: string): string[] {
   return lastNDays(todayISO, 7);
 }
 
-const WEEKDAY_INITIALS = ["D", "L", "M", "M", "J", "V", "S"];
-
 /** Inicial del día en español: L M M J V S D. */
 export function weekdayInitial(dateISO: string): string {
-  return WEEKDAY_INITIALS[parseISO(dateISO).getDay()];
-}
-
-/** Número del día del mes, para las píldoras de la tira de fechas. */
-export function dayOfMonth(dateISO: string): number {
-  return parseISO(dateISO).getDate();
+  return DOW_INICIALES[parseISO(dateISO).getDay()];
 }
 
 const MONTHS = [
