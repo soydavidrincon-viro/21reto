@@ -237,7 +237,7 @@ export async function extendHabit(habitId: string, nuevaMeta: number) {
  *
  * Las dos opciones no son la misma y por eso conviven: archivar conserva el
  * historial y solo lo saca de Hoy —sirve para algo que ya dejó de ser un reto—,
- * y borrar se lleva los registros y los antojos por la cascada del esquema.
+ * y borrar se lleva los registros y los impulsos por la cascada del esquema.
  * Para lo que se creó por error, archivar sería dejar basura para siempre.
  */
 export async function deleteHabit(habitId: string) {

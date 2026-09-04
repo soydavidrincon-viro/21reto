@@ -42,7 +42,7 @@ export default async function HoyPage() {
   // El día se resuelve con la zona horaria del perfil, no con la del servidor.
   const today = todayIn(profile.timezone);
 
-  const [overview, quote, entry, pasadas, antojosHoy] = await Promise.all([
+  const [overview, quote, entry, pasadas, impulsosHoy] = await Promise.all([
     supabase.rpc("get_daily_overview", { p_date: today }),
     supabase.rpc("get_daily_quote", { p_date: today }),
     supabase
@@ -220,14 +220,14 @@ export default async function HoyPage() {
               el orden real: primero el día, y esto para cuando haga falta.
 
               Solo si hay algo que dejar: en un hábito que se construye no hay
-              antojo que aguantar. */}
+              impulso que aguantar. */}
             {paraDejar.length > 0 && (
               <div className="px-4 lg:px-0">
                 <CravingButton
                   habits={paraDejar}
                   companion={profile.companion ?? "brote"}
                   etapa={etapaDeRacha(rachaViva)}
-                  hoy={antojosHoy.count ?? 0}
+                  hoy={impulsosHoy.count ?? 0}
                 />
               </div>
             )}

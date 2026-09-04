@@ -1,23 +1,28 @@
 "use client";
 
-import { Archive, Trash } from "@phosphor-icons/react";
+import { Archive, DotsThree, Trash, X } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { archiveHabit, deleteHabit } from "@/app/actions/habits";
 
 /**
- * Archivar o borrar un reto.
+ * Archivar o borrar un reto, escondido detrás de un botón pequeño.
  *
- * Son cosas distintas y por eso están las dos. Archivar conserva todo el
- * historial y solo lo saca de Hoy: sirve para algo que ya no es un reto sino
- * cómo vives. Borrar se lleva los registros y los antojos, y es lo que hace
- * falta para los tres o cuatro que cualquiera crea al probar la app — dejarlos
- * archivados sería guardar basura para siempre.
+ * Antes era una tarjeta abierta al pie de la pantalla, con "Eliminar" en rojo a
+ * la vista. Eso está mal repartido: son las dos únicas acciones sin vuelta atrás
+ * de todo el detalle y eran las que más sitio ocupaban. Una tarjeta grande
+ * invita a tocarla, y aquí se quiere lo contrario — que estén, que se
+ * encuentren cuando se buscan, y que nadie se tropiece con ellas.
  *
- * Borrar pide confirmación en dos pasos, como quitar un día marcado, porque no
- * hay vuelta atrás. Pero no pide escribir "ELIMINAR" como la cuenta entera: eso
- * es para algo que no se puede rehacer, y un hábito se vuelve a crear en diez
- * segundos. Poner la misma fricción a las dos cosas enseña a la gente a saltarse
- * la fricción.
+ * Ahora es un botón de tres puntos en la cabecera, del tamaño de un icono, que
+ * abre una hoja. Archivar y borrar siguen siendo cosas distintas: archivar
+ * conserva el historial y solo lo saca de Hoy —para algo que ya no es un reto
+ * sino cómo vives—, y borrar se lleva los registros y los impulsos, que es lo
+ * que hace falta para los tres o cuatro que cualquiera crea al probar la app.
+ *
+ * Borrar pide confirmación, pero no pide escribir "ELIMINAR" como la cuenta
+ * entera: eso es para algo que no se puede rehacer, y un hábito se vuelve a
+ * crear en diez segundos. Poner la misma fricción a las dos cosas enseña a la
+ * gente a saltarse la fricción.
  */
 export function GestionDeReto({
   habitId,
@@ -26,87 +31,146 @@ export function GestionDeReto({
   habitId: string;
   nombre: string;
 }) {
-  const [pending, startTransition] = useTransition();
+  const [abierto, setAbierto] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function cerrar() {
+    setAbierto(false);
+    setConfirmando(false);
+    setError(null);
+  }
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-[22px] bg-card px-4 py-3.5 lg:px-5 lg:py-4">
-      <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-label">
-        Este reto
-      </h2>
-
+    <>
       <button
         type="button"
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            const result = await archiveHabit(habitId);
-            if (result?.error) setError(result.error);
-          })
-        }
-        className="pulsable flex h-11 items-center gap-2.5 rounded-xl bg-fill px-3.5 text-left text-[14.5px] font-medium text-label disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        onClick={() => setAbierto(true)}
+        aria-label={`Opciones de ${nombre}`}
+        className="pulsable flex size-9 shrink-0 items-center justify-center rounded-full text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
       >
-        <Archive size={17} aria-hidden="true" className="shrink-0" />
-        <span className="flex min-w-0 flex-1 flex-col">
-          Archivar
-          <small className="text-[12px] text-label-2">
-            Sale de Hoy y guarda todo el historial
-          </small>
-        </span>
+        <DotsThree size={22} weight="bold" aria-hidden="true" />
       </button>
 
-      {confirmando ? (
-        <div className="flex flex-col gap-2 rounded-xl bg-fill p-3">
-          <p className="text-pretty text-[13.5px] leading-[1.4] text-label">
-            Se va <b>{nombre}</b> con todos sus días marcados y sus antojos. No
-            se puede deshacer.
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  const result = await deleteHabit(habitId);
-                  if (result?.error) setError(result.error);
-                })
-              }
-              className="pulsable h-11 flex-1 rounded-xl bg-rojo text-[14.5px] font-semibold text-rojo-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-            >
-              {pending ? "Borrando…" : "Sí, bórralo"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmando(false)}
-              className="pulsable h-11 flex-1 rounded-xl bg-card text-[14.5px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-            >
-              Cancelar
-            </button>
+      {abierto && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
+          <button
+            type="button"
+            aria-label="Cerrar"
+            onClick={cerrar}
+            className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+          />
+
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Opciones de ${nombre}`}
+            className="entrar relative flex w-full max-w-[460px] flex-col gap-3 rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-display text-[20px] font-semibold leading-tight tracking-[-0.01em] text-label">
+                {nombre}
+              </h2>
+              <button
+                type="button"
+                onClick={cerrar}
+                aria-label="Cerrar"
+                className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              >
+                <X size={17} weight="bold" aria-hidden="true" />
+              </button>
+            </div>
+
+            {confirmando ? (
+              <div className="flex flex-col gap-2.5">
+                <p className="text-pretty text-[14px] leading-[1.45] text-label">
+                  Se va <b>{nombre}</b> con todos sus días marcados y sus
+                  impulsos. No se puede deshacer.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        const result = await deleteHabit(habitId);
+                        if (result?.error) setError(result.error);
+                      })
+                    }
+                    className="pulsable h-12 flex-1 rounded-[14px] bg-rojo text-[15px] font-semibold text-rojo-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                  >
+                    {pending ? "Borrando…" : "Sí, bórralo"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmando(false)}
+                    className="pulsable h-12 flex-1 rounded-[14px] bg-fill text-[15px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    startTransition(async () => {
+                      const result = await archiveHabit(habitId);
+                      if (result?.error) setError(result.error);
+                    })
+                  }
+                  className="pulsable flex items-center gap-3 rounded-[16px] bg-fill px-3.5 py-3 text-left disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                >
+                  <Archive
+                    size={19}
+                    aria-hidden="true"
+                    className="shrink-0 text-label-2"
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col gap-px">
+                    <span className="text-[15px] font-semibold text-label">
+                      Archivar
+                    </span>
+                    <span className="text-[12.5px] text-label-2">
+                      Sale de Hoy y guarda todo el historial
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => setConfirmando(true)}
+                  className="pulsable flex items-center gap-3 rounded-[16px] px-3.5 py-3 text-left disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                >
+                  <Trash
+                    size={19}
+                    aria-hidden="true"
+                    className="shrink-0 text-rojo"
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col gap-px">
+                    <span className="text-[15px] font-semibold text-rojo">
+                      Eliminar
+                    </span>
+                    <span className="text-[12.5px] text-label-2">
+                      Borra el reto y todo lo que lleva registrado
+                    </span>
+                  </span>
+                </button>
+              </>
+            )}
+
+            {error && (
+              <p role="alert" className="text-[13px] text-rojo">
+                {error}
+              </p>
+            )}
           </div>
         </div>
-      ) : (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => setConfirmando(true)}
-          className="pulsable flex h-11 items-center gap-2.5 rounded-xl px-3.5 text-left text-[14.5px] font-medium text-rojo disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-        >
-          <Trash size={17} aria-hidden="true" className="shrink-0" />
-          <span className="flex min-w-0 flex-1 flex-col">
-            Eliminar
-            <span className="text-[12px] text-label-2">
-              Borra el reto y todo lo que lleva registrado
-            </span>
-          </span>
-        </button>
       )}
-
-      {error && (
-        <p role="alert" className="text-[13px] text-rojo">
-          {error}
-        </p>
-      )}
-    </div>
+    </>
   );
 }

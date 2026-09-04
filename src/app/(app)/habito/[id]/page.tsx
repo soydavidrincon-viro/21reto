@@ -6,8 +6,11 @@ import { CompartirTarjeta } from "@/components/compartir-tarjeta";
 import { DiasDelHabito } from "@/components/dias-del-habito";
 import { GestionDeReto } from "@/components/gestion-de-reto";
 import { HabitActions } from "@/components/habit-actions";
-import { MonthHeatmap } from "@/components/month-heatmap";
-import { monthGrid, monthName, todayIn } from "@/lib/dates";
+import {
+  MonthHeatmap,
+  type ImpulsoDelDia,
+} from "@/components/month-heatmap";
+import { todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
 import type { LogStatus, Profile } from "@/lib/types";
@@ -41,11 +44,20 @@ export default async function HabitoPage({
 
   const today = todayIn(profile?.timezone ?? "UTC");
 
-  const [{ data: habit }, { data: statsRows }, { data: logs }] =
+  const [{ data: habit }, { data: statsRows }, { data: logs }, { data: impulsos }] =
     await Promise.all([
       supabase.from("habits").select("*").eq("id", id).maybeSingle(),
       supabase.rpc("get_habit_stats", { p_habit_id: id, p_today: today }),
-      supabase.from("habit_logs").select("log_date, status").eq("habit_id", id),
+      // Sin filtro de fecha, y por eso el calendario puede navegar meses sin
+      // volver a consultar: el histórico entero ya está aquí.
+      supabase
+        .from("habit_logs")
+        .select("log_date, status, note")
+        .eq("habit_id", id),
+      supabase
+        .from("cravings")
+        .select("local_date, local_hour, intensity, trigger_key, resisted, note")
+        .eq("habit_id", id),
     ]);
 
   if (!habit) notFound();
@@ -59,13 +71,15 @@ export default async function HabitoPage({
   };
 
   const byDate = new Map<string, LogStatus>(
-    (logs ?? []).map((log) => [
-      log.log_date as string,
-      log.status as LogStatus,
-    ]),
+    (logs ?? []).map((log) => [log.log_date as string, log.status as LogStatus]),
   );
 
-  const grid = monthGrid(today);
+  const notas = Object.fromEntries(
+    (logs ?? [])
+      .filter((log) => (log.note as string | null)?.trim())
+      .map((log) => [log.log_date as string, log.note as string]),
+  );
+
   const todayStatus = byDate.get(today) ?? null;
 
   return (
@@ -73,19 +87,27 @@ export default async function HabitoPage({
       {/* La barra pegajosa con el título centrado es un patrón de teléfono. En
           escritorio el carril lateral ya dice dónde estás, así que sobra: queda
           solo el enlace de vuelta y el nombre pasa a ser un título de verdad. */}
-      <header className="sticky top-0 z-10 flex h-11 items-center justify-between border-b border-separator bg-bar px-3 backdrop-blur-xl lg:static lg:mx-0 lg:h-auto lg:flex-col lg:items-start lg:gap-1 lg:border-0 lg:bg-transparent lg:px-0 lg:backdrop-blur-none">
+      <header className="sticky top-0 z-10 flex h-11 items-center justify-between gap-2 border-b border-separator bg-bar px-3 backdrop-blur-xl lg:static lg:mx-0 lg:h-auto lg:border-0 lg:bg-transparent lg:px-0 lg:backdrop-blur-none">
         <Link
           href="/hoy"
-          className="inline-flex items-center gap-0.5 text-[17px] tracking-[-0.02em] text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:text-[14px] lg:font-semibold"
+          className="inline-flex shrink-0 items-center gap-0.5 text-[17px] tracking-[-0.02em] text-azul focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:text-[14px] lg:font-semibold"
         >
           <CaretLeft size={18} weight="bold" aria-hidden="true" />
           Hoy
         </Link>
-        <h1 className="truncate text-[17px] font-semibold tracking-[-0.02em] text-label lg:font-display lg:text-[30px] lg:leading-none lg:tracking-[-0.01em]">
+        <h1 className="truncate text-[17px] font-semibold tracking-[-0.02em] text-label lg:hidden">
           {habit.name}
         </h1>
-        <span className="w-12 lg:hidden" />
+        {/* Archivar y eliminar viven aquí, del tamaño de un icono. Antes eran
+            una tarjeta abierta al pie con "Eliminar" en rojo a la vista: las
+            dos únicas acciones sin vuelta atrás de la pantalla eran también las
+            que más sitio ocupaban. */}
+        <GestionDeReto habitId={habit.id} nombre={habit.name} />
       </header>
+
+      <h1 className="hidden font-display text-[30px] font-semibold leading-none tracking-[-0.01em] text-label lg:block">
+        {habit.name}
+      </h1>
 
       <div className="flex flex-col gap-3.5 lg:grid lg:grid-cols-[1fr_1.15fr] lg:items-start lg:gap-6">
         <div className="flex flex-col gap-3.5">
@@ -144,22 +166,20 @@ export default async function HabitoPage({
               />
             </div>
           )}
-
-          <div className="mx-4 lg:mx-0">
-            <CompartirTarjeta habitId={habit.id} nombre={habit.name} />
-          </div>
-
-          <div className="mx-4 lg:mx-0">
-            <GestionDeReto habitId={habit.id} nombre={habit.name} />
-          </div>
         </div>
 
-        <section className="mx-4 flex flex-col gap-3 rounded-[22px] bg-card px-3.5 py-4 lg:mx-0 lg:px-5 lg:py-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-label">
-              {monthName(today)}
-            </h2>
-            <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3.5">
+          <section className="mx-4 flex flex-col gap-3 rounded-[22px] bg-card px-3.5 py-4 lg:mx-0 lg:px-5 lg:py-5">
+            <MonthHeatmap
+              habitId={habit.id}
+              today={today}
+              startDate={habit.start_date as string}
+              initial={Object.fromEntries(byDate)}
+              notas={notas}
+              impulsos={(impulsos ?? []) as ImpulsoDelDia[]}
+            />
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
                 <span className="size-2.5 rounded-[3px] bg-azul" />
                 Limpio
@@ -168,20 +188,25 @@ export default async function HabitoPage({
                 <span className="size-2.5 rounded-[3px] bg-ambar" />
                 Recaída
               </span>
+              <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
+                <span className="size-[5px] rounded-full bg-naranja" />
+                Hubo impulsos
+              </span>
             </div>
+
+            <p className="text-[12px] leading-[1.35] text-label-2">
+              Toca un día para ver qué pasó, o para corregirlo si se te olvidó
+              marcarlo.
+            </p>
+          </section>
+
+          {/* Compartir va debajo del calendario y no en medio de la columna de
+              números: se comparte cuando ya se ha visto lo que se lleva hecho,
+              no antes. */}
+          <div className="mx-4 lg:mx-0">
+            <CompartirTarjeta habitId={habit.id} nombre={habit.name} />
           </div>
-
-          <MonthHeatmap
-            habitId={habit.id}
-            days={grid}
-            today={today}
-            initial={Object.fromEntries(byDate)}
-          />
-
-          <p className="text-[12px] leading-[1.35] text-label-2">
-            ¿Se te olvidó marcar un día? Tócalo y corrígelo.
-          </p>
-        </section>
+        </div>
       </div>
     </div>
   );

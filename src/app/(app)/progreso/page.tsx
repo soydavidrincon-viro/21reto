@@ -53,12 +53,12 @@ export default async function ProgresoPage() {
     .select("id", { count: "exact", head: true })
     .eq("status", "success");
 
-  // Los antojos de los últimos 90 días. Más atrás la vida de alguien ya cambió
+  // Los impulsos de los últimos 90 días. Más atrás la vida de alguien ya cambió
   // y el patrón de hace medio año no describe el de ahora.
-  const desdeAntojos = shiftISO(today, -90);
-  const [rejilla, resumenAntojos] = await Promise.all([
-    supabase.rpc("get_craving_grid", { p_since: desdeAntojos }),
-    supabase.rpc("get_craving_summary", { p_since: desdeAntojos }),
+  const desdeImpulsos = shiftISO(today, -90);
+  const [rejilla, resumenImpulsos] = await Promise.all([
+    supabase.rpc("get_craving_grid", { p_since: desdeImpulsos }),
+    supabase.rpc("get_craving_summary", { p_since: desdeImpulsos }),
   ]);
 
   const celdas = ((rejilla.data ?? []) as CravingGridCell[]).map((c) => ({
@@ -66,7 +66,7 @@ export default async function ProgresoPage() {
     total: Number(c.total),
     resisted: Number(c.resisted),
   }));
-  const resumen = ((resumenAntojos.data ?? []) as CravingSummary[])[0] ?? null;
+  const resumen = ((resumenImpulsos.data ?? []) as CravingSummary[])[0] ?? null;
 
   const weeks = Array.from({ length: WEEKS }, (_, i) => {
     const start = shiftISO(firstMonday, i * 7);
@@ -149,7 +149,7 @@ export default async function ProgresoPage() {
         style={{ animationDelay: "0.09s" }}
       >
         <h2 className="px-6 text-[12.5px] lg:px-0 font-bold uppercase tracking-[0.08em] text-label-3">
-          Tus antojos
+          Tus impulsos
         </h2>
         <div className="mx-4 lg:mx-0">
           <CravingGrid

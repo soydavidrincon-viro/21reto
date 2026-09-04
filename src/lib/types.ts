@@ -109,7 +109,7 @@ export const MOODS = [
 export const MOOD_BY_KEY = new Map(MOODS.map((mood) => [mood.key as string, mood]));
 
 /**
- * Los disparadores de un antojo. Lista cerrada a propósito: con texto libre
+ * Los disparadores de un impulso. Lista cerrada a propósito: con texto libre
  * cada quien escribe "estres", "estrés" y "mucho estres", y agrupar se vuelve
  * imposible — que es justo para lo que existe el registro. El matiz va en la
  * nota.
@@ -128,7 +128,7 @@ export const TRIGGER_BY_KEY = new Map(
   CRAVING_TRIGGERS.map((t) => [t.key as string, t]),
 );
 
-/** Los seis bloques de cuatro horas de la rejilla de antojos. */
+/** Los seis bloques de cuatro horas de la rejilla de impulsos. */
 export const CRAVING_BLOCKS = [
   "12–4 a.m.",
   "4–8 a.m.",
@@ -192,7 +192,7 @@ export type CravingSummary = {
 };
 
 /**
- * Cuántos antojos hacen falta antes de que la app afirme algo.
+ * Cuántos impulsos hacen falta antes de que la app afirme algo.
  *
  * Con cuatro registros cualquier "patrón" es ruido, y decirle a alguien "tu
  * hora difícil son los martes" con esa muestra sería inventar. Hasta llegar

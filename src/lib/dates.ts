@@ -16,7 +16,7 @@ export function todayIn(timeZone: string): string {
  * El "ahora" del usuario partido en día, hora y día de la semana.
  *
  * Sale de la zona del perfil, nunca del reloj del servidor. Lo usan el registro
- * de antojos —donde todo el análisis cuelga de esa hora— y el compañero, que se
+ * de impulsos —donde todo el análisis cuelga de esa hora— y el compañero, que se
  * duerme de noche. `en-US` con hourCycle h23 devuelve 0..23 de forma estable sin
  * que el locale del servidor intervenga.
  */

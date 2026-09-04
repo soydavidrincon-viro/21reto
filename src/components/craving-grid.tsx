@@ -14,7 +14,7 @@ const ORDEN = [1, 2, 3, 4, 5, 6, 0];
 const BLOQUES_CORTOS = ["0–4", "4–8", "8–12", "12–16", "16–20", "20–24"];
 
 /**
- * La rejilla de antojos: día de la semana × bloque de cuatro horas.
+ * La rejilla de impulsos: día de la semana × bloque de cuatro horas.
  *
  * Esta es la única pantalla de la app que le dice a alguien algo que no sabía.
  * Por eso no habla hasta tener con qué: con cuatro registros cualquier casilla
@@ -36,8 +36,8 @@ export function CravingGrid({
       <div className="flex flex-col gap-1.5 rounded-[22px] bg-card px-4 py-5">
         <p className="text-pretty text-[15px] leading-[1.45] text-label">
           {total === 0
-            ? "Todavía no has registrado ningún antojo."
-            : `Llevas ${total} ${total === 1 ? "antojo registrado" : "antojos registrados"}.`}
+            ? "Todavía no has registrado ningún impulso."
+            : `Llevas ${total} ${total === 1 ? "impulso registrado" : "impulsos registrados"}.`}
         </p>
         <p className="text-pretty text-[13.5px] leading-[1.45] text-label-2">
           {total === 0
@@ -91,7 +91,7 @@ export function CravingGrid({
               de 150 × 28 y la rejilla deja de leerse como rejilla. */}
         <table className="w-full min-w-[280px] max-w-[560px] border-separate border-spacing-1">
           <caption className="sr-only">
-            Antojos por día de la semana y franja horaria
+            Impulsos por día de la semana y franja horaria
           </caption>
           <thead>
             <tr>
@@ -121,7 +121,7 @@ export function CravingGrid({
                   const celda = porClave.get(`${dow}-${block}`);
                   const n = celda?.total ?? 0;
                   // La opacidad va de 0.18 a 1 sobre el máximo: con un salto
-                  // desde 0 la casilla de un solo antojo era invisible.
+                  // desde 0 la casilla de un solo impulso era invisible.
                   const fuerza = n === 0 ? 0 : 0.18 + (n / maximo) * 0.82;
 
                   return (
@@ -129,8 +129,8 @@ export function CravingGrid({
                       <span
                         title={
                           n === 0
-                            ? `${DOW_LABELS[dow]}, ${CRAVING_BLOCKS[block]}: sin antojos`
-                            : `${DOW_LABELS[dow]}, ${CRAVING_BLOCKS[block]}: ${n} ${n === 1 ? "antojo" : "antojos"}, ${celda!.resisted} aguantados`
+                            ? `${DOW_LABELS[dow]}, ${CRAVING_BLOCKS[block]}: sin impulsos`
+                            : `${DOW_LABELS[dow]}, ${CRAVING_BLOCKS[block]}: ${n} ${n === 1 ? "impulso" : "impulsos"}, ${celda!.resisted} aguantados`
                         }
                         className={`block h-7 w-full rounded-md ${n === 0 ? "bg-fill" : "bg-naranja"}`}
                         style={n === 0 ? undefined : { opacity: fuerza }}
@@ -145,7 +145,7 @@ export function CravingGrid({
       </div>
 
       <p className="text-[12px] leading-[1.35] text-label-3">
-        Cuanto más naranja, más antojos en esa franja.
+        Cuanto más naranja, más impulsos en esa franja.
       </p>
     </div>
   );

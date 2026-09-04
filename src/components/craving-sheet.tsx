@@ -61,7 +61,7 @@ export function CravingSheet({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Registrar un antojo"
+        aria-label="Registrar un impulso"
         className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
       >
@@ -122,7 +122,7 @@ export function CravingSheet({
           </div>
           <div
             role="radiogroup"
-            aria-label="Intensidad del antojo"
+            aria-label="Intensidad del impulso"
             className="flex gap-1.5"
           >
             {[1, 2, 3, 4, 5].map((n) => (
@@ -178,7 +178,7 @@ export function CravingSheet({
           value={note}
           onChange={(event) => setNote(event.target.value)}
           placeholder="Qué estaba pasando (opcional)"
-          aria-label="Nota del antojo"
+          aria-label="Nota del impulso"
           className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         />
 

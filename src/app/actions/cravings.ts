@@ -5,25 +5,25 @@ import { createClient } from "@/lib/supabase/server";
 import { zonedNow } from "@/lib/dates";
 import type { Profile } from "@/lib/types";
 
-export type NuevoAntojo = {
+export type NuevoImpulso = {
   habitId: string | null;
   intensity: number;
   triggerKey: string | null;
   note: string | null;
-  /** false = cayó. Además de guardar el antojo, marca la recaída del día. */
+  /** false = cayó. Además de guardar el impulso, marca la recaída del día. */
   resisted: boolean;
 };
 
 /**
- * Registra un antojo.
+ * Registra un impulso.
  *
  * La hora y el día de la semana se calculan aquí con la zona del perfil, no en
  * el navegador ni con el reloj del servidor. Es la misma regla que rige todo lo
- * demás: quien registra a las 23:40 en Ciudad de México tiene un antojo de esa
+ * demás: quien registra a las 23:40 en Ciudad de México tiene un impulso de esa
  * noche, no de la madrugada siguiente en Virginia. Y como el análisis entero
  * cuelga de esa hora, equivocarla no daría un dato feo: daría un dato falso.
  */
-export async function logCraving(input: NuevoAntojo) {
+export async function logCraving(input: NuevoImpulso) {
   const supabase = await createClient();
 
   const {
@@ -62,7 +62,7 @@ export async function logCraving(input: NuevoAntojo) {
 
   if (error) return { error: error.message };
 
-  // Si cayó y el antojo cuelga de un hábito, la recaída del día se registra
+  // Si cayó y el impulso cuelga de un hábito, la recaída del día se registra
   // sola. Pedirle a alguien que acaba de recaer que además vaya a otra pantalla
   // a marcarlo es pedir demasiado justo en el peor momento.
   if (!input.resisted && input.habitId) {

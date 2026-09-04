@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
-import { HabitIcon } from "@/components/habit-icon";
 import { JournalEditor } from "@/components/journal-editor";
+import {
+  DiaDeBitacora,
+  type DiaDeBitacora as Dia,
+  type HabitoDelDia,
+  type ImpulsoDeBitacora,
+} from "@/components/dia-de-bitacora";
 import { longDate, shiftISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
-import { MOOD_BY_KEY, type Profile } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Bitácora · Antídoto" };
@@ -24,7 +29,7 @@ export default async function BitacoraPage() {
   const today = todayIn(profile?.timezone ?? "UTC");
   const since = shiftISO(today, -120);
 
-  const [{ data: entries }, { data: logs }, { data: habits }] =
+  const [{ data: entries }, { data: logs }, { data: habits }, { data: cravings }] =
     await Promise.all([
       supabase
         .from("journal_entries")
@@ -36,42 +41,85 @@ export default async function BitacoraPage() {
         .select("habit_id, log_date, status")
         .gte("log_date", since),
       supabase.from("habits").select("id, name, icon, color"),
+      supabase
+        .from("cravings")
+        .select("habit_id, local_date, local_hour, trigger_key, resisted, note")
+        .gte("local_date", since),
     ]);
 
   const habitById = new Map(
     (habits ?? []).map((habit) => [habit.id as string, habit]),
   );
 
-  // Qué hábitos se cumplieron cada día, para colgarlos de su entrada. Se
-  // guarda el hábito entero y no solo su icono: `icon` ahora es una clave
-  // ("azucar", "redes") y pintarla tal cual dejaba la palabra suelta ahí.
-  const cleanByDate = new Map<
-    string,
-    { id: string; name: string; icon: string }[]
-  >();
-  for (const log of logs ?? []) {
-    if (log.status !== "success") continue;
-    const habit = habitById.get(log.habit_id as string);
-    if (!habit) continue;
-    const day = log.log_date as string;
-    cleanByDate.set(day, [
-      ...(cleanByDate.get(day) ?? []),
-      {
-        id: habit.id as string,
-        name: habit.name as string,
-        icon: habit.icon as string,
-      },
-    ]);
+  /**
+   * Un día del historial se arma de tres sitios: la entrada escrita, lo que se
+   * marcó y los impulsos que hubo.
+   *
+   * Antes la lista salía solo de `journal_entries`, así que un día en el que
+   * marcaste tus hábitos y aguantaste dos impulsos pero no escribiste nada no
+   * existía. El historial se veía vacío justo los días en que más se había
+   * hecho. Ahora aparece cualquier día con algo dentro, se haya escrito o no.
+   */
+  const porDia = new Map<string, Dia>();
+
+  const dia = (fecha: string): Dia => {
+    let d = porDia.get(fecha);
+    if (!d) {
+      d = {
+        fecha,
+        mood: null,
+        nota: null,
+        cumplidos: [],
+        recaidas: [],
+        impulsos: [],
+      };
+      porDia.set(fecha, d);
+    }
+    return d;
+  };
+
+  for (const entry of entries ?? []) {
+    const d = dia(entry.entry_date as string);
+    d.mood = (entry.mood as string | null) ?? null;
+    d.nota = (entry.note as string | null) ?? null;
   }
 
-  const todayEntry = (entries ?? []).find(
-    (entry) => entry.entry_date === today,
+  for (const log of logs ?? []) {
+    // El hábito puede haberse borrado; sus registros se van con él, pero un
+    // desfase entre consultas no debería tumbar la página.
+    const habit = habitById.get(log.habit_id as string);
+    if (!habit) continue;
+
+    const ficha: HabitoDelDia = {
+      id: habit.id as string,
+      name: habit.name as string,
+      icon: habit.icon as string,
+    };
+    const d = dia(log.log_date as string);
+    if (log.status === "success") d.cumplidos.push(ficha);
+    else if (log.status === "relapse") d.recaidas.push(ficha);
+  }
+
+  for (const craving of cravings ?? []) {
+    const habit = craving.habit_id
+      ? habitById.get(craving.habit_id as string)
+      : undefined;
+
+    const impulso: ImpulsoDeBitacora = {
+      hora: craving.local_hour as number,
+      trigger: (craving.trigger_key as string | null) ?? null,
+      resistido: craving.resisted as boolean,
+      nota: (craving.note as string | null) ?? null,
+      habito: (habit?.name as string | undefined) ?? null,
+    };
+    dia(craving.local_date as string).impulsos.push(impulso);
+  }
+
+  const historial = [...porDia.values()].sort((a, b) =>
+    a.fecha < b.fecha ? 1 : -1,
   );
 
-  // La de hoy también va en el historial. Antes se excluía porque ya estaba en
-  // el editor de arriba, pero eso hacía que al guardar no apareciera en ningún
-  // lado y pareciera que no se había guardado.
-  const historial = entries ?? [];
+  const entradaDeHoy = porDia.get(today);
 
   return (
     <div className="flex flex-col gap-4 pt-11 lg:pt-0">
@@ -93,8 +141,8 @@ export default async function BitacoraPage() {
         >
           <JournalEditor
             date={today}
-            initialMood={todayEntry?.mood ?? null}
-            initialNote={todayEntry?.note ?? null}
+            initialMood={entradaDeHoy?.mood ?? null}
+            initialNote={entradaDeHoy?.nota ?? null}
           />
         </section>
 
@@ -107,69 +155,18 @@ export default async function BitacoraPage() {
           </h2>
 
           {historial.length === 0 ? (
-            <p className="mx-4 lg:mx-0 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2">
-              Todavía no has escrito nada. Lo que guardes arriba aparece aquí.
+            <p className="mx-4 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2 lg:mx-0">
+              Todavía no hay nada. Marca un día o escribe arriba y aparece aquí.
             </p>
           ) : (
-            <ol className="mx-4 lg:mx-0 flex flex-col gap-2">
-              {historial.map((entry) => {
-                const date = entry.entry_date as string;
-                const cumplidos = cleanByDate.get(date) ?? [];
-
-                return (
-                  <li
-                    key={date}
-                    className="flex gap-3 rounded-2xl bg-card px-4 py-3.5"
-                  >
-                    <span
-                      aria-label={
-                        MOOD_BY_KEY.get(entry.mood as string)?.label ??
-                        "Sin ánimo"
-                      }
-                      className="shrink-0 text-[26px] leading-none"
-                    >
-                      {MOOD_BY_KEY.get(entry.mood as string)?.emoji ?? "•"}
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        {/* La fecha va siempre. Antes la de hoy decía solo
-                            "Hoy", y quien acababa de escribir su primera
-                            entrada veía una lista sin una sola fecha. */}
-                        <span className="flex items-baseline gap-2">
-                          {date === today && (
-                            <span className="rounded-md bg-azul px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] text-azul-tinta">
-                              Hoy
-                            </span>
-                          )}
-                          <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
-                            {longDate(date)}
-                          </span>
-                        </span>
-                        {cumplidos.length > 0 && (
-                          <span
-                            title={cumplidos.map((h) => h.name).join(", ")}
-                            aria-label={`${cumplidos.length} ${cumplidos.length === 1 ? "hábito cumplido" : "hábitos cumplidos"}: ${cumplidos.map((h) => h.name).join(", ")}`}
-                            className="flex shrink-0 items-center gap-1 text-menta"
-                          >
-                            {cumplidos.map((habit) => (
-                              <HabitIcon
-                                key={habit.id}
-                                clave={habit.icon}
-                                size={16}
-                              />
-                            ))}
-                          </span>
-                        )}
-                      </div>
-                      {entry.note && (
-                        <p className="whitespace-pre-line text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label-2">
-                          {entry.note}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
+            <ol className="mx-4 flex flex-col gap-2 lg:mx-0">
+              {historial.map((d) => (
+                <DiaDeBitacora
+                  key={d.fecha}
+                  dia={d}
+                  esHoy={d.fecha === today}
+                />
+              ))}
             </ol>
           )}
         </section>

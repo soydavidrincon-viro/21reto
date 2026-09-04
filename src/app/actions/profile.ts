@@ -114,7 +114,7 @@ export async function exportData() {
       habitos: habits.data ?? [],
       registros: logs.data ?? [],
       bitacora: journal.data ?? [],
-      antojos: cravings.data ?? [],
+      impulsos: cravings.data ?? [],
     },
   };
 }

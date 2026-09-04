@@ -24,7 +24,7 @@ import type { DailyOverviewRow } from "@/lib/types";
  * trabajo que marcar un día ya pasado.
  *
  * Solo se le enseña a quien tiene algo que dejar. Para un hábito que se
- * construye no hay antojo que aguantar —lo que falta ahí es saber qué hacer, y
+ * construye no hay impulso que aguantar —lo que falta ahí es saber qué hacer, y
  * eso son los videos del hábito—, así que ofrecerle este botón a quien solo
  * trackea "Leer" es ruido en la pantalla que más se mira.
  */
@@ -38,7 +38,7 @@ export function CravingButton({
   habits: DailyOverviewRow[];
   companion: CompanionKey;
   etapa: CompanionEtapa;
-  /** Cuántos antojos van hoy. Cambia el texto: el primero no es el tercero. */
+  /** Cuántos impulsos van hoy. Cambia el texto: el primero no es el tercero. */
   hoy: number;
 }) {
   const [abierto, setAbierto] = useState(false);
