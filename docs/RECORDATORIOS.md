@@ -16,15 +16,17 @@ TypeScript, y se despliega sola con el resto.
 pg_cron (Supabase, cada hora)
    └── POST https://21reto.vercel.app/api/recordatorios
           └── avisos_pendientes()   ← decide a quién, en SQL
-          └── web-push              ← cifra y manda
-          └── notification_log      ← anota, y así no repite
+          └── notification_log      ← anota primero, y así no repite
+          └── web-push              ← cifra y manda, por lotes
 ```
 
 ## Las cuatro reglas
 
-- **Uno al día como máximo.** No lo garantiza el código sino la llave primaria
-  de `notification_log`: `(user_id, local_date)`. Un bucle mal escrito no puede
-  provocar una tormenta.
+- **Uno al día como máximo.** Lo garantiza la llave primaria de
+  `notification_log`, `(user_id, local_date)`, y el orden del enviador: primero
+  anota, y solo manda a quien consiguió anotar. Así dos corridas solapadas del
+  cron —un reintento, un `curl` a mano— no mandan dos veces, y un bucle mal
+  escrito no puede provocar una tormenta.
 - **Apagados de fábrica.** `reminder_hour` nace nulo y la función ni mira a
   quien lo tenga vacío.
 - **La hora es la de cada quien.** `timezone(p.timezone, now())`, igual que el

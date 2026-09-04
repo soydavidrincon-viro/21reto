@@ -23,22 +23,40 @@ Estas no son afirmaciones de diseño, son pruebas corridas contra el proyecto
 real y contra un Postgres local:
 
 - **Aislamiento entre cuentas.** Con dos usuarios distintos, cada uno ve cero
-  filas del otro en `habits`, `habit_logs` y `journal_entries`. Lo impone
-  Postgres con Row Level Security, no el código de la app: aunque alguien
-  llamara la API directamente con la llave pública, no obtiene datos ajenos.
-- **Escritura anónima rechazada.** Un intento de crear un hábito sin sesión
-  devuelve `42501 — new row violates row-level security policy`.
+  filas del otro en `habits`, `habit_logs`, `journal_entries`, `cravings`,
+  `push_subscriptions` y `notification_log`. Lo impone Postgres con Row Level
+  Security, no el código de la app: aunque alguien llamara la API directamente
+  con la llave pública, no obtiene datos ajenos.
+- **Escritura sin sesión rechazada.** Las políticas de escritura exigen que
+  `auth.uid()` coincida con `user_id`, y sin sesión `auth.uid()` es nulo, así
+  que nada coincide. (Las pruebas del repo lo ejercitan con sesiones cruzadas;
+  el caso sin sesión se comprobó a mano contra el proyecto real.)
 - **No se puede escribir sobre el hábito de otro.** Encontramos ese agujero
   probando: la política solo verificaba que el `user_id` fuera el de quien
   escribe, así que se podían colgar registros del hábito de otra persona.
   Se cerró con una llave foránea compuesta `(habit_id, user_id)`, de modo que
   lo garantiza el esquema y no una política que se pueda olvidar mañana.
-- **Borrado de cuenta.** Elimina en cascada perfil, hábitos, registros y
-  bitácora, y no toca ninguna otra cuenta. La función saca el id de la sesión en
-  vez de recibirlo como parámetro, así que nadie puede pedir el borrado de otro.
+- **Nadie puede quedarse con el dispositivo de otro.** El endpoint de una
+  suscripción push es único en el mundo. La política de actualización exige
+  que la fila sea tuya antes y después del cambio, así que un upsert sobre un
+  endpoint ajeno se rechaza. Sin eso, alguien podría recibir los avisos de
+  otra persona, que llevan el nombre de sus hábitos.
+- **Una zona horaria inválida no entra.** Un trigger la comprueba al guardar.
+  No es cosmética: los recordatorios de todo el mundo se calculan con la zona
+  de cada perfil, y uno solo inválido dejaba la función entera sin poder correr.
+- **Borrado de cuenta.** Elimina en cascada perfil, hábitos, registros,
+  bitácora, impulsos y dispositivos, y no toca ninguna otra cuenta. La función
+  saca el id de la sesión en vez de recibirlo como parámetro, así que nadie
+  puede pedir el borrado de otro.
 - **La sesión se valida contra el servidor.** El proxy usa `getUser()` y no
   `getSession()`: comprueba el token con el servidor de auth en cada request en
   vez de creerle a la cookie.
+- **Las acciones no se fían de lo que les llega.** Zona horaria, fechas,
+  estados, metas y caras se comprueban contra listas cerradas antes de tocar
+  Postgres, y las fechas no pueden ser futuras respecto al hoy de la persona.
+- **El destino después de entrar es siempre interno.** Solo se acepta un
+  camino que empiece por una barra y no sea el login: `//otro.sitio` o
+  `@otro.sitio` caen a Hoy.
 
 Las pruebas viven en `supabase/tests/` y se pueden volver a correr.
 

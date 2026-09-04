@@ -1,8 +1,45 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { esFechaISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
-import type { LogStatus } from "@/lib/types";
+import { LOG_STATUSES, MOOD_BY_KEY, type LogStatus, type Profile } from "@/lib/types";
+
+/** Hasta 4000 caracteres, lo mismo que el `maxLength` de los editores. */
+const MAX_NOTA = 4000;
+
+/**
+ * ¿Es una fecha que la app puede aceptar para esta cuenta?
+ *
+ * Con forma de `yyyy-MM-dd` y no después de hoy — de SU hoy, el de la zona
+ * del perfil. Un registro con fecha futura no se puede marcar desde la
+ * pantalla, pero una acción de servidor la puede llamar cualquiera con sesión,
+ * y un "limpio" puesto en 2099 inflaba la racha. Ahora ni entra.
+ */
+async function fechaAceptable(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  dateISO: unknown,
+): Promise<string | null> {
+  if (!esFechaISO(dateISO)) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", userId)
+    .single<Pick<Profile, "timezone">>();
+
+  const hoy = todayIn(profile?.timezone ?? "UTC");
+  return dateISO <= hoy ? dateISO : null;
+}
+
+/** Las pantallas que enseñan registros de hábitos, para revalidarlas juntas. */
+function revalidarRegistros(habitId: string) {
+  revalidatePath("/hoy");
+  revalidatePath("/progreso");
+  revalidatePath("/bitacora");
+  revalidatePath(`/habito/${habitId}`);
+}
 
 /**
  * Marca un día de un hábito.
@@ -23,13 +60,23 @@ export async function markDay(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Necesitas iniciar sesión." };
+  if (!user) return { error: "Necesitas iniciar sesión.", streak: null };
+
+  if (!LOG_STATUSES.includes(status)) {
+    return { error: "Ese estado no existe.", streak: null };
+  }
+  if (note !== undefined && (typeof note !== "string" || note.length > MAX_NOTA)) {
+    return { error: "La nota es demasiado larga.", streak: null };
+  }
+
+  const fecha = await fechaAceptable(supabase, user.id, dateISO);
+  if (!fecha) return { error: "Esa fecha no se puede marcar.", streak: null };
 
   const { error } = await supabase.from("habit_logs").upsert(
     {
       habit_id: habitId,
       user_id: user.id,
-      log_date: dateISO,
+      log_date: fecha,
       status,
       note: note ?? null,
     },
@@ -43,11 +90,10 @@ export async function markDay(
   // desde el navegador haría que la celebración de un hito saliera equivocada.
   const { data } = await supabase.rpc("get_habit_stats", {
     p_habit_id: habitId,
-    p_today: dateISO,
+    p_today: fecha,
   });
 
-  revalidatePath("/hoy");
-  revalidatePath(`/habito/${habitId}`);
+  revalidarRegistros(habitId);
   return { error: null, streak: data?.[0]?.current_streak ?? null };
 }
 
@@ -55,16 +101,25 @@ export async function markDay(
 export async function clearDay(habitId: string, dateISO: string) {
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  if (!esFechaISO(dateISO)) return { error: "Esa fecha no existe." };
+
+  // Doble cerrojo: la política RLS ya limita a lo propio, y el filtro por
+  // user_id hace que un fallo de política no baste por sí solo.
   const { error } = await supabase
     .from("habit_logs")
     .delete()
     .eq("habit_id", habitId)
+    .eq("user_id", user.id)
     .eq("log_date", dateISO);
 
   if (error) return { error: error.message };
 
-  revalidatePath("/hoy");
-  revalidatePath(`/habito/${habitId}`);
+  revalidarRegistros(habitId);
   return { error: null };
 }
 
@@ -87,11 +142,31 @@ export async function saveJournal(
 
   if (!user) return { error: "Necesitas iniciar sesión." };
 
+  const fecha = await fechaAceptable(supabase, user.id, dateISO);
+  if (!fecha) return { error: "Ese día todavía no ha llegado." };
+
+  if (patch.mood !== undefined && !MOOD_BY_KEY.has(patch.mood)) {
+    return { error: "Esa cara no existe." };
+  }
+  if (
+    patch.intensity !== undefined &&
+    (!Number.isInteger(patch.intensity) || patch.intensity < 1 || patch.intensity > 5)
+  ) {
+    return { error: "La intensidad va del 1 al 5." };
+  }
+  if (
+    patch.note !== undefined &&
+    patch.note !== null &&
+    (typeof patch.note !== "string" || patch.note.length > MAX_NOTA)
+  ) {
+    return { error: "La nota es demasiado larga." };
+  }
+
   const { data: existing } = await supabase
     .from("journal_entries")
     .select("mood, intensity, note")
     .eq("user_id", user.id)
-    .eq("entry_date", dateISO)
+    .eq("entry_date", fecha)
     .maybeSingle();
 
   const mood = patch.mood ?? existing?.mood;
@@ -100,7 +175,7 @@ export async function saveJournal(
   const { error } = await supabase.from("journal_entries").upsert(
     {
       user_id: user.id,
-      entry_date: dateISO,
+      entry_date: fecha,
       mood,
       intensity: patch.intensity ?? existing?.intensity ?? 3,
       note: patch.note !== undefined ? patch.note : (existing?.note ?? null),
@@ -112,5 +187,7 @@ export async function saveJournal(
 
   revalidatePath("/hoy");
   revalidatePath("/bitacora");
+  // La línea de ánimo vive en Progreso.
+  revalidatePath("/progreso");
   return { error: null };
 }

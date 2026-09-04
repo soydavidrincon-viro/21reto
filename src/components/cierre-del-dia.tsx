@@ -1,6 +1,6 @@
 "use client";
 
-import { Portal } from "@/components/portal";
+import { Portal, useHojaModal } from "@/components/portal";
 
 import { CaretRight, X } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -87,73 +87,103 @@ export function CierreDelDiaProvider({
       {children}
 
       {abierto && (
-        <Portal>
-          <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-            <button
-              type="button"
-              aria-label="Cerrar"
-              onClick={() => setAbierto(false)}
-              className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
-            />
-
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label="Cerrar el día"
-              className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
-              style={{
-                paddingBottom: "max(env(safe-area-inset-bottom), 20px)",
-              }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Companion
-                    who={companion}
-                    size={56}
-                    mood="celebra"
-                    etapa={etapa}
-                    sombra={false}
-                    className="salta shrink-0"
-                  />
-                  <div className="flex flex-col gap-0.5">
-                    <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
-                      Día cerrado
-                    </h2>
-                    <p className="text-[13.5px] leading-[1.4] text-label-2">
-                      Ya marcaste todo. ¿Cómo te fue?
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAbierto(false)}
-                  aria-label="Cerrar"
-                  className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                >
-                  <X size={17} weight="bold" aria-hidden="true" />
-                </button>
-              </div>
-
-              <MoodPicker
-                today={today}
-                selected={moodDeHoy}
-                nota={notaDeHoy}
-                enlaceABitacora={false}
-                onGuardado={() => setAbierto(false)}
-              />
-
-              <button
-                type="button"
-                onClick={() => setAbierto(false)}
-                className="pulsable h-11 rounded-[14px] bg-fill text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-              >
-                Ahora no
-              </button>
-            </div>
-          </div>
-        </Portal>
+        <HojaDeCierre
+          today={today}
+          moodDeHoy={moodDeHoy}
+          notaDeHoy={notaDeHoy}
+          companion={companion}
+          etapa={etapa}
+          cerrar={() => setAbierto(false)}
+        />
       )}
     </Ctx.Provider>
+  );
+}
+
+function HojaDeCierre({
+  today,
+  moodDeHoy,
+  notaDeHoy,
+  companion,
+  etapa,
+  cerrar,
+}: {
+  today: string;
+  moodDeHoy: string | null;
+  notaDeHoy: string | null;
+  companion: CompanionKey;
+  etapa: CompanionEtapa;
+  cerrar: () => void;
+}) {
+  const hoja = useHojaModal(cerrar);
+
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
+        <div
+          aria-hidden="true"
+          onClick={cerrar}
+          className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+        />
+
+        <div
+          ref={hoja}
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Cerrar el día"
+          className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 outline-none sm:rounded-[28px]"
+          style={{
+            paddingBottom: "max(env(safe-area-inset-bottom), 20px)",
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Companion
+                who={companion}
+                size={56}
+                mood="celebra"
+                etapa={etapa}
+                sombra={false}
+                className="salta shrink-0"
+              />
+              <div className="flex flex-col gap-0.5">
+                <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
+                  Día cerrado
+                </h2>
+                <p className="text-[13.5px] leading-[1.4] text-label-2">
+                  Ya marcaste todo. ¿Cómo te fue?
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={cerrar}
+              aria-label="Cerrar"
+              className="pulsable -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            >
+              <X size={17} weight="bold" aria-hidden="true" />
+            </button>
+          </div>
+
+          <MoodPicker
+            today={today}
+            selected={moodDeHoy}
+            nota={notaDeHoy}
+            enlaceABitacora={false}
+            onGuardado={cerrar}
+          />
+
+          <button
+            type="button"
+            onClick={cerrar}
+            className="pulsable h-11 rounded-[14px] bg-fill text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          >
+            Ahora no
+          </button>
+        </div>
+      </div>
+    </Portal>
   );
 }
 

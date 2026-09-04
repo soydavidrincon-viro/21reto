@@ -82,6 +82,15 @@ export default async function HabitoPage({
 
   const todayStatus = byDate.get(today) ?? null;
 
+  // Lo que se construye no tiene "recaídas" ni "días limpios": tiene días
+  // hechos y días saltados. Decirle a alguien que "recayó" en Leer es el tono
+  // que el resto de la app se esfuerza en no tener.
+  const kind = habit.kind as "quit" | "build";
+  const construye = kind === "build";
+  const limpios = construye ? "hechos" : "limpios";
+  const recaida = construye ? "Saltado" : "Recaída";
+  const recaidas = construye ? "Saltados" : "Recaídas";
+
   return (
     <div className="flex flex-col gap-3.5">
       {/* La barra pegajosa con el título centrado es un patrón de teléfono. En
@@ -124,16 +133,16 @@ export default async function HabitoPage({
               </span>
             </p>
             <span className="text-[13px] tracking-[-0.01em] text-label-2">
-              Meta de {habit.target_days} días · {stats.clean_days} limpios
+              Meta de {habit.target_days} días · {stats.clean_days} {limpios}
             </span>
           </section>
 
           <section className="mx-4 flex rounded-[22px] bg-card px-1.5 py-3.5 lg:mx-0 lg:py-4">
             {[
-              [stats.clean_days, "Días limpios"],
+              [stats.clean_days, `Días ${limpios}`],
               [stats.best_streak, "Mejor racha"],
               [`${stats.completion_rate}%`, "Cumplimiento"],
-              [stats.relapses, stats.relapses === 1 ? "Recaída" : "Recaídas"],
+              [stats.relapses, stats.relapses === 1 ? recaida : recaidas],
             ].map(([value, label]) => (
               <div
                 key={String(label)}
@@ -151,6 +160,7 @@ export default async function HabitoPage({
 
           <HabitActions
             habitId={habit.id}
+            kind={kind}
             today={today}
             todayStatus={todayStatus}
           />
@@ -158,7 +168,7 @@ export default async function HabitoPage({
           {/* Solo en lo que se construye: lo que se deja se deja todos los
               días, y ofrecer días libres ahí sería ofrecer una excusa con
               forma de ajuste. */}
-          {habit.kind === "build" && (
+          {construye && (
             <div className="mx-4 lg:mx-0">
               <DiasDelHabito
                 habitId={habit.id}
@@ -172,6 +182,7 @@ export default async function HabitoPage({
           <section className="mx-4 flex flex-col gap-3 rounded-[22px] bg-card px-3.5 py-4 lg:mx-0 lg:px-5 lg:py-5">
             <MonthHeatmap
               habitId={habit.id}
+              kind={kind}
               today={today}
               startDate={habit.start_date as string}
               initial={Object.fromEntries(byDate)}
@@ -186,7 +197,7 @@ export default async function HabitoPage({
               </span>
               <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
                 <span className="size-2.5 rounded-[3px] bg-ambar" />
-                Recaída
+                {recaida}
               </span>
               <span className="flex items-center gap-1.5 text-[11.5px] tracking-[-0.01em] text-label-2">
                 <span className="size-[5px] rounded-full bg-naranja" />

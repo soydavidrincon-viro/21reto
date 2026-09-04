@@ -6,17 +6,20 @@ import { WeeklyBars } from "@/components/weekly-bars";
 import { lastSevenDays, shiftISO, todayIn, weekdayInitial } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
-import {
-  TODOS_LOS_DIAS,
-  type CravingGridCell,
-  type CravingSummary,
-  type Profile,
-} from "@/lib/types";
+import type { CravingGridCell, CravingSummary, Profile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Progreso · Antídoto" };
 
 const WEEKS = 6;
+
+type SemanaRow = {
+  semana: number;
+  inicio: string;
+  fin: string;
+  esperados: number;
+  cumplidos: number;
+};
 
 export default async function ProgresoPage() {
   const supabase = await createClient();
@@ -32,50 +35,40 @@ export default async function ProgresoPage() {
 
   const today = todayIn(profile?.timezone ?? "UTC");
 
-  // La semana empieza el lunes. getDay() cuenta desde domingo, de ahí el ajuste.
-  const offsetToMonday = (new Date(`${today}T00:00:00`).getDay() + 6) % 7;
-  const thisMonday = shiftISO(today, -offsetToMonday);
-  const firstMonday = shiftISO(thisMonday, -(WEEKS - 1) * 7);
+  // Los impulsos de los últimos 90 días. Más atrás la vida de alguien ya cambió
+  // y el patrón de hace medio año no describe el de ahora.
+  const desdeImpulsos = shiftISO(today, -90);
 
-  const [{ data: logs }, { data: entries }, { data: activos }] =
+  /*
+   * Todo en una tanda. Antes eran cuatro rondas de ida y vuelta —hábitos,
+   * luego el total, luego los impulsos— y ninguna dependía de la anterior:
+   * todas necesitan solo `today`. Con Supabase frío, cada ronda de más se
+   * notaba al tocar la pestaña.
+   *
+   * El cumplimiento por semana lo calcula SQL con las mismas reglas que la
+   * racha; aquí solo se pinta.
+   */
+  const [semanas, { data: entries }, activos, { count: totalClean }, rejilla, resumenImpulsos] =
     await Promise.all([
-      supabase
-        .from("habit_logs")
-        .select("habit_id, log_date, status")
-        .gte("log_date", firstMonday),
+      supabase.rpc("cumplimiento_semanal", { p_today: today, p_semanas: WEEKS }),
       supabase
         .from("journal_entries")
         .select("entry_date, mood")
         .gte("entry_date", shiftISO(today, -6)),
-      // Con los días y la fecha de arranque, que es lo que hace falta para
-      // saber cuántos días tocaba haber marcado cada semana.
       supabase
         .from("habits")
-        .select("id, start_date, active_dows")
+        .select("id", { count: "exact", head: true })
         .eq("status", "active"),
+      supabase
+        .from("habit_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "success")
+        .lte("log_date", today),
+      supabase.rpc("get_craving_grid", { p_since: desdeImpulsos }),
+      supabase.rpc("get_craving_summary", { p_since: desdeImpulsos }),
     ]);
 
-  const habitos = (activos ?? []).map((h) => ({
-    id: h.id as string,
-    startDate: h.start_date as string,
-    // Sin la migración de los días, toca todos: igual que antes de que
-    // existieran.
-    dows: (Array.isArray(h.active_dows) ? h.active_dows : TODOS_LOS_DIAS) as number[],
-  }));
-  const activeHabits = habitos.length;
-
-  const { count: totalClean } = await supabase
-    .from("habit_logs")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "success");
-
-  // Los impulsos de los últimos 90 días. Más atrás la vida de alguien ya cambió
-  // y el patrón de hace medio año no describe el de ahora.
-  const desdeImpulsos = shiftISO(today, -90);
-  const [rejilla, resumenImpulsos] = await Promise.all([
-    supabase.rpc("get_craving_grid", { p_since: desdeImpulsos }),
-    supabase.rpc("get_craving_summary", { p_since: desdeImpulsos }),
-  ]);
+  const activeHabits = activos.count ?? 0;
 
   const celdas = ((rejilla.data ?? []) as CravingGridCell[]).map((c) => ({
     ...c,
@@ -84,59 +77,14 @@ export default async function ProgresoPage() {
   }));
   const resumen = ((resumenImpulsos.data ?? []) as CravingSummary[])[0] ?? null;
 
-  /**
-   * El cumplimiento se mide contra los días que tocaban, no contra los que se
-   * registraron.
-   *
-   * Antes el divisor eran los días marcados, así que un día que no tocaste no
-   * contaba ni a favor ni en contra: alguien que usó la app una semana al 100%
-   * y la abandonó cinco seguía viendo "100%". La app le daba la razón por
-   * haberla dejado. Si no lo marcaste, es un día fallado.
-   *
-   * El día de hoy solo cuenta si ya está marcado — todavía no ha terminado, y
-   * suspender a alguien a las ocho de la mañana no es medir.
-   */
-  const marcados = new Set(
-    (logs ?? [])
-      .filter((log) => log.status === "success")
-      .map((log) => `${log.habit_id}|${log.log_date}`),
-  );
-  const conRegistroHoy = new Set(
-    (logs ?? [])
-      .filter((log) => log.log_date === today)
-      .map((log) => log.habit_id as string),
-  );
-
-  const weeks = Array.from({ length: WEEKS }, (_, i) => {
-    const start = shiftISO(firstMonday, i * 7);
-    const end = shiftISO(start, 6);
-
-    let esperados = 0;
-    let cumplidos = 0;
-
-    for (const habito of habitos) {
-      for (let d = 0; d < 7; d++) {
-        const fecha = shiftISO(start, d);
-        if (fecha > end || fecha > today) break;
-        if (fecha < habito.startDate) continue;
-
-        const dow = new Date(`${fecha}T00:00:00`).getDay();
-        if (!habito.dows.includes(dow)) continue;
-        if (fecha === today && !conRegistroHoy.has(habito.id)) continue;
-
-        esperados += 1;
-        if (marcados.has(`${habito.id}|${fecha}`)) cumplidos += 1;
-      }
-    }
-
-    return {
-      label: i === WEEKS - 1 ? "Esta" : `S${i + 1}`,
-      range: `${start.slice(8)}/${start.slice(5, 7)} – ${end.slice(8)}/${end.slice(5, 7)}`,
-      // Sin días esperados no hay nota que poner: es una semana anterior al
-      // reto, no una semana suspendida.
-      value: esperados === 0 ? null : Math.round((cumplidos / esperados) * 100),
-    };
-  });
+  const weeks = ((semanas.data ?? []) as SemanaRow[]).map((s) => ({
+    label: s.semana === WEEKS - 1 ? "Esta" : `S${s.semana + 1}`,
+    range: `${s.inicio.slice(8)}/${s.inicio.slice(5, 7)} – ${s.fin.slice(8)}/${s.fin.slice(5, 7)}`,
+    // Sin días esperados no hay nota que poner: es una semana anterior al
+    // reto, no una semana suspendida.
+    value:
+      s.esperados === 0 ? null : Math.round((s.cumplidos / s.esperados) * 100),
+  }));
 
   const measured = weeks.filter((week) => week.value !== null);
   const average =
@@ -187,12 +135,12 @@ export default async function ProgresoPage() {
               {totalClean ?? 0}
             </span>
             <span className="text-[15px] font-medium tracking-[-0.01em] text-label-2">
-              {totalClean === 1 ? "día limpio" : "días limpios"}
+              {totalClean === 1 ? "día cumplido" : "días cumplidos"}
             </span>
           </p>
         </div>
         <span className="tnum shrink-0 rounded-lg bg-fill px-2.5 py-1.5 text-[13px] font-semibold text-label-2">
-          {activeHabits ?? 0} {activeHabits === 1 ? "hábito" : "hábitos"}
+          {activeHabits} {activeHabits === 1 ? "hábito" : "hábitos"}
         </span>
       </section>
 

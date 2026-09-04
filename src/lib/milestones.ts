@@ -10,11 +10,6 @@ export function milestoneReached(streak: number): number | null {
   return MILESTONES.includes(streak) ? streak : null;
 }
 
-/** El siguiente hito por delante, para mostrarlo como meta cercana. */
-export function nextMilestone(streak: number): number | null {
-  return MILESTONES.find((day) => day > streak) ?? null;
-}
-
 /** Qué se le dice a alguien que acaba de llegar a cada hito. */
 export function milestoneCopy(day: number): { title: string; detail: string } {
   switch (day) {
@@ -50,8 +45,13 @@ export function milestoneCopy(day: number): { title: string; detail: string } {
     case 90:
       return { title: "Noventa días", detail: "El trimestre completo." };
     case 180:
-      return { title: "Medio año", detail: "Medio año." };
+      return {
+        title: "Medio año",
+        detail: "Seis meses. Lo que empezó como un reto ya es tu vida normal.",
+      };
+    case 365:
+      return { title: "Un año", detail: "Un año entero. Trescientos sesenta y cinco decisiones." };
     default:
-      return { title: `${day} días`, detail: "Un año entero." };
+      return { title: `${day} días`, detail: "Sigue contando." };
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Portal } from "@/components/portal";
+import { Portal, useHojaModal } from "@/components/portal";
 
 import { Archive, DotsThree, Trash, X } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
@@ -50,30 +50,79 @@ export function GestionDeReto({
         type="button"
         onClick={() => setAbierto(true)}
         aria-label={`Opciones de ${nombre}`}
-        className="pulsable flex size-9 shrink-0 items-center justify-center rounded-full text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        className="pulsable flex size-11 shrink-0 items-center justify-center rounded-full text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
       >
         <DotsThree size={22} weight="bold" aria-hidden="true" />
       </button>
 
       {abierto && (
-        <Portal>
-          <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-            <button
-              type="button"
-              aria-label="Cerrar"
-              onClick={cerrar}
-              className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
-            />
+        <Hoja
+          nombre={nombre}
+          habitId={habitId}
+          confirmando={confirmando}
+          setConfirmando={setConfirmando}
+          error={error}
+          setError={setError}
+          pending={pending}
+          startTransition={startTransition}
+          cerrar={cerrar}
+        />
+      )}
+    </>
+  );
+}
 
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label={`Opciones de ${nombre}`}
-              className="entrar relative flex w-full max-w-[460px] flex-col gap-3 rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
-              style={{
-                paddingBottom: "max(env(safe-area-inset-bottom), 20px)",
-              }}
-            >
+/**
+ * La hoja va aparte para que el hook del modal —foco, Escape, Tab— se monte y
+ * desmonte con ella, y no con el botón de tres puntos que siempre está.
+ */
+function Hoja({
+  nombre,
+  habitId,
+  confirmando,
+  setConfirmando,
+  error,
+  setError,
+  pending,
+  startTransition,
+  cerrar,
+}: {
+  nombre: string;
+  habitId: string;
+  confirmando: boolean;
+  setConfirmando: (v: boolean) => void;
+  error: string | null;
+  setError: (v: string | null) => void;
+  pending: boolean;
+  startTransition: (fn: () => Promise<void>) => void;
+  cerrar: () => void;
+}) {
+  const hoja = useHojaModal(cerrar);
+
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
+        {/* El fondo cierra al tocarlo, pero no es un control: Escape y el
+            botón de cerrar ya hacen ese trabajo para el teclado, y un botón
+            invisible del tamaño de la pantalla era el primer sitio al que
+            llegaba el Tab. */}
+        <div
+          aria-hidden="true"
+          onClick={cerrar}
+          className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+        />
+
+        <div
+          ref={hoja}
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Opciones de ${nombre}`}
+          className="entrar relative flex w-full max-w-[460px] flex-col gap-3 rounded-t-[28px] bg-card p-5 outline-none sm:rounded-[28px]"
+          style={{
+            paddingBottom: "max(env(safe-area-inset-bottom), 20px)",
+          }}
+        >
               <div className="flex items-start justify-between gap-3">
                 <h2 className="font-display text-[20px] font-semibold leading-tight tracking-[-0.01em] text-label">
                   {nombre}
@@ -82,7 +131,7 @@ export function GestionDeReto({
                   type="button"
                   onClick={cerrar}
                   aria-label="Cerrar"
-                  className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                  className="pulsable -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
                 >
                   <X size={17} weight="bold" aria-hidden="true" />
                 </button>
@@ -173,10 +222,8 @@ export function GestionDeReto({
                   {error}
                 </p>
               )}
-            </div>
-          </div>
-        </Portal>
-      )}
-    </>
+        </div>
+      </div>
+    </Portal>
   );
 }

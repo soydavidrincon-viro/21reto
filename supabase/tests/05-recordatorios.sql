@@ -11,6 +11,12 @@
 -- funciones dependen de now() y sin fijarlo la prueba pasaría o fallaría según
 -- a qué hora se corriera.
 
+-- Los ficheros anteriores dejan puesta una sesión de usuario, y
+-- `avisos_pendientes()` se niega a correr con sesión. Aquí se empieza sin
+-- nadie, como el enviador.
+reset role;
+select set_config('request.jwt.claim.sub', '', false);
+
 insert into auth.users (id, email) values
   ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'hugo@antidoto.test'),
   ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'ines@antidoto.test');

@@ -25,13 +25,31 @@ proceso, no como una falta.
 Antes de cada push: `npm run typecheck && npm run lint && npm run build`.
 
 El esquema tiene pruebas de verdad en `supabase/tests/` — corren contra un
-Postgres real y cubren rachas, aislamiento entre cuentas y borrado en cascada.
-Si tocas `supabase/migrations/`, córrelas y regenera `setup-completo.sql`:
+Postgres real y cubren rachas, aislamiento entre cuentas, recordatorios y
+borrado en cascada; `supabase/tests/README.md` dice cómo. Si tocas
+`supabase/migrations/`, córrelas y regenera `setup-completo.sql`:
 
 ```bash
 cat supabase/migrations/*.sql supabase/seed.sql > supabase/setup-completo.sql
 ```
 
-Los colores y tipografías salen de los tokens de `src/app/globals.css`. Son los
-colores de sistema de iOS y el system font stack, que en iPhone resuelve a SF
-Pro real. No metas fuentes de Google ni hex sueltos en los componentes.
+Los colores y tipografías salen de los tokens de `src/app/globals.css` y están
+como se quieren: no se cambian. La paleta es propia (`--c-azul`, `--c-naranja`,
+`--c-menta`, `--c-ambar`, `--c-lila`, y el único rojo, `--c-rojo`), cada acento
+trae su tinta (`--c-*-tinta`) y todo sube de luminosidad en oscuro. Las fuentes
+son Fredoka para títulos y números y Figtree para el resto, cargadas con
+`next/font` en `src/app/layout.tsx`: se sirven desde nuestro dominio, sin
+petición a Google en tiempo de carga. En los componentes se usan las clases de
+Tailwind que exponen esos tokens (`bg-ambar`, `text-ambar-tinta`,
+`font-display`), nunca hex sueltos; el único sitio donde hay hex son los
+muñecos de `companion.tsx` y `HABIT_HEX`, que alimentan SVG y confetti.
+
+Las hojas modales (`role="dialog"`) pasan por `useHojaModal` de
+`src/components/portal.tsx`, que pone el foco dentro, cierra con Escape y
+encierra el Tab. Una hoja nueva lo usa; no se reimplementa.
+
+Las acciones de servidor validan lo que reciben antes de tocar Postgres
+(`esZonaValida`, `esFechaISO`, las listas cerradas de `src/lib/types.ts`): una
+acción la puede llamar cualquiera con sesión mandando lo que quiera, y el error
+crudo del esquema no es un mensaje para nadie. Y devuelven `{ error }`, que el
+componente enseña: ningún resultado de acción se tira sin mirarlo.

@@ -40,7 +40,7 @@ export default async function BitacoraPage() {
         .from("habit_logs")
         .select("habit_id, log_date, status")
         .gte("log_date", since),
-      supabase.from("habits").select("id, name, icon, color"),
+      supabase.from("habits").select("id, name, icon, kind"),
       supabase
         .from("cravings")
         .select("habit_id, local_date, local_hour, trigger_key, resisted, note")
@@ -94,6 +94,7 @@ export default async function BitacoraPage() {
       id: habit.id as string,
       name: habit.name as string,
       icon: habit.icon as string,
+      kind: habit.kind as "quit" | "build",
     };
     const d = dia(log.log_date as string);
     if (log.status === "success") d.cumplidos.push(ficha);

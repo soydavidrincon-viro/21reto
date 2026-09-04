@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import webpush from "web-push";
@@ -11,12 +12,15 @@ import webpush from "web-push";
  *
  * Aquí no se decide nada: a quién le toca y por qué lo resuelve
  * `avisos_pendientes()` en SQL, al lado del dato y con la zona horaria de cada
- * perfil. Esto solo cifra, manda y anota.
+ * perfil. Esto solo anota, cifra y manda — en ese orden, y el orden importa.
  */
 
 // Node y no Edge: `web-push` necesita el crypto de Node para cifrar el payload.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Cuántos envíos van a la vez. Google y Apple aguantan de sobra; Vercel tiene reloj. */
+const EN_PARALELO = 25;
 
 const TEXTOS: Record<
   string,
@@ -52,6 +56,25 @@ type Aviso = {
   dato: number;
 };
 
+type Dispositivo = {
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+};
+
+/**
+ * Comparación en tiempo constante. Con `!==` el tiempo de respuesta depende de
+ * cuántos caracteres coinciden desde el principio, y eso es una pista que no
+ * hace falta regalar en un endpoint que puede notificar a toda la base.
+ */
+function mismoSecreto(recibido: string | null, esperado: string): boolean {
+  if (!recibido) return false;
+  const a = Buffer.from(recibido);
+  const b = Buffer.from(`Bearer ${esperado}`);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export async function POST(request: NextRequest) {
   const secreto = process.env.CRON_SECRET;
 
@@ -61,7 +84,7 @@ export async function POST(request: NextRequest) {
   if (!secreto) {
     return NextResponse.json({ error: "sin configurar" }, { status: 500 });
   }
-  if (request.headers.get("authorization") !== `Bearer ${secreto}`) {
+  if (!mismoSecreto(request.headers.get("authorization"), secreto)) {
     return NextResponse.json({ error: "no" }, { status: 401 });
   }
 
@@ -114,7 +137,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const avisos = (data ?? []) as Aviso[];
+  const avisos = ((data ?? []) as Aviso[]).filter((a) => TEXTOS[a.kind]);
 
   // `dry` permite ver a quién se le mandaría sin mandar nada. Existe para poder
   // depurar esto sin despertar a nadie a las tres de la mañana.
@@ -127,61 +150,112 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  webpush.setVapidDetails("mailto:hola@antidoto.app", publica, privada);
-
-  let enviados = 0;
-  let caducados = 0;
-
-  for (const aviso of avisos) {
-    const plantilla = TEXTOS[aviso.kind];
-    if (!plantilla) continue;
-
-    const { data: dispositivos } = await supabase
-      .from("push_subscriptions")
-      .select("endpoint, p256dh, auth")
-      .eq("user_id", aviso.user_id);
-
-    if (!dispositivos?.length) continue;
-
-    const cuerpo = JSON.stringify(plantilla(aviso.habito, aviso.dato));
-    let algunoLlego = false;
-
-    for (const d of dispositivos) {
-      try {
-        await webpush.sendNotification(
-          {
-            endpoint: d.endpoint as string,
-            keys: { p256dh: d.p256dh as string, auth: d.auth as string },
-          },
-          cuerpo,
-        );
-        algunoLlego = true;
-      } catch (fallo) {
-        const status = (fallo as { statusCode?: number }).statusCode;
-        // 404 y 410 significan que ese dispositivo ya no existe: la persona
-        // desinstaló la app o revocó el permiso. Guardarlo para siempre es
-        // acumular basura que se reintenta cada hora.
-        if (status === 404 || status === 410) {
-          await supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("endpoint", d.endpoint as string);
-          caducados += 1;
-        }
-      }
-    }
-
-    // Se anota aunque no haya llegado a ningún dispositivo. El registro es el
-    // tope de "uno al día": si se apuntara solo al acertar, un fallo de red
-    // dejaría a alguien recibiendo un intento cada hora.
-    await supabase.from("notification_log").insert({
-      user_id: aviso.user_id,
-      local_date: aviso.local_date,
-      kind: aviso.kind,
-    });
-
-    if (algunoLlego) enviados += 1;
+  if (avisos.length === 0) {
+    return NextResponse.json({ candidatos: 0, enviados: 0, caducados: 0 });
   }
 
-  return NextResponse.json({ candidatos: avisos.length, enviados, caducados });
+  /*
+   * Primero se anota, después se manda.
+   *
+   * Al revés —mandar y luego anotar— dos corridas solapadas del cron (un
+   * reintento, un `curl` a mano, una hora lenta que pisa a la siguiente) leían
+   * las dos la lista vacía, mandaban las dos, y solo la segunda fallaba al
+   * anotar. La persona recibía dos avisos, y el fallo del insert ni se miraba.
+   *
+   * Con la fila puesta antes de enviar y `ignoreDuplicates`, la llave primaria
+   * de `notification_log` hace de cerrojo: solo quien consigue insertar manda.
+   * Lo que devuelve el insert son justo las filas que entraron.
+   */
+  const { data: reservados, error: errorLog } = await supabase
+    .from("notification_log")
+    .upsert(
+      avisos.map((a) => ({
+        user_id: a.user_id,
+        local_date: a.local_date,
+        kind: a.kind,
+      })),
+      { onConflict: "user_id,local_date", ignoreDuplicates: true },
+    )
+    .select("user_id");
+
+  if (errorLog) {
+    return NextResponse.json({ error: errorLog.message }, { status: 500 });
+  }
+
+  const conTurno = new Set((reservados ?? []).map((r) => r.user_id as string));
+  const aMandar = avisos.filter((a) => conTurno.has(a.user_id));
+
+  // Una sola consulta para todos los dispositivos, no una por persona.
+  const { data: dispositivos } = await supabase
+    .from("push_subscriptions")
+    .select("user_id, endpoint, p256dh, auth")
+    .in(
+      "user_id",
+      aMandar.map((a) => a.user_id),
+    );
+
+  const porUsuario = new Map<string, Dispositivo[]>();
+  for (const d of (dispositivos ?? []) as Dispositivo[]) {
+    const lista = porUsuario.get(d.user_id) ?? [];
+    lista.push(d);
+    porUsuario.set(d.user_id, lista);
+  }
+
+  webpush.setVapidDetails("mailto:hola@antidoto.app", publica, privada);
+
+  const envios: { aviso: Aviso; dispositivo: Dispositivo }[] = [];
+  for (const aviso of aMandar) {
+    for (const dispositivo of porUsuario.get(aviso.user_id) ?? []) {
+      envios.push({ aviso, dispositivo });
+    }
+  }
+
+  const llegoA = new Set<string>();
+  const caducadosEndpoints: string[] = [];
+
+  // Por lotes y en paralelo: en serie, con mil personas a la misma hora, el
+  // bucle se pasaba del tiempo máximo de la función y la cola se quedaba a
+  // medias en silencio.
+  for (let i = 0; i < envios.length; i += EN_PARALELO) {
+    const lote = envios.slice(i, i + EN_PARALELO);
+    const resultados = await Promise.allSettled(
+      lote.map(({ aviso, dispositivo }) =>
+        webpush.sendNotification(
+          {
+            endpoint: dispositivo.endpoint,
+            keys: { p256dh: dispositivo.p256dh, auth: dispositivo.auth },
+          },
+          JSON.stringify(TEXTOS[aviso.kind](aviso.habito, aviso.dato)),
+        ),
+      ),
+    );
+
+    resultados.forEach((resultado, n) => {
+      const { aviso, dispositivo } = lote[n];
+      if (resultado.status === "fulfilled") {
+        llegoA.add(aviso.user_id);
+        return;
+      }
+      const status = (resultado.reason as { statusCode?: number }).statusCode;
+      // 404 y 410 significan que ese dispositivo ya no existe: la persona
+      // desinstaló la app o revocó el permiso. Guardarlo para siempre es
+      // acumular basura que se reintenta cada hora.
+      if (status === 404 || status === 410) {
+        caducadosEndpoints.push(dispositivo.endpoint);
+      }
+    });
+  }
+
+  if (caducadosEndpoints.length > 0) {
+    await supabase
+      .from("push_subscriptions")
+      .delete()
+      .in("endpoint", caducadosEndpoints);
+  }
+
+  return NextResponse.json({
+    candidatos: avisos.length,
+    enviados: llegoA.size,
+    caducados: caducadosEndpoints.length,
+  });
 }

@@ -75,7 +75,10 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
     setThemeState(next);
     aplicarTema(next);
     startTransition(async () => {
-      await setTheme(next);
+      const result = await setTheme(next);
+      // Si no llegó al perfil, el tema se queda en este navegador y en ningún
+      // otro. Se avisa, que es distinto de quedarse callado.
+      if (result.error) setMessage("No pudimos guardar el tema en tu cuenta.");
     });
   }
 
@@ -374,6 +377,15 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
         className="px-5 text-center text-[13px] text-label-2 lg:col-span-2 lg:px-0"
       >
         {message}
+      </p>
+
+      {/* Al pie y en pequeño, y solo aquí. Es obligatorio decirlo en una app
+          que trackea alcohol, apuestas o pastillas; repetirlo en cada pantalla
+          sería tratar a la persona como si no lo supiera. */}
+      <p className="px-8 text-center text-[12px] leading-[1.45] text-label-3 lg:col-span-2 lg:px-0">
+        Antídoto acompaña tu proceso. No sustituye la atención de un
+        profesional de la salud: si lo que llevas te pesa más de lo que puedes
+        solo, pedir ayuda también es parte del camino.
       </p>
     </div>
   );

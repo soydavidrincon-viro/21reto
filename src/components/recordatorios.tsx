@@ -1,6 +1,6 @@
 "use client";
 
-import { Portal } from "@/components/portal";
+import { Portal, useHojaModal } from "@/components/portal";
 
 import {
   Bell,
@@ -86,7 +86,7 @@ export function Recordatorios({
               ? "Recordatorios encendidos. Tocar para cambiarlos."
               : "Encender recordatorios"
           }
-          className="pulsable relative flex size-9 shrink-0 items-center justify-center rounded-full text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          className="pulsable relative flex size-11 shrink-0 items-center justify-center rounded-full text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         >
           {encendidos ? (
             <>
@@ -100,7 +100,7 @@ export function Recordatorios({
                   que están puestos. */}
               <span
                 aria-hidden="true"
-                className="absolute right-1.5 top-1.5 size-[7px] rounded-full bg-menta ring-2 ring-grouped"
+                className="absolute right-2.5 top-2.5 size-[7px] rounded-full bg-menta ring-2 ring-grouped"
               />
             </>
           ) : (
@@ -155,6 +155,7 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
   const [dificil, setDificil] = useState(profile.avisa_hora_dificil);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const hoja = useHojaModal(onClose);
 
   // Qué puede hacer este navegador. Va por useSyncExternalStore y no por un
   // efecto que llame a setState: en el servidor estas APIs no existen, así que
@@ -248,18 +249,19 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
   return (
     <Portal>
       <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-        <button
-          type="button"
-          aria-label="Cerrar"
+        <div
+          aria-hidden="true"
           onClick={onClose}
           className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
         />
 
         <div
+          ref={hoja}
+          tabIndex={-1}
           role="dialog"
           aria-modal="true"
           aria-label="Recordatorios"
-          className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
+          className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 outline-none sm:rounded-[28px]"
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
         >
           <div className="flex items-start justify-between gap-3">
@@ -275,7 +277,7 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              className="pulsable -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               <X size={17} weight="bold" aria-hidden="true" />
             </button>

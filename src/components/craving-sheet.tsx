@@ -1,6 +1,6 @@
 "use client";
 
-import { Portal } from "@/components/portal";
+import { Portal, useHojaModal } from "@/components/portal";
 
 import { HandPalm, Lightning, X } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
@@ -36,6 +36,7 @@ export function CravingSheet({
   const [error, setError] = useState<string | null>(null);
   const [confirmandoCaida, setConfirmandoCaida] = useState(false);
   const [pending, startTransition] = useTransition();
+  const hoja = useHojaModal(onClose);
 
   const elegido = habits.find((h) => h.habit_id === habitId) ?? null;
 
@@ -83,18 +84,19 @@ export function CravingSheet({
   return (
     <Portal>
       <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-        <button
-          type="button"
-          aria-label="Cerrar"
+        <div
+          aria-hidden="true"
           onClick={onClose}
           className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
         />
 
         <div
+          ref={hoja}
+          tabIndex={-1}
           role="dialog"
           aria-modal="true"
           aria-label="Registrar un impulso"
-          className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
+          className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 outline-none sm:rounded-[28px]"
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
         >
           <div className="flex items-start justify-between gap-3">
@@ -110,7 +112,7 @@ export function CravingSheet({
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              className="pulsable -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
             >
               <X size={17} weight="bold" aria-hidden="true" />
             </button>

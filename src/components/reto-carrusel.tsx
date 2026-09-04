@@ -158,19 +158,17 @@ export function RetoCarrusel({
                     ? "Hoy puede ser el día uno."
                     : `Llevas ${habit.current_streak} ${habit.current_streak === 1 ? "día seguido" : "días seguidos"}.`}
                 </p>
-                {/* El compañero solo asoma en la primera tarjeta: repetido en
-                    cada una parecería un adorno del componente y no alguien
-                    que te acompaña. */}
-                {i === 0 && (
-                  <Companion
-                    who={companion}
-                    size={92}
-                    mood={humor}
-                    etapa={etapa}
-                    className={`-mb-5 shrink-0 lg:-mb-7 ${humor === "apagado" ? "" : "flota"}`}
-                    sombra={false}
-                  />
-                )}
+                {/* El compañero va en todas las tarjetas. Solo en la primera,
+                    al deslizar al segundo reto desaparecía, y eso se leía
+                    como que se había ido, no como una decisión de diseño. */}
+                <Companion
+                  who={companion}
+                  size={92}
+                  mood={humor}
+                  etapa={etapa}
+                  className={`-mb-5 shrink-0 lg:-mb-7 ${humor === "apagado" ? "" : "flota"}`}
+                  sombra={false}
+                />
               </div>
             </section>
           );

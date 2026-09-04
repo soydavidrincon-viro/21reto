@@ -24,13 +24,23 @@ export async function guardarDispositivo(sub: {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
+  // Lo que manda el navegador tiene forma conocida; lo que no la tenga no es
+  // una suscripción y no se guarda.
+  const textos = [sub?.endpoint, sub?.p256dh, sub?.auth];
+  if (!textos.every((t) => typeof t === "string" && t.length > 0 && t.length <= 2048)) {
+    return { error: "Esa suscripción no es válida." };
+  }
+  if (!/^https:\/\//.test(sub.endpoint)) {
+    return { error: "Esa suscripción no es válida." };
+  }
+
   const { error } = await supabase.from("push_subscriptions").upsert(
     {
       user_id: user.id,
       endpoint: sub.endpoint,
       p256dh: sub.p256dh,
       auth: sub.auth,
-      user_agent: sub.userAgent,
+      user_agent: typeof sub.userAgent === "string" ? sub.userAgent.slice(0, 200) : null,
     },
     { onConflict: "endpoint" },
   );
@@ -38,6 +48,9 @@ export async function guardarDispositivo(sub: {
   if (error) return { error: error.message };
 
   revalidatePath("/perfil");
+  // La campana de Hoy pinta su estado desde el perfil: sin esto, encender los
+  // avisos desde ahí la dejaba gris hasta la siguiente recarga.
+  revalidatePath("/hoy");
   return { error: null };
 }
 
@@ -60,6 +73,9 @@ export async function olvidarDispositivo(endpoint: string) {
   if (error) return { error: error.message };
 
   revalidatePath("/perfil");
+  // La campana de Hoy pinta su estado desde el perfil: sin esto, encender los
+  // avisos desde ahí la dejaba gris hasta la siguiente recarga.
+  revalidatePath("/hoy");
   return { error: null };
 }
 
@@ -97,5 +113,8 @@ export async function guardarAvisos(prefs: PreferenciasDeAviso) {
   if (error) return { error: error.message };
 
   revalidatePath("/perfil");
+  // La campana de Hoy pinta su estado desde el perfil: sin esto, encender los
+  // avisos desde ahí la dejaba gris hasta la siguiente recarga.
+  revalidatePath("/hoy");
   return { error: null };
 }

@@ -18,25 +18,42 @@ Contra un Postgres cualquiera, aplicando antes el shim que remeda el esquema
 ```bash
 createuser -s authenticated; createuser -s anon   # los roles que crea Supabase
 
-psql "$DATABASE_URL" -f supabase/tests/00-shim-supabase.sql \
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+                     -f supabase/tests/00-shim-supabase.sql \
                      -f supabase/migrations/0001_init.sql \
                      -f supabase/migrations/0002_borrar_cuenta.sql \
                      -f supabase/migrations/0003_companero.sql \
                      -f supabase/migrations/0005_antojos.sql \
                      -f supabase/migrations/0006_dias_del_habito.sql \
+                     -f supabase/migrations/0007_recaida_y_cumplimiento.sql \
+                     -f supabase/migrations/0008_recordatorios.sql \
+                     -f supabase/migrations/0009_auditoria.sql \
                      -f supabase/seed.sql \
                      -f supabase/tests/01-esquema.sql \
                      -f supabase/tests/02-antojos.sql \
-                     -f supabase/tests/03-dias-del-habito.sql
+                     -f supabase/tests/03-dias-del-habito.sql \
+                     -f supabase/tests/04-recaida-y-cumplimiento.sql \
+                     -f supabase/tests/05-recordatorios.sql \
+                     -f supabase/tests/06-auditoria.sql
 ```
 
-`0004_avatares.sql` se queda fuera a propósito: solo crea el bucket de Storage,
-y el esquema `storage` no existe fuera de Supabase.
+La base tiene que estar vacía y el rol `app_user` no debe existir de antes:
+`01-esquema.sql` lo crea. Para repetir la corrida, `dropdb` + `drop role
+app_user` + `createdb`.
 
-`02-antojos.sql` y `03-dias-del-habito.sql` corren después de `01-esquema.sql` y
-reutilizan el rol `app_user` que aquel deja creado. Los usuarios sí son propios
-de cada fichero: los anteriores terminan probando cascadas de borrado, así que
-sus usuarios ya no existen cuando arranca el siguiente.
+`0004_avatares.sql` se queda fuera a propósito: solo crea el bucket de Storage,
+y el esquema `storage` no existe fuera de Supabase. El único trozo de `0009` que
+toca `storage` va dentro de un `if exists` por la misma razón.
+
+Los ficheros a partir de `02` corren después de `01-esquema.sql` y reutilizan
+el rol `app_user` que aquel deja creado. Los usuarios sí son propios de cada
+fichero: los anteriores terminan probando cascadas de borrado, así que sus
+usuarios ya no existen cuando arranca el siguiente. Cuidado con los ids: son
+uuids escritos a mano y no pueden repetirse entre ficheros.
+
+`set request.jwt.claim.sub` es de sesión y sobrevive al `reset role`, así que
+cada fichero que necesite correr *sin* usuario (los de recordatorios) lo limpia
+al empezar con `set_config(..., '', false)`.
 
 Los casos que fallan cortan la corrida con `raise exception`. Los que pasan
 imprimen `OK:` o la tabla con el valor esperado escrito al lado en el `\echo`.
@@ -58,3 +75,16 @@ racha el martes, y que sí se le rompa cuando falta un lunes. Incluye el caso de
 regresión que importa —un hábito de todos los días se comporta exactamente igual
 que antes de la migración— porque de eso depende que nadie pierda una racha por
 haber actualizado.
+
+`04-recaida-y-cumplimiento.sql` comprueba que "sigo contando" y "vuelvo a
+empezar" den rachas distintas sobre los mismos registros, y que el cumplimiento
+se mida contra los días que tocaban y no contra los que se marcaron.
+
+`05-recordatorios.sql` fija instantes concretos para comprobar que la hora del
+aviso es la de cada quien, que el tope de uno al día lo impone la llave primaria
+y que nadie con sesión puede listar los avisos de todos.
+
+`06-auditoria.sql` cubre lo que cerró la migración 0009: el upsert del
+dispositivo funciona para el dueño y queda bloqueado para cualquier otro, una
+zona horaria inventada no entra en el perfil, y un registro con fecha futura no
+cuenta para la racha.
