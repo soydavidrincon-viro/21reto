@@ -17,6 +17,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
 import { etapaDeRacha, type CompanionMood } from "@/components/companion";
+import { conDiasPorDefecto } from "@/lib/types";
 import type { DailyOverviewRow, Profile, Quote } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +65,12 @@ export default async function HoyPage() {
       .eq("local_date", today),
   ]);
 
-  const habits = (overview.data ?? []) as DailyOverviewRow[];
+  // `conDiasPorDefecto` es el seguro de la ventana entre el despliegue y la
+  // migración: mientras la base no tenga la columna de días, la app se comporta
+  // como antes de que existieran en vez de quedarse en blanco.
+  const habits = ((overview.data ?? []) as DailyOverviewRow[]).map(
+    conDiasPorDefecto,
+  );
   const frase = ((quote.data ?? []) as Quote[])[0];
   const firstName = profile.display_name?.split(" ")[0] ?? "";
 

@@ -21,6 +21,33 @@ export type DailyOverviewRow = {
   best_streak: number;
 };
 
+/**
+ * Rellena lo que la base todavía no sabe dar.
+ *
+ * Entre que se despliega el código y se corre la migración pasa un rato, y en
+ * ese rato `get_daily_overview` devuelve las columnas de antes. Sin esto, la
+ * primera pantalla de la app se quedaba en blanco: `active_dows` llegaba
+ * `undefined` y esparcirlo con `[...]` lanza una excepción que se lleva el
+ * render entero.
+ *
+ * Los valores por defecto son los mismos que los de la columna en el esquema —
+ * toca todos los días— así que mientras falte la migración la app se comporta
+ * exactamente como se comportaba antes de que existieran los días, que es lo
+ * correcto: no había días, tocaba siempre.
+ */
+export function conDiasPorDefecto(fila: DailyOverviewRow): DailyOverviewRow {
+  if (Array.isArray(fila.active_dows) && typeof fila.toca_hoy === "boolean") {
+    return fila;
+  }
+  return {
+    ...fila,
+    active_dows: Array.isArray(fila.active_dows)
+      ? fila.active_dows
+      : TODOS_LOS_DIAS,
+    toca_hoy: typeof fila.toca_hoy === "boolean" ? fila.toca_hoy : true,
+  };
+}
+
 export type Quote = { id: string; text: string; author: string | null };
 
 export type Profile = {
@@ -125,7 +152,13 @@ export const TODOS_LOS_DIAS = [0, 1, 2, 3, 4, 5, 6];
  * y porque "Lun, Mar, Mié, Jue y Vie" ocupa media tarjeta para decir algo que
  * cabe en dos palabras.
  */
-export function comoSeLeenLosDias(dows: number[]): string {
+export function comoSeLeenLosDias(dows: number[] | null | undefined): string {
+  // Tolera que no venga nada. Esta función se pinta dentro de una tarjeta, y
+  // una excepción aquí no rompe una etiqueta: se lleva por delante la pantalla
+  // entera. Sin días, lo honesto es decir que toca siempre, que es el valor
+  // por defecto de la columna.
+  if (!Array.isArray(dows) || dows.length === 0) return "Todos los días";
+
   const dias = [...dows].sort((a, b) => a - b);
   if (dias.length === 7) return "Todos los días";
   if (dias.length === 5 && dias.every((d) => d >= 1 && d <= 5)) {

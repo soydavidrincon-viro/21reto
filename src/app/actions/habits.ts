@@ -6,6 +6,28 @@ import { todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import type { HabitColor, Profile } from "@/lib/types";
 
+/**
+ * ¿Falló porque la base todavía no tiene la columna de los días?
+ *
+ * Llega de dos formas según quién se queje. Postgres devuelve 42703
+ * ("column does not exist"); PostgREST, que es quien está delante, corta antes
+ * con PGRST204 y su propio texto — "Could not find the 'active_dows' column of
+ * 'habits' in the schema cache"—. Mirar solo el de Postgres no servía de nada,
+ * porque la petición nunca llega tan abajo.
+ *
+ * Existe por un error de despliegue mío: el código salió antes que la
+ * migración, y durante esa ventana crear un hábito devolvía ese texto en rojo
+ * debajo del botón. Se queda como red de seguridad para la próxima.
+ */
+function faltaLaColumnaDeDias(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  return (
+    error.code === "PGRST204" ||
+    error.code === "42703" ||
+    (error.message ?? "").includes("active_dows")
+  );
+}
+
 export type NewHabit = {
   name: string;
   /**
@@ -73,17 +95,28 @@ export async function createHabit(input: NewHabit) {
   // El reto arranca hoy según el reloj del usuario, no el del servidor.
   const startDate = todayIn(zone);
 
-  const { error } = await supabase.from("habits").insert({
+  const base = {
     user_id: user.id,
     name,
     kind: input.kind,
     icon: input.icon,
     color: input.color,
     target_days: input.targetDays,
-    active_dows: dows,
     relapse_policy: input.relapsePolicy,
     start_date: startDate,
-  });
+  };
+
+  let { error } = await supabase
+    .from("habits")
+    .insert({ ...base, active_dows: dows });
+
+  // Si la migración de los días todavía no está aplicada, se reintenta sin
+  // ellos: el hábito nace tocando todos los días, que es como se ha comportado
+  // la app siempre. Crear un hábito es lo primero que hace cualquiera y no
+  // puede quedarse roto por una columna que aún no existe.
+  if (faltaLaColumnaDeDias(error)) {
+    ({ error } = await supabase.from("habits").insert(base));
+  }
 
   if (error) return { error: error.message };
 
@@ -132,6 +165,12 @@ export async function setHabitDows(habitId: string, dows: number[]) {
     .update({ active_dows: limpios })
     .eq("id", habitId)
     .eq("user_id", user.id);
+
+  // Aquí no hay reintento posible: sin la columna, esto es justo lo que no se
+  // puede guardar. Pero el texto crudo de PostgREST no le dice nada a nadie.
+  if (faltaLaColumnaDeDias(error)) {
+    return { error: "Esto todavía no está disponible. Vuelve a intentarlo en un rato." };
+  }
 
   if (error) return { error: error.message };
 
