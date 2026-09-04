@@ -30,14 +30,34 @@ select '33333333-3333-3333-3333-333333333333',
        case when d = 12 then 'relapse' else 'success' end
 from generate_series(1, 19) as d;
 
-\echo '--- 2. estadísticas (esperado: 18 limpios, 1 recaída, 95%, racha 7, mejor 11) ---'
-select * from public.get_habit_stats(
-  '33333333-3333-3333-3333-333333333333', date '2026-08-20');
+\echo '--- 2. estadísticas: 18 limpios, 1 recaída, 95%, racha 18, mejor 18 ---'
+\echo '    (política "sigo contando" por defecto: la recaída del 12 no parte nada)'
+do $$
+declare s record;
+begin
+  select * into s from public.get_habit_stats(
+    '33333333-3333-3333-3333-333333333333', date '2026-08-20');
+  if s.clean_days <> 18 or s.relapses <> 1 or s.completion_rate <> 95
+     or s.current_streak <> 18 or s.best_streak <> 18 then
+    raise exception 'FALLO: limpios % recaídas % cumplimiento % racha % mejor %',
+      s.clean_days, s.relapses, s.completion_rate, s.current_streak, s.best_streak;
+  end if;
+  raise notice 'OK: 18 limpios, 1 recaída, 95%%, racha 18, mejor 18';
+end $$;
 
-\echo '--- 3. la racha aguanta que hoy no esté marcado, pero no dos días ---'
-select
-  (public.get_habit_stats('33333333-3333-3333-3333-333333333333', date '2026-08-20')).current_streak as ayer_marcado_hoy_no,
-  (public.get_habit_stats('33333333-3333-3333-3333-333333333333', date '2026-08-22')).current_streak as dos_dias_sin_marcar;
+\echo '--- 3. la racha no se rompe por días sin marcar: se pausa ---'
+do $$
+declare hoy integer; luego integer;
+begin
+  select current_streak into hoy
+  from public.get_habit_stats('33333333-3333-3333-3333-333333333333', date '2026-08-20');
+  select current_streak into luego
+  from public.get_habit_stats('33333333-3333-3333-3333-333333333333', date '2026-08-22');
+  if hoy <> 18 or luego <> 18 then
+    raise exception 'FALLO: racha % hoy y % dos días después, se esperaba 18 y 18', hoy, luego;
+  end if;
+  raise notice 'OK: 18 con hoy sin marcar, y 18 dos días después';
+end $$;
 
 \echo '--- 4. frase del día: una sola, y la misma al repetir la consulta ---'
 set request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';

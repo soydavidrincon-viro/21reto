@@ -235,3 +235,22 @@ la otra: las políticas RLS deben devolver cero filas.
 
 Todo el desarrollo va en la rama `claude/antidoto-app-plan-cj964q`, con commits por fase y un pull
 request en borrador.
+
+
+## Racha en pausa (septiembre 2026)
+
+Regla vigente desde la migración 0010:
+
+- Un día sin marcar es un hueco: pausa la racha, no la rompe.
+- Lo único que rompe la racha es una recaída, y solo con "vuelvo a empezar de
+  cero". Con "sigo contando", nada la rompe y la racha coincide con los días
+  limpios.
+- Los huecos cuestan: no avanzan la meta, bajan el cumplimiento y salen grises
+  en el calendario.
+- Se pueden contestar durante siete días desde Hoy ("¿Seguiste limpio?" /
+  "¿Lo hiciste?"), un toque por día. Después el hueco se queda.
+- Mientras haya huecos sin contestar, el compañero sale dormido y el aviso de
+  la noche lo dice.
+
+Y el "por qué": una frase opcional por hábito que se enseña en el botón de
+emergencia y después de "Caí".

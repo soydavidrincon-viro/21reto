@@ -63,17 +63,17 @@ select
   (select best_streak from public.get_habit_stats('c1111111-1111-1111-1111-111111111111', date '2026-08-07')) as sigo_contando,
   (select best_streak from public.get_habit_stats('c2222222-2222-2222-2222-222222222222', date '2026-08-07')) as vuelvo_a_cero;
 
-\echo '--- 3. "sigo contando" NO perdona un día sin marcar (esperado: 0) ---'
-\echo '    (el 9 de agosto, con el 8 en blanco: eso no es una recaída, es un hueco)'
+\echo '--- 3. un día sin marcar es un hueco: pausa la racha, no la rompe (esperado: 4) ---'
+\echo '    (el 9 de agosto, con el 8 en blanco)'
 do $$
 declare r integer;
 begin
   select current_streak into r
   from public.get_habit_stats('c1111111-1111-1111-1111-111111111111', date '2026-08-09');
-  if r <> 0 then
-    raise exception 'FALLO: un día en blanco dejó la racha en %, se esperaba 0', r;
+  if r <> 4 then
+    raise exception 'FALLO: un día en blanco dejó la racha en %, se esperaba 4', r;
   end if;
-  raise notice 'OK: perdona la recaída registrada, no el día que nadie tocó';
+  raise notice 'OK: el hueco pausa; la racha sigue en 4';
 end $$;
 
 \echo '--- 4. cumplimiento sobre los días que tocaban, no sobre los registrados ---'

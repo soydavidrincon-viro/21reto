@@ -71,17 +71,17 @@ begin
   raise notice 'OK: un día que no toca no rompe la racha';
 end $$;
 
-\echo '--- 5. saltarse un día que SÍ tocaba sí rompe la racha ---'
-\echo '    (el miércoles 12 sin haber marcado el lunes 10: esperado 0)'
+\echo '--- 5. saltarse un día que SÍ tocaba pausa la racha, no la rompe ---'
+\echo '    (el miércoles 12 sin haber marcado el lunes 10: sigue en 3)'
 do $$
 declare r integer;
 begin
   select current_streak into r
   from public.get_habit_stats('a8888888-8888-8888-8888-888888888888', date '2026-08-12');
-  if r <> 0 then
-    raise exception 'FALLO: saltarse el lunes dejó la racha en %, se esperaba 0', r;
+  if r <> 3 then
+    raise exception 'FALLO: saltarse el lunes dejó la racha en %, se esperaba 3', r;
   end if;
-  raise notice 'OK: faltar un día de los que tocan sí la rompe';
+  raise notice 'OK: faltar un día de los que tocan la pausa; sigue en 3';
 end $$;
 
 \echo '--- 6. la mejor racha también cuenta sobre días que tocan (esperado: 3) ---'
@@ -105,10 +105,10 @@ begin
   if viva <> 3 then
     raise exception 'FALLO: el jueves sin marcar la racha salió %, se esperaba 3', viva;
   end if;
-  if rota <> 0 then
-    raise exception 'FALLO: tras saltarse el jueves salió %, se esperaba 0', rota;
+  if rota <> 3 then
+    raise exception 'FALLO: tras saltarse el jueves salió %, se esperaba 3', rota;
   end if;
-  raise notice 'OK: 3 el jueves (aún sin marcar) y 0 el viernes (ya saltado)';
+  raise notice 'OK: 3 el jueves (aún sin marcar) y 3 el viernes (el jueves queda como hueco)';
 end $$;
 
 \echo '--- 8. get_daily_overview dice si hoy toca (mié: Eva sí, vie: Eva sí, mar: Eva no) ---'

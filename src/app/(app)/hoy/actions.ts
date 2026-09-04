@@ -1,9 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { esFechaISO, todayIn } from "@/lib/dates";
+import { esFechaISO, shiftISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
-import { LOG_STATUSES, MOOD_BY_KEY, type LogStatus, type Profile } from "@/lib/types";
+import {
+  DIAS_PARA_CONTESTAR,
+  LOG_STATUSES,
+  MOOD_BY_KEY,
+  type LogStatus,
+  type Profile,
+} from "@/lib/types";
 
 /** Hasta 4000 caracteres, lo mismo que el `maxLength` de los editores. */
 const MAX_NOTA = 4000;
@@ -11,17 +17,17 @@ const MAX_NOTA = 4000;
 /**
  * ¿Es una fecha que la app puede aceptar para esta cuenta?
  *
- * Con forma de `yyyy-MM-dd` y no después de hoy — de SU hoy, el de la zona
- * del perfil. Un registro con fecha futura no se puede marcar desde la
- * pantalla, pero una acción de servidor la puede llamar cualquiera con sesión,
- * y un "limpio" puesto en 2099 inflaba la racha. Ahora ni entra.
+ * Con forma de `yyyy-MM-dd`, no después de hoy — de SU hoy, el de la zona del
+ * perfil— y no más de siete días atrás. Un registro con fecha futura inflaba
+ * la racha; uno de hace un mes reescribe el pasado. Los huecos se contestan
+ * durante una semana; después se quedan como estaban.
  */
 async function fechaAceptable(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   dateISO: unknown,
-): Promise<string | null> {
-  if (!esFechaISO(dateISO)) return null;
+): Promise<{ fecha: string | null; error: string }> {
+  if (!esFechaISO(dateISO)) return { fecha: null, error: "Esa fecha no existe." };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -30,7 +36,11 @@ async function fechaAceptable(
     .single<Pick<Profile, "timezone">>();
 
   const hoy = todayIn(profile?.timezone ?? "UTC");
-  return dateISO <= hoy ? dateISO : null;
+  if (dateISO > hoy) return { fecha: null, error: "Ese día todavía no ha llegado." };
+  if (dateISO < shiftISO(hoy, -DIAS_PARA_CONTESTAR)) {
+    return { fecha: null, error: "Ese día ya no se puede cambiar." };
+  }
+  return { fecha: dateISO, error: "" };
 }
 
 /** Las pantallas que enseñan registros de hábitos, para revalidarlas juntas. */
@@ -69,8 +79,8 @@ export async function markDay(
     return { error: "La nota es demasiado larga.", streak: null };
   }
 
-  const fecha = await fechaAceptable(supabase, user.id, dateISO);
-  if (!fecha) return { error: "Esa fecha no se puede marcar.", streak: null };
+  const { fecha, error: fechaError } = await fechaAceptable(supabase, user.id, dateISO);
+  if (!fecha) return { error: fechaError, streak: null };
 
   const { error } = await supabase.from("habit_logs").upsert(
     {
@@ -106,7 +116,8 @@ export async function clearDay(habitId: string, dateISO: string) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  if (!esFechaISO(dateISO)) return { error: "Esa fecha no existe." };
+  const { fecha, error: fechaError } = await fechaAceptable(supabase, user.id, dateISO);
+  if (!fecha) return { error: fechaError };
 
   // Doble cerrojo: la política RLS ya limita a lo propio, y el filtro por
   // user_id hace que un fallo de política no baste por sí solo.
@@ -115,7 +126,7 @@ export async function clearDay(habitId: string, dateISO: string) {
     .delete()
     .eq("habit_id", habitId)
     .eq("user_id", user.id)
-    .eq("log_date", dateISO);
+    .eq("log_date", fecha);
 
   if (error) return { error: error.message };
 
@@ -142,8 +153,18 @@ export async function saveJournal(
 
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  const fecha = await fechaAceptable(supabase, user.id, dateISO);
-  if (!fecha) return { error: "Ese día todavía no ha llegado." };
+  // La bitácora sí se puede escribir hacia atrás sin límite: es un diario,
+  // no un contador. Solo se exige que el día exista y no sea futuro.
+  if (!esFechaISO(dateISO)) return { error: "Esa fecha no existe." };
+  const { data: perfil } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", user.id)
+    .single<Pick<Profile, "timezone">>();
+  if (dateISO > todayIn(perfil?.timezone ?? "UTC")) {
+    return { error: "Ese día todavía no ha llegado." };
+  }
+  const fecha = dateISO;
 
   if (patch.mood !== undefined && !MOOD_BY_KEY.has(patch.mood)) {
     return { error: "Esa cara no existe." };

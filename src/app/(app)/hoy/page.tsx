@@ -115,8 +115,11 @@ export default async function HoyPage() {
   const { hour: horaLocal } = zonedNow(profile.timezone);
   const esDeNoche = horaLocal >= 23 || horaLocal < 6;
   const rompioLaRacha = rachaViva === 0 && habits.some((h) => h.clean_days > 0);
+  // Días sin contestar en cualquier reto: el compañero se duerme hasta que
+  // se contesten. Es la única señal de que hay algo pendiente, y no regaña.
+  const hayHuecos = habits.some((h) => h.pendientes.length > 0);
 
-  const humor: CompanionMood = esDeNoche
+  const humor: CompanionMood = esDeNoche || hayHuecos
     ? "dormido"
     : rompioLaRacha
       ? "apagado"
@@ -173,6 +176,7 @@ export default async function HoyPage() {
           el estado de la hoja es de cliente. */}
       <CierreDelDiaProvider
         today={today}
+        habits={habits}
         moodDeHoy={entry.data?.mood ?? null}
         notaDeHoy={entry.data?.note ?? null}
         companion={profile.companion ?? "brote"}
@@ -194,37 +198,15 @@ export default async function HoyPage() {
 
             <RetoCarrusel
               habits={habits}
+              today={today}
               companion={profile.companion ?? "brote"}
               humor={humor}
               etapa={etapaDeRacha(rachaViva)}
             />
 
-            <section className="flex flex-col gap-2.5">
-              <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
-                Tus hábitos
-              </h2>
-
-              <div className="flex flex-col gap-2.5 px-4 lg:px-0">
-                <HabitosDeHoy habits={habits} />
-
-                <Link
-                  href="/habito/nuevo"
-                  className="entrar pulsable flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-separator py-4 text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                  style={{ animationDelay: `${0.18 + habits.length * 0.06}s` }}
-                >
-                  <Plus size={18} weight="bold" aria-hidden="true" />
-                  {habits.length === 0
-                    ? "Crear tu primer hábito"
-                    : "Agregar hábito"}
-                </Link>
-              </div>
-            </section>
-
-            {/* Debajo de los hábitos, y no encima.
-              Arriba competía con lo que se abre a mirar todos los días —cómo va
-              el reto— y lo primero de la pantalla acababa siendo la salida de
-              emergencia. Aquí abajo se llega después de haber marcado, que es
-              el orden real: primero el día, y esto para cuando haga falta.
+            {/* Justo debajo del reto, a la vista sin scroll en un teléfono
+              normal. Antes iba detrás de una lista que repetía las tarjetas,
+              y la salida de emergencia quedaba a dos pantallas.
 
               Solo si hay algo que dejar: en un hábito que se construye no hay
               impulso que aguantar. */}
@@ -238,6 +220,22 @@ export default async function HoyPage() {
                 />
               </div>
             )}
+
+            {/* La fila compacta solo sale con tres o más retos. */}
+            <HabitosDeHoy habits={habits} />
+
+            <div className="px-4 lg:px-0">
+              <Link
+                href="/habito/nuevo"
+                className="entrar pulsable flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-separator py-4 text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                style={{ animationDelay: "0.2s" }}
+              >
+                <Plus size={18} weight="bold" aria-hidden="true" />
+                {habits.length === 0
+                  ? "Crear tu primer hábito"
+                  : "Agregar hábito"}
+              </Link>
+            </div>
           </div>
 
           <div className="flex flex-col gap-4">

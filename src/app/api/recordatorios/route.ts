@@ -41,11 +41,21 @@ const TEXTOS: Record<
     body: `Un día más y cumples tu meta con ${habito ?? "tu reto"}.`,
     url: "/hoy",
   }),
-  dia: () => ({
-    title: "¿Cómo te fue hoy?",
-    body: "Marca tus hábitos y cuéntalo en dos líneas mientras lo tienes fresco.",
-    url: "/hoy",
-  }),
+  // `dato` trae cuántos días de los últimos siete quedaron sin contestar. Con
+  // alguno, el aviso lo dice: un hueco se contesta con un toque y la racha
+  // sigue; sin decirlo, el hueco se queda y a los siete días ya no se toca.
+  dia: (_, huecos) =>
+    huecos > 0
+      ? {
+          title: huecos === 1 ? "Ayer quedó sin marcar" : `${huecos} días sin marcar`,
+          body: "Un toque y sigue contando. La racha no se rompe, pero el hueco se queda si no contestas.",
+          url: "/hoy",
+        }
+      : {
+          title: "¿Cómo te fue hoy?",
+          body: "Marca tus hábitos y cuéntalo en dos líneas mientras lo tienes fresco.",
+          url: "/hoy",
+        },
 };
 
 type Aviso = {

@@ -14,6 +14,7 @@ import {
   comoSeLeenLosDias,
   DOW_INICIALES,
   DOW_LABELS,
+  MAX_MOTIVO,
   TODOS_LOS_DIAS,
   type HabitColor,
 } from "@/lib/types";
@@ -65,6 +66,7 @@ export function HabitForm({
   const [preset, setPreset] = useState<Preset | null>(null);
   const [custom, setCustom] = useState("");
   const [targetDays, setTargetDays] = useState(21);
+  const [motivo, setMotivo] = useState("");
 
   /**
    * En qué días de la semana toca.
@@ -103,6 +105,7 @@ export function HabitForm({
         finishOnboarding,
         timezone: detectTimeZone(),
         companion: finishOnboarding ? companion : undefined,
+        motivo: motivo.trim() || undefined,
       });
       if (result?.error) setError(result.error);
     });
@@ -189,6 +192,29 @@ export function HabitForm({
           placeholder={
             dejar ? "Lo que quieres dejar" : "Lo que quieres empezar"
           }
+          className="mx-4 h-[50px] rounded-2xl bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        />
+      </div>
+
+      {/* El "por qué". Opcional y en una línea: es lo que la app va a
+          enseñar en el botón de emergencia y después de una caída, y una frase
+          propia pesa más ahí que cualquier cosa que la app pueda decir. */}
+      <div className="flex flex-col gap-[7px]">
+        <label
+          htmlFor="motivo"
+          className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2"
+        >
+          {dejar ? "Para qué lo dejas" : "Para qué lo haces"}
+          <span className="ml-1.5 font-medium normal-case tracking-normal text-label-3">
+            opcional
+          </span>
+        </label>
+        <input
+          id="motivo"
+          value={motivo}
+          onChange={(event) => setMotivo(event.target.value)}
+          maxLength={MAX_MOTIVO}
+          placeholder="Una frase tuya. Se te enseña cuando más falta hace."
           className="mx-4 h-[50px] rounded-2xl bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         />
       </div>

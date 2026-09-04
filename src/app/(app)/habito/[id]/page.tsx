@@ -6,6 +6,8 @@ import { CompartirTarjeta } from "@/components/compartir-tarjeta";
 import { DiasDelHabito } from "@/components/dias-del-habito";
 import { GestionDeReto } from "@/components/gestion-de-reto";
 import { HabitActions } from "@/components/habit-actions";
+import { MotivoDelHabito } from "@/components/motivo-del-habito";
+import { faltaPara } from "@/lib/milestones";
 import {
   MonthHeatmap,
   type ImpulsoDelDia,
@@ -90,6 +92,7 @@ export default async function HabitoPage({
   const limpios = construye ? "hechos" : "limpios";
   const recaida = construye ? "Saltado" : "Recaída";
   const recaidas = construye ? "Saltados" : "Recaídas";
+  const falta = faltaPara(stats.current_streak, habit.target_days);
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -135,6 +138,11 @@ export default async function HabitoPage({
             <span className="text-[13px] tracking-[-0.01em] text-label-2">
               Meta de {habit.target_days} días · {stats.clean_days} {limpios}
             </span>
+            {falta && (
+              <span className="rounded-full bg-naranja/15 px-3 py-1 text-[13px] font-semibold text-naranja">
+                {falta.texto}
+              </span>
+            )}
           </section>
 
           <section className="mx-4 flex rounded-[22px] bg-card px-1.5 py-3.5 lg:mx-0 lg:py-4">
@@ -164,6 +172,14 @@ export default async function HabitoPage({
             today={today}
             todayStatus={todayStatus}
           />
+
+          <div className="mx-4 lg:mx-0">
+            <MotivoDelHabito
+              habitId={habit.id}
+              inicial={(habit.description as string | null) ?? null}
+              kind={kind}
+            />
+          </div>
 
           {/* Solo en lo que se construye: lo que se deja se deja todos los
               días, y ofrecer días libres ahí sería ofrecer una excusa con
@@ -206,8 +222,8 @@ export default async function HabitoPage({
             </div>
 
             <p className="text-[12px] leading-[1.35] text-label-2">
-              Toca un día para ver qué pasó, o para corregirlo si se te olvidó
-              marcarlo.
+              Toca un día para ver qué pasó. Los últimos siete se pueden
+              corregir; los de antes se quedan como quedaron.
             </p>
           </section>
 
