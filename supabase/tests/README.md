@@ -28,13 +28,15 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
                      -f supabase/migrations/0007_recaida_y_cumplimiento.sql \
                      -f supabase/migrations/0008_recordatorios.sql \
                      -f supabase/migrations/0009_auditoria.sql \
+                     -f supabase/migrations/0010_racha_en_pausa.sql \
                      -f supabase/seed.sql \
                      -f supabase/tests/01-esquema.sql \
                      -f supabase/tests/02-antojos.sql \
                      -f supabase/tests/03-dias-del-habito.sql \
                      -f supabase/tests/04-recaida-y-cumplimiento.sql \
                      -f supabase/tests/05-recordatorios.sql \
-                     -f supabase/tests/06-auditoria.sql
+                     -f supabase/tests/06-auditoria.sql \
+                     -f supabase/tests/07-racha-en-pausa.sql
 ```
 
 La base tiene que estar vacía y el rol `app_user` no debe existir de antes:
@@ -69,12 +71,9 @@ límites del esquema (intensidad fuera de 1..5, disparador inventado) y las dos
 cascadas: borrar el hábito se lleva sus antojos y deja vivos los sueltos;
 borrar la cuenta se los lleva todos.
 
-`03-dias-del-habito.sql` prueba lo único que hace falta probar de los días de la
-semana: que a quien va al gimnasio lunes, miércoles y viernes no se le rompa la
-racha el martes, y que sí se le rompa cuando falta un lunes. Incluye el caso de
-regresión que importa —un hábito de todos los días se comporta exactamente igual
-que antes de la migración— porque de eso depende que nadie pierda una racha por
-haber actualizado.
+`03-dias-del-habito.sql` prueba los días de la semana: que a quien va al
+gimnasio lunes, miércoles y viernes no se le pida marcar el martes, y que un
+lunes sin marcar quede como hueco (desde 0010 pausa la racha, no la rompe).
 
 `04-recaida-y-cumplimiento.sql` comprueba que "sigo contando" y "vuelvo a
 empezar" den rachas distintas sobre los mismos registros, y que el cumplimiento
@@ -88,3 +87,9 @@ y que nadie con sesión puede listar los avisos de todos.
 dispositivo funciona para el dueño y queda bloqueado para cualquier otro, una
 zona horaria inventada no entra en el perfil, y un registro con fecha futura no
 cuenta para la racha.
+
+`07-racha-en-pausa.sql` cubre la regla de 0010: un día sin marcar pausa la
+racha y no la rompe; la recaída rompe solo con "vuelvo a cero"; los huecos de
+los últimos siete días se listan de viejo a nuevo y contestarlos los quita; los
+días que no tocan no son huecos; y `get_daily_overview` trae el porqué y los
+huecos. Los tests 01, 03 y 04 se actualizaron a esa regla.
