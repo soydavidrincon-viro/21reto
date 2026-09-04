@@ -54,20 +54,53 @@ type Aviso = {
 
 export async function POST(request: NextRequest) {
   const secreto = process.env.CRON_SECRET;
-  const publica = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privada = process.env.VAPID_PRIVATE_KEY;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const servicio = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!secreto || !publica || !privada || !url || !servicio) {
+  // La puerta va primero y sin excepciones: este endpoint puede leer y
+  // notificar a toda la base. Sin secreto configurado no se puede autenticar a
+  // nadie, así que se cierra entero y sin dar detalles.
+  if (!secreto) {
     return NextResponse.json({ error: "sin configurar" }, { status: 500 });
   }
-
-  // Este endpoint puede leer y notificar a toda la base, así que la puerta va
-  // primero y sin excepciones.
   if (request.headers.get("authorization") !== `Bearer ${secreto}`) {
     return NextResponse.json({ error: "no" }, { status: 401 });
   }
+
+  /*
+   * Y solo después, qué más falta — con nombres.
+   *
+   * Antes esto iba antes de la puerta y devolvía un "sin configurar" pelado a
+   * cualquiera que preguntara sin contraseña. Dos problemas: le contaba a un
+   * desconocido en qué estado está el servidor, y a quien sí tenía la
+   * contraseña no le decía cuál de las cinco variables faltaba. Nos costó media
+   * hora de adivinar. Los nombres de las variables no son secretos; sus valores
+   * sí, y esos no salen de aquí.
+   */
+  const config = {
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  };
+  const faltan = Object.entries(config)
+    .filter(([, valor]) => !valor)
+    .map(([nombre]) => nombre);
+
+  if (faltan.length > 0) {
+    return NextResponse.json(
+      {
+        error: "sin configurar",
+        faltan,
+        pista:
+          "Añádelas en Vercel y vuelve a desplegar: las variables se leen al construir.",
+      },
+      { status: 500 },
+    );
+  }
+
+  const publica = config.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+  const privada = config.VAPID_PRIVATE_KEY!;
+  const url = config.NEXT_PUBLIC_SUPABASE_URL!;
+  const servicio = config.SUPABASE_SERVICE_ROLE_KEY!;
 
   // Sin sesión de usuario: la clave de servicio se salta la RLS a propósito,
   // porque hay que mirar a todo el mundo para saber a quién le toca. Es la

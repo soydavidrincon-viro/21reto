@@ -78,6 +78,18 @@ select cron.schedule(
 Para ver que está puesto: `select * from cron.job;`
 Para quitarlo: `select cron.unschedule('antidoto-recordatorios');`
 
+### Dos trampas que nos costaron media hora
+
+**El secreto se queda de adorno.** En el SQL del cron hay que sustituir el
+placeholder por el `CRON_SECRET` de verdad. Si se pega tal cual, el cron llama
+cada hora mandando la palabra `TU_CRON_SECRET`, el endpoint responde 401 y no
+llega ni un aviso — sin que salte un error en ningún sitio.
+
+**Hay que volver a desplegar.** Las variables de entorno se leen al construir,
+no en caliente. Añadirlas en Vercel y no redesplegar deja el endpoint
+devolviendo `sin configurar` para siempre. En Deployments → la fila de arriba →
+`⋯` → Redeploy.
+
 ### 3. Comprobar sin despertar a nadie
 
 El endpoint tiene modo seco: dice a quién le mandaría y no manda nada.
