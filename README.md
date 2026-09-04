@@ -16,7 +16,8 @@ activar el ingreso con Google: [`docs/GOOGLE-LOGIN.md`](docs/GOOGLE-LOGIN.md).
 
 ```bash
 npm install
-cp .env.example .env.local     # y llena las dos variables de Supabase
+cp .env.example .env.local     # las dos de Supabase bastan para correrla;
+                               # las de recordatorios están explicadas dentro
 npm run dev                    # http://localhost:3000
 ```
 
@@ -55,14 +56,20 @@ el día siguiente y perdería la racha sin haber hecho nada mal.
 
 **La recaída no se castiga.** Se guarda en amarillo, nunca en rojo, y no borra
 los días acumulados. La app acompaña un proceso; no sustituye atención
-profesional, y eso aparece escrito donde el usuario lo va a leer.
+profesional, y eso está escrito al pie de Perfil — una vez, y no en cada
+pantalla.
 
 ## Estado
 
-Listo: fundaciones, esquema con RLS, entrada por magic link, onboarding,
-Hoy con anillos y check diario, detalle de hábito con heatmap, bitácora con
-editor y timeline, progreso con cumplimiento semanal y línea de ánimo, y perfil
-con tema, zona horaria, exportación y borrado de cuenta.
+Listo: esquema con RLS y pruebas, entrada por Google o enlace al correo,
+onboarding con compañero, Hoy con carrusel de retos y check diario, botón de
+emergencia con registro de impulsos, detalle de hábito con calendario
+navegable y tarjeta compartible, bitácora escribible por día, progreso con
+cumplimiento semanal, rejilla de impulsos y línea de ánimo, hitos con
+confetti, cierre del reto al llegar a la meta, recordatorios push con la hora
+de cada quien, y perfil con foto, tema, zona horaria, exportación y borrado de
+cuenta.
 
-Falta: service worker y modo offline, hitos con confetti, y cerrar el reto al
-llegar a la meta de días.
+Falta: modo offline con cola de cambios (el service worker solo recibe avisos,
+a propósito: ver `public/sw.js`), selector de icono y color para hábitos con
+nombre propio, y entrada con Apple.

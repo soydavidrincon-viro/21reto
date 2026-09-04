@@ -68,9 +68,14 @@ conviene si vas a seguir cambiando el esquema.
 
 1. En el panel, **SQL Editor → New query**.
 2. Abre `supabase/setup-completo.sql`, copia todo y pégalo. **Run**. Ese archivo
-   junta las dos migraciones y las frases, así que es una sola pasada.
-3. Comprueba en **Table Editor** que aparezcan las cinco tablas: `profiles`,
-   `habits`, `habit_logs`, `journal_entries` y `quotes`.
+   junta todas las migraciones y las frases, así que es una sola pasada.
+3. Comprueba en **Table Editor** que aparezcan las ocho tablas: `profiles`,
+   `habits`, `habit_logs`, `journal_entries`, `quotes`, `cravings`,
+   `push_subscriptions` y `notification_log`.
+
+Si el proyecto ya tenía el esquema de antes y solo quieres ponerlo al día,
+pega únicamente las migraciones nuevas de `supabase/migrations/` en orden, no
+el archivo completo: `0001` crea las tablas sin `if not exists` y fallaría.
 
 `setup-completo.sql` se genera desde los otros archivos; si tocas el esquema,
 regenéralo en vez de editarlo a mano:
@@ -122,13 +127,17 @@ SMTP propio (Resend, Postmark) en **Project Settings → Auth → SMTP Settings*
 abriste en un navegador distinto al que pidió el enlace.
 
 **Entro pero no veo nada y la consola marca error de permisos.** El SQL del paso
-4 no corrió completo. Vuelve a pegarlo: el archivo es idempotente en su mayor
-parte, pero si quedó a medias es más limpio borrar las tablas y correrlo de
-nuevo.
+4 no corrió completo. El archivo **no** es idempotente: `0001` crea tablas sin
+`if not exists` y las frases se insertan sin `on conflict`, así que si quedó a
+medias lo limpio es borrar las tablas de `public` y correrlo de nuevo desde
+cero, no volver a pegarlo encima.
 
 **Marco un día y aparece en la fecha equivocada.** Revisa el campo `timezone` de
 tu fila en `profiles`. Debería tener algo como `America/Bogota`; si dice `UTC`,
-el login no alcanzó a guardarlo — puedes corregirlo a mano en el Table Editor.
+el login no alcanzó a guardarlo — se cambia desde Perfil en la app, o a mano en
+el Table Editor. Solo entran zonas que Postgres conoce: un trigger rechaza
+cualquier otra, porque una zona inválida rompía los recordatorios de todo el
+mundo.
 
 ## Antes de publicar
 
