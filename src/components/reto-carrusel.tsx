@@ -1,9 +1,12 @@
+import { AccionDelDia } from "@/components/accion-del-dia";
 import {
   Companion,
   type CompanionEtapa,
   type CompanionKey,
   type CompanionMood,
 } from "@/components/companion";
+import { Huecos } from "@/components/huecos";
+import { faltaPara } from "@/lib/milestones";
 import { HABIT_SKIN, type DailyOverviewRow } from "@/lib/types";
 
 /**
@@ -19,18 +22,25 @@ const MAX_CASILLAS = 31;
 /**
  * Los retos activos, uno al lado del otro y con arrastre.
  *
- * Antes la tarjeta grande mostraba siempre el primer hábito y no había forma de
- * ver el segundo ahí arriba: quien llevaba tres retos veía la portada de uno
- * solo. Esto es scroll con `scroll-snap` y nada de JavaScript, así que funciona
- * con el dedo en el teléfono, con la rueda en escritorio y sin hidratar.
+ * Es la única vista de los hábitos en Hoy: cada tarjeta trae su botón de
+ * marcar, la pregunta por los días sin contestar y cuánto falta para lo
+ * próximo. Antes había además una lista debajo con los mismos números, y en
+ * teléfono eso eran dos pantallas de scroll para llegar al botón de
+ * emergencia.
+ *
+ * Scroll con `scroll-snap` y nada de JavaScript, así que funciona con el dedo
+ * en el teléfono, con la rueda en escritorio y sin hidratar. Solo los botones
+ * de dentro son de cliente.
  */
 export function RetoCarrusel({
   habits,
+  today,
   companion,
   humor,
   etapa,
 }: {
   habits: DailyOverviewRow[];
+  today: string;
   companion: CompanionKey;
   humor: CompanionMood;
   etapa: CompanionEtapa;
@@ -55,6 +65,8 @@ export function RetoCarrusel({
             (habit.clean_days / habit.target_days) * 100,
           );
           const porDias = habit.target_days <= MAX_CASILLAS;
+          const falta = faltaPara(habit.current_streak, habit.target_days);
+          const conHuecos = habit.pendientes.length > 0;
 
           return (
             <section
@@ -149,26 +161,40 @@ export function RetoCarrusel({
                 )}
               </div>
 
+              {conHuecos && (
+                <div className="mt-4">
+                  <Huecos habit={habit} today={today} tinta={skin.tinta} />
+                </div>
+              )}
+
               <div className="mt-4 flex items-end justify-between gap-3">
                 <p
                   className="max-w-[62%] text-pretty text-[14px] leading-[1.4] opacity-80"
                   style={{ color: skin.tinta }}
                 >
+                  {/* Cuánto falta para lo próximo que valga la pena nombrar:
+                      "faltan 3 para tu semana" dice más que "18 de 21". Con
+                      racha en cero, solo la invitación. */}
                   {habit.current_streak === 0
                     ? "Hoy puede ser el día uno."
-                    : `Llevas ${habit.current_streak} ${habit.current_streak === 1 ? "día seguido" : "días seguidos"}.`}
+                    : falta
+                      ? `Racha de ${habit.current_streak}. ${falta.texto}.`
+                      : `Racha de ${habit.current_streak} ${habit.current_streak === 1 ? "día" : "días"}.`}
                 </p>
-                {/* El compañero va en todas las tarjetas. Solo en la primera,
-                    al deslizar al segundo reto desaparecía, y eso se leía
-                    como que se había ido, no como una decisión de diseño. */}
+                {/* El compañero va en todas las tarjetas. Se duerme cuando hay
+                    días sin contestar: no regaña, espera. */}
                 <Companion
                   who={companion}
                   size={92}
-                  mood={humor}
+                  mood={conHuecos ? "dormido" : humor}
                   etapa={etapa}
-                  className={`-mb-5 shrink-0 lg:-mb-7 ${humor === "apagado" ? "" : "flota"}`}
+                  className={`shrink-0 ${humor === "apagado" || conHuecos ? "" : "flota"}`}
                   sombra={false}
                 />
+              </div>
+
+              <div className="relative mt-3">
+                <AccionDelDia habit={habit} today={today} variante="grande" />
               </div>
             </section>
           );

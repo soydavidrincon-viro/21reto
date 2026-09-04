@@ -3,6 +3,7 @@
 import { ArrowCounterClockwise, Check } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
+import { useCelebracion } from "@/components/celebracion";
 import type { LogStatus } from "@/lib/types";
 
 /**
@@ -29,18 +30,21 @@ export function HabitActions({
   const [deshaciendo, setDeshaciendo] = useState(false);
   const done = todayStatus === "success";
   const relapsed = todayStatus === "relapse";
+  const { celebrar, elemento } = useCelebracion();
 
-  function run(action: () => Promise<{ error: string | null }>) {
+  function run(action: () => Promise<{ error: string | null; streak?: number | null }>) {
     setError(null);
     startTransition(async () => {
       const result = await action();
       if (result.error) setError(result.error);
+      else if (result.streak !== undefined) celebrar(result.streak);
       setConfirming(false);
     });
   }
 
   return (
     <div className="mx-4 mt-1 flex flex-col gap-1 lg:mx-0 lg:mt-0">
+      {elemento}
       <button
         type="button"
         disabled={pending}

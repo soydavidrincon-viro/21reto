@@ -3,8 +3,14 @@
 import { CaretLeft, CaretRight, Lightning } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
-import { longDate, monthGrid, monthName } from "@/lib/dates";
-import { DOW_INICIALES, TRIGGER_BY_KEY, type LogStatus } from "@/lib/types";
+import { useCelebracion } from "@/components/celebracion";
+import { longDate, monthGrid, monthName, shiftISO } from "@/lib/dates";
+import {
+  DIAS_PARA_CONTESTAR,
+  DOW_INICIALES,
+  TRIGGER_BY_KEY,
+  type LogStatus,
+} from "@/lib/types";
 
 export type ImpulsoDelDia = {
   local_date: string;
@@ -68,6 +74,11 @@ export function MonthHeatmap({
   const [mes, setMes] = useState(today);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const { celebrar, elemento } = useCelebracion();
+
+  // Hasta dónde se puede corregir: los últimos siete días. Más atrás el
+  // calendario se mira, no se toca — un hueco viejo se queda como hueco.
+  const limite = shiftISO(today, -DIAS_PARA_CONTESTAR);
 
   const status: Record<string, LogStatus> = { ...initial };
   for (const [fecha, estado] of Object.entries(pendientes)) {
@@ -104,11 +115,14 @@ export function MonthHeatmap({
     setPendientes((current) => ({ ...current, [date]: next }));
 
     startTransition(async () => {
-      const result =
-        next === null
-          ? await clearDay(habitId, date)
-          : await markDay(habitId, date, next);
-      if (result.error) setError(result.error);
+      if (next === null) {
+        const result = await clearDay(habitId, date);
+        if (result.error) setError(result.error);
+      } else {
+        const result = await markDay(habitId, date, next);
+        if (result.error) setError(result.error);
+        else if (next === "success") celebrar(result.streak);
+      }
       // Con éxito, la página ya se revalidó y `initial` trae el cambio; con
       // error, lo que había en `initial` sigue siendo la verdad. En los dos
       // casos el parche local sobra.
@@ -126,6 +140,7 @@ export function MonthHeatmap({
 
   return (
     <div className="flex flex-col gap-3">
+      {elemento}
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
@@ -176,6 +191,7 @@ export function MonthHeatmap({
           const state = status[date];
           const isToday = date === today;
           const future = date > today;
+          const cerrado = date < limite;
           const abierto = editing === date;
           const tuvoImpulsos = impulsos.some((im) => im.local_date === date);
 
@@ -192,7 +208,7 @@ export function MonthHeatmap({
             <button
               key={date}
               type="button"
-              disabled={future || pending}
+              disabled={future || cerrado || pending}
               onClick={() => setEditing(abierto ? null : date)}
               aria-label={`${longDate(date)}: ${
                 state === "success"
@@ -201,7 +217,9 @@ export function MonthHeatmap({
                     ? recaida.toLowerCase()
                     : future
                       ? "por venir"
-                      : "sin registro"
+                      : cerrado
+                        ? "sin registro, ya no se puede cambiar"
+                        : "sin registro"
               }${tuvoImpulsos ? ", con impulsos registrados" : ""}`}
               className={`tnum relative flex aspect-square w-full max-w-[42px] items-center justify-center justify-self-center rounded-lg text-[11px] font-semibold transition-transform active:scale-90 disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-azul ${tone} ${
                 future ? "opacity-40" : ""

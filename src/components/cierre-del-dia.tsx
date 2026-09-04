@@ -10,9 +10,10 @@ import {
   type CompanionEtapa,
   type CompanionKey,
 } from "@/components/companion";
-import { HabitCard } from "@/components/habit-card";
+import { AccionDelDia } from "@/components/accion-del-dia";
+import { HabitIcon } from "@/components/habit-icon";
 import { MoodPicker } from "@/components/mood-picker";
-import { MOOD_BY_KEY, type DailyOverviewRow } from "@/lib/types";
+import { HABIT_SKIN, MOOD_BY_KEY, type DailyOverviewRow } from "@/lib/types";
 
 /**
  * El cierre del día: marcar los hábitos y contar cómo fue.
@@ -40,14 +41,20 @@ type Cierre = {
   today: string;
   moodDeHoy: string | null;
   abrir: () => void;
-  /** Lo llama la lista al marcar: decide si ese fue el último del día. */
-  alMarcar: (habitId: string, habits: DailyOverviewRow[]) => void;
+  /** Lo llama el botón de marcar: decide si ese fue el último del día. */
+  alMarcar: (habitId: string) => void;
 };
 
 const Ctx = createContext<Cierre | null>(null);
 
+/** Para que cualquier botón de marcar pueda avisar. Null fuera del proveedor. */
+export function useCierreDelDia() {
+  return useContext(Ctx);
+}
+
 export function CierreDelDiaProvider({
   today,
+  habits,
   moodDeHoy,
   notaDeHoy,
   companion,
@@ -55,6 +62,7 @@ export function CierreDelDiaProvider({
   children,
 }: {
   today: string;
+  habits: DailyOverviewRow[];
   moodDeHoy: string | null;
   notaDeHoy: string | null;
   companion: CompanionKey;
@@ -72,7 +80,7 @@ export function CierreDelDiaProvider({
    * Los días que no tocan no cuentan como pendientes: un hábito de martes y
    * jueves no puede impedir que el domingo se dé por cerrado.
    */
-  function alMarcar(habitId: string, habits: DailyOverviewRow[]) {
+  function alMarcar(habitId: string) {
     if (moodDeHoy) return;
     const quedaban = habits.filter(
       (h) => h.habit_id !== habitId && h.toca_hoy && h.today_status === null,
@@ -187,22 +195,60 @@ function HojaDeCierre({
   );
 }
 
-/** Los hábitos de hoy. Avisan al contexto cuando se marca el último. */
+/**
+ * La fila compacta de hábitos: una línea por hábito, con su check.
+ *
+ * Solo aparece con tres o más retos. Con uno o dos, el carrusel ya los enseña
+ * enteros y una lista debajo era decir lo mismo dos veces: dos pantallas de
+ * scroll para llegar al botón de emergencia. Con tres o más, deslizar para
+ * encontrar el cuarto cansa, y esta fila es el atajo.
+ */
 export function HabitosDeHoy({ habits }: { habits: DailyOverviewRow[] }) {
   const cierre = useContext(Ctx);
+  if (habits.length < 3) return null;
 
   return (
-    <>
-      {habits.map((habit, i) => (
-        <HabitCard
-          key={habit.habit_id}
-          habit={habit}
-          today={cierre?.today ?? ""}
-          delay={0.18 + i * 0.06}
-          onMarcado={() => cierre?.alMarcar(habit.habit_id, habits)}
-        />
-      ))}
-    </>
+    <section className="flex flex-col gap-2.5">
+      <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+        Todos tus retos
+      </h2>
+      <ul className="mx-4 flex flex-col overflow-hidden rounded-[22px] bg-card lg:mx-0">
+        {habits.map((habit, i) => {
+          const skin = HABIT_SKIN[habit.color];
+          return (
+            <li
+              key={habit.habit_id}
+              className={`flex items-center gap-3 px-3.5 py-2.5 ${i > 0 ? "border-t border-separator" : ""}`}
+            >
+              <Link
+                href={`/habito/${habit.habit_id}`}
+                className="flex min-w-0 flex-1 items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              >
+                <span
+                  className="flex size-9 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: skin.fondo, color: skin.tinta }}
+                >
+                  <HabitIcon clave={habit.icon} size={18} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-[15px] font-semibold tracking-[-0.01em] text-label">
+                    {habit.name}
+                  </span>
+                  <span className="tnum text-[12.5px] text-label-2">
+                    {habit.pendientes.length > 0
+                      ? `${habit.pendientes.length} ${habit.pendientes.length === 1 ? "día" : "días"} sin contestar`
+                      : habit.current_streak === 0
+                        ? "Sin racha todavía"
+                        : `Racha de ${habit.current_streak}`}
+                  </span>
+                </span>
+              </Link>
+              <AccionDelDia habit={habit} today={cierre?.today ?? ""} variante="fila" />
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

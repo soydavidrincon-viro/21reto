@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   COMPANION_KEYS,
   HABIT_COLORS,
+  MAX_MOTIVO,
   MAX_TARGET_DAYS,
   type HabitColor,
   type Profile,
@@ -73,7 +74,18 @@ export type NewHabit = {
   timezone?: string;
   /** Compañero elegido en el onboarding. Va en el perfil, no en el hábito. */
   companion?: string;
+  /** Para qué lo hace, en sus palabras. Opcional. */
+  motivo?: string;
 };
+
+/** El "por qué" limpio, o null si no vino. Devuelve undefined si no vale. */
+function limpiarMotivo(motivo: unknown): string | null | undefined {
+  if (motivo === undefined || motivo === null) return null;
+  if (typeof motivo !== "string") return undefined;
+  const limpio = motivo.trim();
+  if (limpio.length > MAX_MOTIVO) return undefined;
+  return limpio || null;
+}
 
 export async function createHabit(input: NewHabit) {
   const supabase = await createClient();
@@ -106,6 +118,10 @@ export async function createHabit(input: NewHabit) {
     typeof input.icon === "string" && input.icon.length > 0 && input.icon.length <= 32
       ? input.icon
       : "otro";
+  const motivo = limpiarMotivo(input.motivo);
+  if (motivo === undefined) {
+    return { error: `El porqué cabe en ${MAX_MOTIVO} caracteres.` };
+  }
 
   // Un array vacío que llegue hasta Postgres vuelve como un error de CHECK, y
   // eso no es un mensaje para nadie.
@@ -144,6 +160,7 @@ export async function createHabit(input: NewHabit) {
     target_days: input.targetDays,
     relapse_policy: input.relapsePolicy,
     start_date: startDate,
+    description: motivo,
   };
 
   let { error } = await supabase
@@ -173,7 +190,43 @@ export async function createHabit(input: NewHabit) {
 
   revalidatePath("/hoy");
   revalidatePath("/progreso");
-  redirect("/hoy");
+  // Al terminar el onboarding se pasa por la pantalla de instalar: en iPhone
+  // los avisos solo llegan con la app en la pantalla de inicio, y ese es el
+  // momento en que alguien está dispuesto a hacerlo. La pantalla misma decide
+  // si tiene algo que decir o manda a Hoy.
+  redirect(input.finishOnboarding ? "/instalar" : "/hoy");
+}
+
+/**
+ * Cambiar o quitar el "por qué" de un hábito.
+ *
+ * Se guarda en `description`, la columna que el esquema tenía desde el
+ * principio y nadie usaba.
+ */
+export async function setHabitMotivo(habitId: string, motivo: string | null) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  const limpio = limpiarMotivo(motivo);
+  if (limpio === undefined) {
+    return { error: `El porqué cabe en ${MAX_MOTIVO} caracteres.` };
+  }
+
+  const { error } = await supabase
+    .from("habits")
+    .update({ description: limpio })
+    .eq("id", habitId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/hoy");
+  revalidatePath(`/habito/${habitId}`);
+  return { error: null };
 }
 
 /**

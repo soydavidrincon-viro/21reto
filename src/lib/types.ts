@@ -27,6 +27,13 @@ export type DailyOverviewRow = {
   /** Si hoy es uno de esos días. Lo resuelve el servidor con la fecha local. */
   toca_hoy: boolean;
   today_status: LogStatus | null;
+  /** Para qué lo hace, en sus palabras. Opcional. */
+  motivo: string | null;
+  /**
+   * Los días de los últimos siete que tocaban y quedaron sin registro, de más
+   * viejo a más nuevo. Son los que Hoy pregunta uno a uno.
+   */
+  pendientes: string[];
   clean_days: number;
   current_streak: number;
   best_streak: number;
@@ -47,17 +54,25 @@ export type DailyOverviewRow = {
  * correcto: no había días, tocaba siempre.
  */
 export function conDiasPorDefecto(fila: DailyOverviewRow): DailyOverviewRow {
-  if (Array.isArray(fila.active_dows) && typeof fila.toca_hoy === "boolean") {
-    return fila;
-  }
   return {
     ...fila,
     active_dows: Array.isArray(fila.active_dows)
       ? fila.active_dows
       : TODOS_LOS_DIAS,
     toca_hoy: typeof fila.toca_hoy === "boolean" ? fila.toca_hoy : true,
+    motivo: typeof fila.motivo === "string" ? fila.motivo : null,
+    pendientes: Array.isArray(fila.pendientes) ? fila.pendientes : [],
   };
 }
+
+/** El tope del "por qué": una frase, no un ensayo. */
+export const MAX_MOTIVO = 200;
+
+/**
+ * Cuántos días hacia atrás se puede contestar un hueco. Después de eso el día
+ * se queda como estaba: gris en el calendario, sin contar para nada.
+ */
+export const DIAS_PARA_CONTESTAR = 7;
 
 export type Quote = { id: string; text: string; author: string | null };
 

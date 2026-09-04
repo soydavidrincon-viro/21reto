@@ -2,14 +2,7 @@
 
 import { Portal, useHojaModal } from "@/components/portal";
 
-import {
-  Bell,
-  BellRinging,
-  BellSlash,
-  Export,
-  Plus,
-  X,
-} from "@phosphor-icons/react";
+import { Bell, BellRinging, BellSlash, X } from "@phosphor-icons/react";
 import { useState, useSyncExternalStore, useTransition } from "react";
 import {
   guardarAvisos,
@@ -23,6 +16,7 @@ import {
   soportaAvisos,
   suscribirse,
 } from "@/lib/push";
+import { PasosDeInstalacion } from "@/components/pasos-de-instalacion";
 import { HORA_AVISO_POR_DEFECTO, type Profile } from "@/lib/types";
 
 type Entorno = {
@@ -294,29 +288,7 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
                 En iPhone los avisos solo llegan si la app está en tu pantalla
                 de inicio. Safari no lo ofrece solo, hay que hacerlo a mano:
               </p>
-              <ol className="flex flex-col gap-1.5 text-[13.5px] leading-[1.4] text-label">
-                <li className="flex items-center gap-2">
-                  <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
-                    1
-                  </span>
-                  Toca <Export size={16} weight="bold" aria-hidden="true" />{" "}
-                  abajo en Safari
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
-                    2
-                  </span>
-                  Baja y toca{" "}
-                  <Plus size={15} weight="bold" aria-hidden="true" /> Añadir a
-                  inicio
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
-                    3
-                  </span>
-                  Abre Antídoto desde ahí y vuelve aquí
-                </li>
-              </ol>
+              <PasosDeInstalacion ultimo="Abre Antídoto desde ahí y vuelve aquí" />
             </div>
           )}
 

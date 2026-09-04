@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { DeviceMobile, X } from "@phosphor-icons/react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import {
   deleteAccount,
   exportData,
@@ -10,6 +11,8 @@ import {
   type Theme,
 } from "@/app/actions/profile";
 import { AvatarUploader } from "@/components/avatar-uploader";
+import { PasosDeInstalacion } from "@/components/pasos-de-instalacion";
+import { Portal, useHojaModal } from "@/components/portal";
 import { Recordatorios } from "@/components/recordatorios";
 import {
   COMPANIONS,
@@ -18,7 +21,19 @@ import {
 } from "@/components/companion";
 import { aplicarTema } from "@/components/tema";
 import { detectTimeZone } from "@/lib/dates";
+import { iphoneSinInstalar } from "@/lib/push";
 import type { Profile } from "@/lib/types";
+
+/**
+ * ¿Es un iPhone abierto en Safari, sin instalar? Se lee una vez: si la
+ * persona instala la app, eso pasa fuera y la app se vuelve a abrir.
+ */
+const sinCambios = () => () => {};
+let cacheIphone: boolean | null = null;
+function leerIphone() {
+  cacheIphone ??= iphoneSinInstalar();
+  return cacheIphone;
+}
 
 /**
  * Todas las zonas horarias que conoce el navegador. Se pide una sola vez porque
@@ -49,7 +64,9 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
   const [confirmText, setConfirmText] = useState("");
   const [danger, setDanger] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [instalar, setInstalar] = useState(false);
   const [pending, startTransition] = useTransition();
+  const iphoneSuelto = useSyncExternalStore(sinCambios, leerIphone, () => false);
 
   const browserZone = detectTimeZone();
   const zoneMismatch = browserZone !== profile.timezone;
@@ -215,6 +232,29 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
           <span className="px-8 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
             Avisos
           </span>
+          {/* En iPhone sin instalar, esto va antes que los avisos: sin la app
+              en la pantalla de inicio no llega ninguno. Desaparece solo al
+              instalarla. */}
+          {iphoneSuelto && (
+            <button
+              type="button"
+              onClick={() => setInstalar(true)}
+              className="pulsable mx-4 flex items-center gap-3 rounded-[22px] bg-card px-4 py-3.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:mx-0 lg:px-5"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ambar text-ambar-tinta">
+                <DeviceMobile size={20} weight="fill" aria-hidden="true" />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-px">
+                <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
+                  Instalar en el iPhone
+                </span>
+                <span className="text-[12.5px] text-label-2">
+                  Sin esto los avisos no llegan
+                </span>
+              </span>
+            </button>
+          )}
+          {instalar && <HojaDeInstalar cerrar={() => setInstalar(false)} />}
           <Recordatorios profile={profile} variante="fila" />
         </section>
 
@@ -388,5 +428,52 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
         solo, pedir ayuda también es parte del camino.
       </p>
     </div>
+  );
+}
+
+function HojaDeInstalar({ cerrar }: { cerrar: () => void }) {
+  const hoja = useHojaModal(cerrar);
+
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
+        <div
+          aria-hidden="true"
+          onClick={cerrar}
+          className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+        />
+        <div
+          ref={hoja}
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Instalar en el iPhone"
+          className="entrar relative flex w-full max-w-[460px] flex-col gap-4 rounded-t-[28px] bg-card p-5 outline-none sm:rounded-[28px]"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
+                Ponla en tu pantalla de inicio
+              </h2>
+              <p className="text-[13.5px] leading-[1.4] text-label-2">
+                Un minuto, y los avisos ya pueden llegar.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={cerrar}
+              aria-label="Cerrar"
+              className="pulsable -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            >
+              <X size={17} weight="bold" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="rounded-[16px] bg-fill p-4">
+            <PasosDeInstalacion ultimo="Abre Antídoto desde ahí. Todo sigue igual." />
+          </div>
+        </div>
+      </div>
+    </Portal>
   );
 }

@@ -35,11 +35,18 @@ export function CravingSheet({
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmandoCaida, setConfirmandoCaida] = useState(false);
+  const [caido, setCaido] = useState(false);
   const [pending, startTransition] = useTransition();
   const hoja = useHojaModal(onClose);
 
   const elegido = habits.find((h) => h.habit_id === habitId) ?? null;
 
+  /**
+   * Después de "Caí" la hoja no se cierra: se queda con lo que importa decir
+   * en ese momento —que los días siguen ahí— y con el porqué que la persona
+   * escribió, si lo escribió. Cerrarla de golpe dejaba a quien acaba de caer
+   * mirando la pantalla de Hoy como si nada.
+   */
   function guardar(resisted: boolean) {
     setError(null);
     startTransition(async () => {
@@ -51,7 +58,8 @@ export function CravingSheet({
         resisted,
       });
       if (result.error) setError(result.error);
-      else onClose();
+      else if (resisted) onClose();
+      else setCaido(true);
     });
   }
 
@@ -118,6 +126,34 @@ export function CravingSheet({
             </button>
           </div>
 
+          {caido && elegido ? (
+            <>
+              <div className="flex flex-col gap-2 rounded-[16px] bg-ambar/20 px-4 py-3.5">
+                <p className="text-[15px] font-semibold text-label">
+                  Queda anotado. Tus {elegido.clean_days}{" "}
+                  {elegido.clean_days === 1 ? "día" : "días"} siguen ahí.
+                </p>
+                <p className="text-pretty text-[13.5px] leading-[1.45] text-label-2">
+                  {elegido.relapse_policy === "reset"
+                    ? "La racha vuelve a empezar mañana. Lo que ya hiciste no se borra."
+                    : "La racha sigue contando. Una caída es un dato, no un veredicto."}
+                </p>
+              </div>
+              {elegido.motivo && (
+                <p className="text-pretty px-1 font-display text-[17px] font-medium leading-[1.4] text-label">
+                  Tú dijiste: “{elegido.motivo}”
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="pulsable h-[52px] rounded-[16px] bg-fill text-[16px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              >
+                Cerrar
+              </button>
+            </>
+          ) : (
+          <>
           {habits.length > 1 && (
             <div className="flex flex-col gap-1.5">
               <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
@@ -229,6 +265,14 @@ export function CravingSheet({
             className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
           />
 
+          {/* Lo que la persona escribió al crear el reto, justo aquí, que es
+              para lo que lo escribió. */}
+          {elegido?.motivo && (
+            <p className="text-pretty rounded-xl bg-fill px-3.5 py-2.5 font-display text-[16px] font-medium leading-[1.4] text-label">
+              Tú dijiste: “{elegido.motivo}”
+            </p>
+          )}
+
           {error && (
             <p role="alert" className="text-[13px] leading-[1.35] text-rojo">
               {error}
@@ -270,6 +314,8 @@ export function CravingSheet({
                   : "Caí"}
             </button>
           </div>
+          </>
+          )}
         </div>
       </div>
     </Portal>
