@@ -32,7 +32,10 @@ export function CravingSheet({
   const [triggerKey, setTriggerKey] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [confirmandoCaida, setConfirmandoCaida] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  const elegido = habits.find((h) => h.habit_id === habitId) ?? null;
 
   function guardar(resisted: boolean) {
     setError(null);
@@ -47,6 +50,32 @@ export function CravingSheet({
       if (result.error) setError(result.error);
       else onClose();
     });
+  }
+
+  /**
+   * "Caí" no es un botón más, y hasta ahora se comportaba como si lo fuera.
+   *
+   * Hacía dos cosas opuestas sin decirlo. Con un solo hábito marcaba el día
+   * como recaída y partía una racha de cuarenta días de un toque, sin
+   * preguntar nada — la única acción irreversible de la app sin confirmación.
+   * Con dos o más hábitos y ninguno elegido, guardaba el impulso y no tocaba
+   * la racha, así que quien acababa de caer se quedaba con la racha intacta y
+   * sin enterarse.
+   *
+   * Ahora hace una sola cosa y la dice antes: pide de cuál fue, avisa de que
+   * eso marca el día, y pide un segundo toque.
+   */
+  function tocarCai() {
+    if (!habitId) {
+      setError("Dime de cuál fue para poder registrarlo.");
+      return;
+    }
+    if (!confirmandoCaida) {
+      setError(null);
+      setConfirmandoCaida(true);
+      return;
+    }
+    guardar(false);
   }
 
   return (
@@ -95,9 +124,16 @@ export function CravingSheet({
                   key={habit.habit_id}
                   type="button"
                   aria-pressed={habitId === habit.habit_id}
-                  onClick={() =>
-                    setHabitId(habitId === habit.habit_id ? null : habit.habit_id)
-                  }
+                  onClick={() => {
+                    setHabitId(
+                      habitId === habit.habit_id ? null : habit.habit_id,
+                    );
+                    // Cambiar de hábito con la confirmación abierta la
+                    // cancela: si no, el segundo toque confirmaría una recaída
+                    // en un hábito distinto del que se leyó en el aviso.
+                    setConfirmandoCaida(false);
+                    setError(null);
+                  }}
                   className={`min-h-10 rounded-[20px] px-3.5 text-[14px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
                     habitId === habit.habit_id
                       ? "bg-azul text-azul-tinta"
@@ -188,6 +224,16 @@ export function CravingSheet({
           </p>
         )}
 
+        {/* Lo que va a pasar, antes de que pase. Un botón que rompe una racha
+            tiene que decirlo con el dedo todavía en el aire. */}
+        {confirmandoCaida && elegido && (
+          <p className="rounded-xl bg-ambar/20 px-3.5 py-2.5 text-pretty text-[13.5px] leading-[1.4] text-label">
+            Esto marca hoy como recaída en <b>{elegido.name}</b>. Queda en tu
+            historial y no borra los días que ya llevas. Toca otra vez para
+            confirmar.
+          </p>
+        )}
+
         <div className="flex gap-2">
           <button
             type="button"
@@ -201,10 +247,16 @@ export function CravingSheet({
           <button
             type="button"
             disabled={pending}
-            onClick={() => guardar(false)}
-            className="pulsable flex h-[56px] flex-1 items-center justify-center rounded-[16px] bg-ambar text-[16px] font-semibold tracking-[-0.01em] text-ambar-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            onClick={tocarCai}
+            className={`pulsable flex h-[56px] flex-1 items-center justify-center rounded-[16px] text-[16px] font-semibold tracking-[-0.01em] text-ambar-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+              confirmandoCaida ? "bg-ambar ring-2 ring-label" : "bg-ambar"
+            }`}
           >
-            Caí
+            {pending && confirmandoCaida
+              ? "Guardando…"
+              : confirmandoCaida
+                ? "Confirmar"
+                : "Caí"}
           </button>
         </div>
       </div>

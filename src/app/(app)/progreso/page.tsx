@@ -6,7 +6,12 @@ import { WeeklyBars } from "@/components/weekly-bars";
 import { lastSevenDays, shiftISO, todayIn, weekdayInitial } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
-import type { CravingGridCell, CravingSummary, Profile } from "@/lib/types";
+import {
+  TODOS_LOS_DIAS,
+  type CravingGridCell,
+  type CravingSummary,
+  type Profile,
+} from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Progreso · Antídoto" };
@@ -32,21 +37,32 @@ export default async function ProgresoPage() {
   const thisMonday = shiftISO(today, -offsetToMonday);
   const firstMonday = shiftISO(thisMonday, -(WEEKS - 1) * 7);
 
-  const [{ data: logs }, { data: entries }, { count: activeHabits }] =
+  const [{ data: logs }, { data: entries }, { data: activos }] =
     await Promise.all([
       supabase
         .from("habit_logs")
-        .select("log_date, status")
+        .select("habit_id, log_date, status")
         .gte("log_date", firstMonday),
       supabase
         .from("journal_entries")
         .select("entry_date, mood")
         .gte("entry_date", shiftISO(today, -6)),
+      // Con los días y la fecha de arranque, que es lo que hace falta para
+      // saber cuántos días tocaba haber marcado cada semana.
       supabase
         .from("habits")
-        .select("id", { count: "exact", head: true })
+        .select("id, start_date, active_dows")
         .eq("status", "active"),
     ]);
+
+  const habitos = (activos ?? []).map((h) => ({
+    id: h.id as string,
+    startDate: h.start_date as string,
+    // Sin la migración de los días, toca todos: igual que antes de que
+    // existieran.
+    dows: (Array.isArray(h.active_dows) ? h.active_dows : TODOS_LOS_DIAS) as number[],
+  }));
+  const activeHabits = habitos.length;
 
   const { count: totalClean } = await supabase
     .from("habit_logs")
@@ -68,21 +84,57 @@ export default async function ProgresoPage() {
   }));
   const resumen = ((resumenImpulsos.data ?? []) as CravingSummary[])[0] ?? null;
 
+  /**
+   * El cumplimiento se mide contra los días que tocaban, no contra los que se
+   * registraron.
+   *
+   * Antes el divisor eran los días marcados, así que un día que no tocaste no
+   * contaba ni a favor ni en contra: alguien que usó la app una semana al 100%
+   * y la abandonó cinco seguía viendo "100%". La app le daba la razón por
+   * haberla dejado. Si no lo marcaste, es un día fallado.
+   *
+   * El día de hoy solo cuenta si ya está marcado — todavía no ha terminado, y
+   * suspender a alguien a las ocho de la mañana no es medir.
+   */
+  const marcados = new Set(
+    (logs ?? [])
+      .filter((log) => log.status === "success")
+      .map((log) => `${log.habit_id}|${log.log_date}`),
+  );
+  const conRegistroHoy = new Set(
+    (logs ?? [])
+      .filter((log) => log.log_date === today)
+      .map((log) => log.habit_id as string),
+  );
+
   const weeks = Array.from({ length: WEEKS }, (_, i) => {
     const start = shiftISO(firstMonday, i * 7);
     const end = shiftISO(start, 6);
 
-    const inWeek = (logs ?? []).filter(
-      (log) =>
-        (log.log_date as string) >= start && (log.log_date as string) <= end,
-    );
-    const success = inWeek.filter((log) => log.status === "success").length;
-    const counted = inWeek.filter((log) => log.status !== "skipped").length;
+    let esperados = 0;
+    let cumplidos = 0;
+
+    for (const habito of habitos) {
+      for (let d = 0; d < 7; d++) {
+        const fecha = shiftISO(start, d);
+        if (fecha > end || fecha > today) break;
+        if (fecha < habito.startDate) continue;
+
+        const dow = new Date(`${fecha}T00:00:00`).getDay();
+        if (!habito.dows.includes(dow)) continue;
+        if (fecha === today && !conRegistroHoy.has(habito.id)) continue;
+
+        esperados += 1;
+        if (marcados.has(`${habito.id}|${fecha}`)) cumplidos += 1;
+      }
+    }
 
     return {
       label: i === WEEKS - 1 ? "Esta" : `S${i + 1}`,
       range: `${start.slice(8)}/${start.slice(5, 7)} – ${end.slice(8)}/${end.slice(5, 7)}`,
-      value: counted === 0 ? null : Math.round((success / counted) * 100),
+      // Sin días esperados no hay nota que poner: es una semana anterior al
+      // reto, no una semana suspendida.
+      value: esperados === 0 ? null : Math.round((cumplidos / esperados) * 100),
     };
   });
 
