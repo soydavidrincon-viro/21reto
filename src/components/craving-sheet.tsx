@@ -1,5 +1,7 @@
 "use client";
 
+import { Portal } from "@/components/portal";
+
 import { HandPalm, Lightning, X } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { logCraving } from "@/app/actions/cravings";
@@ -79,187 +81,195 @@ export function CravingSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        aria-label="Cerrar"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
-      />
+    <Portal>
+      <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
+        <button
+          type="button"
+          aria-label="Cerrar"
+          onClick={onClose}
+          className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+        />
 
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Registrar un impulso"
-        className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
-        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-0.5">
-            <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
-              Te están dando ganas
-            </h2>
-            <p className="text-[13.5px] leading-[1.4] text-label-2">
-              Todavía no ha pasado nada. Registrarlo ya es hacer algo.
-            </p>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Registrar un impulso"
+          className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
+                Te están dando ganas
+              </h2>
+              <p className="text-[13.5px] leading-[1.4] text-label-2">
+                Todavía no ha pasado nada. Registrarlo ya es hacer algo.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar"
+              className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            >
+              <X size={17} weight="bold" aria-hidden="true" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar"
-            className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-          >
-            <X size={17} weight="bold" aria-hidden="true" />
-          </button>
-        </div>
 
-        {habits.length > 1 && (
+          {habits.length > 1 && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
+                ¿De cuál?
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {habits.map((habit) => (
+                  <button
+                    key={habit.habit_id}
+                    type="button"
+                    aria-pressed={habitId === habit.habit_id}
+                    onClick={() => {
+                      setHabitId(
+                        habitId === habit.habit_id ? null : habit.habit_id,
+                      );
+                      // Cambiar de hábito con la confirmación abierta la
+                      // cancela: si no, el segundo toque confirmaría una recaída
+                      // en un hábito distinto del que se leyó en el aviso.
+                      setConfirmandoCaida(false);
+                      setError(null);
+                    }}
+                    className={`min-h-10 rounded-[20px] px-3.5 text-[14px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+                      habitId === habit.habit_id
+                        ? "bg-azul text-azul-tinta"
+                        : "bg-fill text-label"
+                    }`}
+                  >
+                    {habit.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1.5">
-            <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-              ¿De cuál?
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {habits.map((habit) => (
+            <div className="flex items-baseline justify-between">
+              <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
+                Qué tan fuerte
+              </span>
+              <span className="text-[13px] font-semibold text-label-2">
+                {
+                  ["Apenas", "Suave", "Normal", "Fuerte", "Durísimo"][
+                    intensity - 1
+                  ]
+                }
+              </span>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Intensidad del impulso"
+              className="flex gap-1.5"
+            >
+              {[1, 2, 3, 4, 5].map((n) => (
                 <button
-                  key={habit.habit_id}
+                  key={n}
                   type="button"
-                  aria-pressed={habitId === habit.habit_id}
-                  onClick={() => {
-                    setHabitId(
-                      habitId === habit.habit_id ? null : habit.habit_id,
-                    );
-                    // Cambiar de hábito con la confirmación abierta la
-                    // cancela: si no, el segundo toque confirmaría una recaída
-                    // en un hábito distinto del que se leyó en el aviso.
-                    setConfirmandoCaida(false);
-                    setError(null);
-                  }}
-                  className={`min-h-10 rounded-[20px] px-3.5 text-[14px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-                    habitId === habit.habit_id
-                      ? "bg-azul text-azul-tinta"
-                      : "bg-fill text-label"
+                  role="radio"
+                  aria-checked={intensity === n}
+                  aria-label={`Intensidad ${n} de 5`}
+                  onClick={() => setIntensity(n)}
+                  className={`pulsable flex h-12 flex-1 items-center justify-center gap-0.5 rounded-xl text-[15px] font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+                    intensity >= n
+                      ? "bg-naranja text-naranja-tinta"
+                      : "bg-fill text-label-3"
                   }`}
                 >
-                  {habit.name}
+                  <Lightning
+                    size={16}
+                    weight={intensity >= n ? "fill" : "regular"}
+                    aria-hidden="true"
+                  />
                 </button>
               ))}
             </div>
           </div>
-        )}
 
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-baseline justify-between">
+          <div className="flex flex-col gap-1.5">
             <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-              Qué tan fuerte
+              ¿Qué lo disparó?
             </span>
-            <span className="text-[13px] font-semibold text-label-2">
-              {["Apenas", "Suave", "Normal", "Fuerte", "Durísimo"][intensity - 1]}
-            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {CRAVING_TRIGGERS.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  aria-pressed={triggerKey === t.key}
+                  onClick={() =>
+                    setTriggerKey(triggerKey === t.key ? null : t.key)
+                  }
+                  className={`min-h-10 rounded-[20px] px-3.5 text-[14px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+                    triggerKey === t.key
+                      ? "bg-lila text-lila-tinta"
+                      : "bg-fill text-label"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div
-            role="radiogroup"
-            aria-label="Intensidad del impulso"
-            className="flex gap-1.5"
-          >
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                role="radio"
-                aria-checked={intensity === n}
-                aria-label={`Intensidad ${n} de 5`}
-                onClick={() => setIntensity(n)}
-                className={`pulsable flex h-12 flex-1 items-center justify-center gap-0.5 rounded-xl text-[15px] font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-                  intensity >= n
-                    ? "bg-naranja text-naranja-tinta"
-                    : "bg-fill text-label-3"
-                }`}
-              >
-                <Lightning
-                  size={16}
-                  weight={intensity >= n ? "fill" : "regular"}
-                  aria-hidden="true"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-            ¿Qué lo disparó?
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {CRAVING_TRIGGERS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                aria-pressed={triggerKey === t.key}
-                onClick={() => setTriggerKey(triggerKey === t.key ? null : t.key)}
-                className={`min-h-10 rounded-[20px] px-3.5 text-[14px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-                  triggerKey === t.key
-                    ? "bg-lila text-lila-tinta"
-                    : "bg-fill text-label"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
+          <textarea
+            rows={2}
+            maxLength={500}
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="Qué estaba pasando (opcional)"
+            aria-label="Nota del impulso"
+            className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          />
 
-        <textarea
-          rows={2}
-          maxLength={500}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-          placeholder="Qué estaba pasando (opcional)"
-          aria-label="Nota del impulso"
-          className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-        />
+          {error && (
+            <p role="alert" className="text-[13px] leading-[1.35] text-rojo">
+              {error}
+            </p>
+          )}
 
-        {error && (
-          <p role="alert" className="text-[13px] leading-[1.35] text-rojo">
-            {error}
-          </p>
-        )}
-
-        {/* Lo que va a pasar, antes de que pase. Un botón que rompe una racha
+          {/* Lo que va a pasar, antes de que pase. Un botón que rompe una racha
             tiene que decirlo con el dedo todavía en el aire. */}
-        {confirmandoCaida && elegido && (
-          <p className="rounded-xl bg-ambar/20 px-3.5 py-2.5 text-pretty text-[13.5px] leading-[1.4] text-label">
-            Esto marca hoy como recaída en <b>{elegido.name}</b>. Queda en tu
-            historial y no borra los días que ya llevas. Toca otra vez para
-            confirmar.
-          </p>
-        )}
+          {confirmandoCaida && elegido && (
+            <p className="rounded-xl bg-ambar/20 px-3.5 py-2.5 text-pretty text-[13.5px] leading-[1.4] text-label">
+              Esto marca hoy como recaída en <b>{elegido.name}</b>. Queda en tu
+              historial y no borra los días que ya llevas. Toca otra vez para
+              confirmar.
+            </p>
+          )}
 
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => guardar(true)}
-            className="pulsable flex h-[56px] flex-[1.6] items-center justify-center gap-2 rounded-[16px] bg-menta text-[16px] font-semibold tracking-[-0.01em] text-menta-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-          >
-            <HandPalm size={19} weight="fill" aria-hidden="true" />
-            {pending ? "Guardando…" : "Lo aguanté"}
-          </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={tocarCai}
-            className={`pulsable flex h-[56px] flex-1 items-center justify-center rounded-[16px] text-[16px] font-semibold tracking-[-0.01em] text-ambar-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-              confirmandoCaida ? "bg-ambar ring-2 ring-label" : "bg-ambar"
-            }`}
-          >
-            {pending && confirmandoCaida
-              ? "Guardando…"
-              : confirmandoCaida
-                ? "Confirmar"
-                : "Caí"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => guardar(true)}
+              className="pulsable flex h-[56px] flex-[1.6] items-center justify-center gap-2 rounded-[16px] bg-menta text-[16px] font-semibold tracking-[-0.01em] text-menta-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            >
+              <HandPalm size={19} weight="fill" aria-hidden="true" />
+              {pending ? "Guardando…" : "Lo aguanté"}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={tocarCai}
+              className={`pulsable flex h-[56px] flex-1 items-center justify-center rounded-[16px] text-[16px] font-semibold tracking-[-0.01em] text-ambar-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+                confirmandoCaida ? "bg-ambar ring-2 ring-label" : "bg-ambar"
+              }`}
+            >
+              {pending && confirmandoCaida
+                ? "Guardando…"
+                : confirmandoCaida
+                  ? "Confirmar"
+                  : "Caí"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 }

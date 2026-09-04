@@ -1,5 +1,7 @@
 "use client";
 
+import { Portal } from "@/components/portal";
+
 import { Archive, DotsThree, Trash, X } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { archiveHabit, deleteHabit } from "@/app/actions/habits";
@@ -54,122 +56,126 @@ export function GestionDeReto({
       </button>
 
       {abierto && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-          <button
-            type="button"
-            aria-label="Cerrar"
-            onClick={cerrar}
-            className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
-          />
+        <Portal>
+          <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
+            <button
+              type="button"
+              aria-label="Cerrar"
+              onClick={cerrar}
+              className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+            />
 
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Opciones de ${nombre}`}
-            className="entrar relative flex w-full max-w-[460px] flex-col gap-3 rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <h2 className="font-display text-[20px] font-semibold leading-tight tracking-[-0.01em] text-label">
-                {nombre}
-              </h2>
-              <button
-                type="button"
-                onClick={cerrar}
-                aria-label="Cerrar"
-                className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-              >
-                <X size={17} weight="bold" aria-hidden="true" />
-              </button>
-            </div>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Opciones de ${nombre}`}
+              className="entrar relative flex w-full max-w-[460px] flex-col gap-3 rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
+              style={{
+                paddingBottom: "max(env(safe-area-inset-bottom), 20px)",
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="font-display text-[20px] font-semibold leading-tight tracking-[-0.01em] text-label">
+                  {nombre}
+                </h2>
+                <button
+                  type="button"
+                  onClick={cerrar}
+                  aria-label="Cerrar"
+                  className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                >
+                  <X size={17} weight="bold" aria-hidden="true" />
+                </button>
+              </div>
 
-            {confirmando ? (
-              <div className="flex flex-col gap-2.5">
-                <p className="text-pretty text-[14px] leading-[1.45] text-label">
-                  Se va <b>{nombre}</b> con todos sus días marcados y sus
-                  impulsos. No se puede deshacer.
-                </p>
-                <div className="flex gap-2">
+              {confirmando ? (
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-pretty text-[14px] leading-[1.45] text-label">
+                    Se va <b>{nombre}</b> con todos sus días marcados y sus
+                    impulsos. No se puede deshacer.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          const result = await deleteHabit(habitId);
+                          if (result?.error) setError(result.error);
+                        })
+                      }
+                      className="pulsable h-12 flex-1 rounded-[14px] bg-rojo text-[15px] font-semibold text-rojo-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                    >
+                      {pending ? "Borrando…" : "Sí, bórralo"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmando(false)}
+                      className="pulsable h-12 flex-1 rounded-[14px] bg-fill text-[15px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
                   <button
                     type="button"
                     disabled={pending}
                     onClick={() =>
                       startTransition(async () => {
-                        const result = await deleteHabit(habitId);
+                        const result = await archiveHabit(habitId);
                         if (result?.error) setError(result.error);
                       })
                     }
-                    className="pulsable h-12 flex-1 rounded-[14px] bg-rojo text-[15px] font-semibold text-rojo-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                    className="pulsable flex items-center gap-3 rounded-[16px] bg-fill px-3.5 py-3 text-left disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
                   >
-                    {pending ? "Borrando…" : "Sí, bórralo"}
+                    <Archive
+                      size={19}
+                      aria-hidden="true"
+                      className="shrink-0 text-label-2"
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col gap-px">
+                      <span className="text-[15px] font-semibold text-label">
+                        Archivar
+                      </span>
+                      <span className="text-[12.5px] text-label-2">
+                        Sale de Hoy y guarda todo el historial
+                      </span>
+                    </span>
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setConfirmando(false)}
-                    className="pulsable h-12 flex-1 rounded-[14px] bg-fill text-[15px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                    disabled={pending}
+                    onClick={() => setConfirmando(true)}
+                    className="pulsable flex items-center gap-3 rounded-[16px] px-3.5 py-3 text-left disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
                   >
-                    Cancelar
+                    <Trash
+                      size={19}
+                      aria-hidden="true"
+                      className="shrink-0 text-rojo"
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col gap-px">
+                      <span className="text-[15px] font-semibold text-rojo">
+                        Eliminar
+                      </span>
+                      <span className="text-[12.5px] text-label-2">
+                        Borra el reto y todo lo que lleva registrado
+                      </span>
+                    </span>
                   </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      const result = await archiveHabit(habitId);
-                      if (result?.error) setError(result.error);
-                    })
-                  }
-                  className="pulsable flex items-center gap-3 rounded-[16px] bg-fill px-3.5 py-3 text-left disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                >
-                  <Archive
-                    size={19}
-                    aria-hidden="true"
-                    className="shrink-0 text-label-2"
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col gap-px">
-                    <span className="text-[15px] font-semibold text-label">
-                      Archivar
-                    </span>
-                    <span className="text-[12.5px] text-label-2">
-                      Sale de Hoy y guarda todo el historial
-                    </span>
-                  </span>
-                </button>
+                </>
+              )}
 
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => setConfirmando(true)}
-                  className="pulsable flex items-center gap-3 rounded-[16px] px-3.5 py-3 text-left disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                >
-                  <Trash
-                    size={19}
-                    aria-hidden="true"
-                    className="shrink-0 text-rojo"
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col gap-px">
-                    <span className="text-[15px] font-semibold text-rojo">
-                      Eliminar
-                    </span>
-                    <span className="text-[12.5px] text-label-2">
-                      Borra el reto y todo lo que lleva registrado
-                    </span>
-                  </span>
-                </button>
-              </>
-            )}
-
-            {error && (
-              <p role="alert" className="text-[13px] text-rojo">
-                {error}
-              </p>
-            )}
+              {error && (
+                <p role="alert" className="text-[13px] text-rojo">
+                  {error}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        </Portal>
       )}
     </>
   );

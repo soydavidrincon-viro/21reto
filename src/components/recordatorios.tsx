@@ -1,5 +1,7 @@
 "use client";
 
+import { Portal } from "@/components/portal";
+
 import {
   Bell,
   BellRinging,
@@ -88,7 +90,12 @@ export function Recordatorios({
         >
           {encendidos ? (
             <>
-              <BellRinging size={21} weight="fill" className="text-azul" aria-hidden="true" />
+              <BellRinging
+                size={21}
+                weight="fill"
+                className="text-azul"
+                aria-hidden="true"
+              />
               {/* Un punto en vez de un número: no hay nada que contar, solo
                   que están puestos. */}
               <span
@@ -141,13 +148,7 @@ export function Recordatorios({
   );
 }
 
-function Hoja({
-  profile,
-  onClose,
-}: {
-  profile: Profile;
-  onClose: () => void;
-}) {
+function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
   const [hora, setHora] = useState<number | null>(profile.reminder_hour);
   const [racha, setRacha] = useState(profile.avisa_racha);
   const [hito, setHito] = useState(profile.avisa_hito);
@@ -214,12 +215,14 @@ function Hoja({
     });
   }
 
-  function actualizar(patch: Partial<{
-    hora: number;
-    racha: boolean;
-    hito: boolean;
-    dificil: boolean;
-  }>) {
+  function actualizar(
+    patch: Partial<{
+      hora: number;
+      racha: boolean;
+      hito: boolean;
+      dificil: boolean;
+    }>,
+  ) {
     const siguiente = {
       hora: patch.hora ?? hora ?? HORA_AVISO_POR_DEFECTO,
       racha: patch.racha ?? racha,
@@ -243,175 +246,180 @@ function Hoja({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        aria-label="Cerrar"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
-      />
-
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Recordatorios"
-        className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
-        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-0.5">
-            <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
-              Recordatorios
-            </h2>
-            <p className="text-[13.5px] leading-[1.4] text-label-2">
-              Uno al día como mucho. Nunca para hacerte sentir mal.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar"
-            className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-          >
-            <X size={17} weight="bold" aria-hidden="true" />
-          </button>
-        </div>
-
-        {/* En iPhone esto va primero y es lo único que importa: sin instalar,
-            no llega nada, y Safari no ofrece el botón. */}
-        {entorno?.iphoneSuelto && (
-          <div className="flex flex-col gap-2 rounded-[16px] bg-ambar/20 px-4 py-3.5">
-            <span className="text-[15px] font-semibold text-label">
-              Primero instala Antídoto
-            </span>
-            <p className="text-pretty text-[13.5px] leading-[1.45] text-label-2">
-              En iPhone los avisos solo llegan si la app está en tu pantalla de
-              inicio. Safari no lo ofrece solo, hay que hacerlo a mano:
-            </p>
-            <ol className="flex flex-col gap-1.5 text-[13.5px] leading-[1.4] text-label">
-              <li className="flex items-center gap-2">
-                <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
-                  1
-                </span>
-                Toca{" "}
-                <Export size={16} weight="bold" aria-hidden="true" /> abajo en
-                Safari
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
-                  2
-                </span>
-                Baja y toca{" "}
-                <Plus size={15} weight="bold" aria-hidden="true" /> Añadir a
-                inicio
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
-                  3
-                </span>
-                Abre Antídoto desde ahí y vuelve aquí
-              </li>
-            </ol>
-          </div>
-        )}
-
-        {entorno && !entorno.soporta && !entorno.iphoneSuelto && (
-          <p className="rounded-[16px] bg-fill px-4 py-3 text-pretty text-[13.5px] leading-[1.45] text-label-2">
-            Este navegador no admite avisos. Prueba desde el teléfono con
-            Chrome o Safari.
-          </p>
-        )}
-
+    <Portal>
+      <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
         <button
           type="button"
-          onClick={encendidos ? apagar : encender}
-          disabled={pending || entorno?.iphoneSuelto || entorno?.soporta === false}
-          className={`pulsable flex h-[54px] items-center justify-center gap-2 rounded-[16px] text-[16px] font-semibold tracking-[-0.01em] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
-            encendidos ? "bg-fill text-label" : "bg-azul text-azul-tinta"
-          }`}
+          aria-label="Cerrar"
+          onClick={onClose}
+          className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+        />
+
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Recordatorios"
+          className="entrar relative flex max-h-[92dvh] w-full max-w-[460px] flex-col gap-4 overflow-y-auto rounded-t-[28px] bg-card p-5 sm:rounded-[28px]"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)" }}
         >
-          {encendidos ? (
-            <BellSlash size={19} weight="bold" aria-hidden="true" />
-          ) : (
-            <BellRinging size={19} weight="fill" aria-hidden="true" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
+                Recordatorios
+              </h2>
+              <p className="text-[13.5px] leading-[1.4] text-label-2">
+                Uno al día como mucho. Nunca para hacerte sentir mal.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar"
+              className="pulsable -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full bg-fill text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            >
+              <X size={17} weight="bold" aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* En iPhone esto va primero y es lo único que importa: sin instalar,
+            no llega nada, y Safari no ofrece el botón. */}
+          {entorno?.iphoneSuelto && (
+            <div className="flex flex-col gap-2 rounded-[16px] bg-ambar/20 px-4 py-3.5">
+              <span className="text-[15px] font-semibold text-label">
+                Primero instala Antídoto
+              </span>
+              <p className="text-pretty text-[13.5px] leading-[1.45] text-label-2">
+                En iPhone los avisos solo llegan si la app está en tu pantalla
+                de inicio. Safari no lo ofrece solo, hay que hacerlo a mano:
+              </p>
+              <ol className="flex flex-col gap-1.5 text-[13.5px] leading-[1.4] text-label">
+                <li className="flex items-center gap-2">
+                  <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
+                    1
+                  </span>
+                  Toca <Export size={16} weight="bold" aria-hidden="true" />{" "}
+                  abajo en Safari
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
+                    2
+                  </span>
+                  Baja y toca{" "}
+                  <Plus size={15} weight="bold" aria-hidden="true" /> Añadir a
+                  inicio
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="tnum flex size-5 shrink-0 items-center justify-center rounded-full bg-card text-[11px] font-bold">
+                    3
+                  </span>
+                  Abre Antídoto desde ahí y vuelve aquí
+                </li>
+              </ol>
+            </div>
           )}
-          {pending
-            ? "Un momento…"
-            : encendidos
-              ? "Apagar los recordatorios"
-              : "Encender recordatorios"}
-        </button>
 
-        {encendidos && (
-          <>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-                ¿A qué hora?
-              </span>
-              <div className="flex items-center gap-3 rounded-[16px] bg-fill px-4 py-3">
-                <label className="sr-only" htmlFor="hora-aviso">
-                  Hora del recordatorio
-                </label>
-                <select
-                  id="hora-aviso"
-                  value={hora ?? HORA_AVISO_POR_DEFECTO}
-                  onChange={(e) => actualizar({ hora: Number(e.target.value) })}
-                  className="tnum h-10 flex-1 rounded-xl bg-card px-3 text-[16px] text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                >
-                  {Array.from({ length: 24 }, (_, h) => (
-                    <option key={h} value={h}>
-                      {String(h).padStart(2, "0")}:00
-                    </option>
-                  ))}
-                </select>
-                <span className="shrink-0 text-[12.5px] text-label-2">
-                  hora tuya
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-                Además
-              </span>
-              <div className="overflow-hidden rounded-[16px] bg-fill">
-                <Interruptor
-                  titulo="Tu hora difícil"
-                  detalle="Un rato antes del momento en que suele darte, cuando ya hay patrón"
-                  activo={dificil}
-                  onChange={(v) => actualizar({ dificil: v })}
-                />
-                <div className="ml-4 h-px bg-separator" />
-                <Interruptor
-                  titulo="Racha en riesgo"
-                  detalle="Tarde, solo si tienes algo que perder y sigue sin marcar"
-                  activo={racha}
-                  onChange={(v) => actualizar({ racha: v })}
-                />
-                <div className="ml-4 h-px bg-separator" />
-                <Interruptor
-                  titulo="Un hito a la vista"
-                  detalle="La víspera de llegar a tu meta. Una sola vez"
-                  activo={hito}
-                  onChange={(v) => actualizar({ hito: v })}
-                />
-              </div>
-            </div>
-
-            <p className="text-[12px] leading-[1.4] text-label-3">
-              Se activan en este dispositivo. Si entras desde otro, enciéndelos
-              también ahí.
+          {entorno && !entorno.soporta && !entorno.iphoneSuelto && (
+            <p className="rounded-[16px] bg-fill px-4 py-3 text-pretty text-[13.5px] leading-[1.45] text-label-2">
+              Este navegador no admite avisos. Prueba desde el teléfono con
+              Chrome o Safari.
             </p>
-          </>
-        )}
+          )}
 
-        {error && (
-          <p role="alert" className="text-[13px] leading-[1.4] text-rojo">
-            {error}
-          </p>
-        )}
+          <button
+            type="button"
+            onClick={encendidos ? apagar : encender}
+            disabled={
+              pending || entorno?.iphoneSuelto || entorno?.soporta === false
+            }
+            className={`pulsable flex h-[54px] items-center justify-center gap-2 rounded-[16px] text-[16px] font-semibold tracking-[-0.01em] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+              encendidos ? "bg-fill text-label" : "bg-azul text-azul-tinta"
+            }`}
+          >
+            {encendidos ? (
+              <BellSlash size={19} weight="bold" aria-hidden="true" />
+            ) : (
+              <BellRinging size={19} weight="fill" aria-hidden="true" />
+            )}
+            {pending
+              ? "Un momento…"
+              : encendidos
+                ? "Apagar los recordatorios"
+                : "Encender recordatorios"}
+          </button>
+
+          {encendidos && (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
+                  ¿A qué hora?
+                </span>
+                <div className="flex items-center gap-3 rounded-[16px] bg-fill px-4 py-3">
+                  <label className="sr-only" htmlFor="hora-aviso">
+                    Hora del recordatorio
+                  </label>
+                  <select
+                    id="hora-aviso"
+                    value={hora ?? HORA_AVISO_POR_DEFECTO}
+                    onChange={(e) =>
+                      actualizar({ hora: Number(e.target.value) })
+                    }
+                    className="tnum h-10 flex-1 rounded-xl bg-card px-3 text-[16px] text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                  >
+                    {Array.from({ length: 24 }, (_, h) => (
+                      <option key={h} value={h}>
+                        {String(h).padStart(2, "0")}:00
+                      </option>
+                    ))}
+                  </select>
+                  <span className="shrink-0 text-[12.5px] text-label-2">
+                    hora tuya
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
+                  Además
+                </span>
+                <div className="overflow-hidden rounded-[16px] bg-fill">
+                  <Interruptor
+                    titulo="Tu hora difícil"
+                    detalle="Un rato antes del momento en que suele darte, cuando ya hay patrón"
+                    activo={dificil}
+                    onChange={(v) => actualizar({ dificil: v })}
+                  />
+                  <div className="ml-4 h-px bg-separator" />
+                  <Interruptor
+                    titulo="Racha en riesgo"
+                    detalle="Tarde, solo si tienes algo que perder y sigue sin marcar"
+                    activo={racha}
+                    onChange={(v) => actualizar({ racha: v })}
+                  />
+                  <div className="ml-4 h-px bg-separator" />
+                  <Interruptor
+                    titulo="Un hito a la vista"
+                    detalle="La víspera de llegar a tu meta. Una sola vez"
+                    activo={hito}
+                    onChange={(v) => actualizar({ hito: v })}
+                  />
+                </div>
+              </div>
+
+              <p className="text-[12px] leading-[1.4] text-label-3">
+                Se activan en este dispositivo. Si entras desde otro,
+                enciéndelos también ahí.
+              </p>
+            </>
+          )}
+
+          {error && (
+            <p role="alert" className="text-[13px] leading-[1.4] text-rojo">
+              {error}
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </Portal>
   );
 }
 
