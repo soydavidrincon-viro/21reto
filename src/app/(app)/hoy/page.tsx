@@ -8,6 +8,7 @@ import {
   HabitosDeHoy,
 } from "@/components/cierre-del-dia";
 import { CravingButton } from "@/components/craving-button";
+import { Recordatorios } from "@/components/recordatorios";
 import { RetoCarrusel } from "@/components/reto-carrusel";
 import { Isotipo } from "@/components/logo";
 import {
@@ -155,9 +156,15 @@ export default async function HoyPage() {
             {firstName ? `Hola, ${firstName}` : "Hoy"}
           </h1>
         </div>
-        <span className="hidden text-[14px] font-medium text-label-2 lg:block">
-          {marcadosHoy} de {totalDeHoy} marcados hoy
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden text-[14px] font-medium text-label-2 lg:block">
+            {marcadosHoy} de {totalDeHoy} marcados hoy
+          </span>
+          {/* La campana vive aquí y no solo enterrada en Perfil: encender los
+              avisos es la decisión que más cambia si la app sirve o no, y hay
+              que poder tomarla desde la pantalla que se mira todos los días. */}
+          <Recordatorios profile={profile} variante="campana" />
+        </div>
       </header>
 
       {/* El proveedor envuelve las dos columnas porque las dos piezas del

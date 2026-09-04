@@ -10,6 +10,7 @@ import {
   type Theme,
 } from "@/app/actions/profile";
 import { AvatarUploader } from "@/components/avatar-uploader";
+import { Recordatorios } from "@/components/recordatorios";
 import {
   COMPANIONS,
   Companion,
@@ -205,6 +206,13 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
           <p className="px-8 text-[12.5px] leading-[1.4] text-label-2 lg:px-0">
             {COMPANIONS[companion].frase}
           </p>
+        </section>
+
+        <section className="flex flex-col gap-[7px]">
+          <span className="px-8 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+            Avisos
+          </span>
+          <Recordatorios profile={profile} variante="fila" />
         </section>
 
         <section className="flex flex-col gap-[7px]">

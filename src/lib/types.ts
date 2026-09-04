@@ -58,7 +58,15 @@ export type Profile = {
   theme: "system" | "light" | "dark";
   onboarded_at: string | null;
   companion: "roco" | "chispa" | "brote" | "nube";
+  /** Hora local del recordatorio del día. null = avisos apagados. */
+  reminder_hour: number | null;
+  avisa_racha: boolean;
+  avisa_hito: boolean;
+  avisa_hora_dificil: boolean;
 };
+
+/** La hora que se propone al encender los avisos por primera vez. */
+export const HORA_AVISO_POR_DEFECTO = 21;
 
 /**
  * Cada color de hábito con su tinta. El blanco sobre naranja, menta y ámbar no

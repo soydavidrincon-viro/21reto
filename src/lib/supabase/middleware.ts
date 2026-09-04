@@ -2,8 +2,17 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { CABECERA_EMAIL, CABECERA_USUARIO } from "./cabeceras";
 
-/** Rutas que se pueden ver sin sesión. */
-const PUBLIC_PATHS = ["/", "/login", "/auth"];
+/**
+ * Rutas que se pueden ver sin sesión.
+ *
+ * `/api/recordatorios` está aquí porque lo llama el cron de Supabase, que no
+ * tiene ni puede tener sesión de usuario. Sin esto el proxy lo redirigía al
+ * login y no se mandaba un solo aviso — y en silencio, porque un 307 no parece
+ * un error. Esa ruta no queda desprotegida: comprueba su propio `CRON_SECRET`
+ * antes de hacer nada, que es la única defensa que sirve para algo que llama
+ * una máquina.
+ */
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/api/recordatorios"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some(
