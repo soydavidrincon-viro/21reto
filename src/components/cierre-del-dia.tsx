@@ -1,7 +1,8 @@
 "use client";
 
-import { X } from "@phosphor-icons/react";
-import { useState } from "react";
+import { CaretRight, X } from "@phosphor-icons/react";
+import Link from "next/link";
+import { createContext, useContext, useState } from "react";
 import {
   Companion,
   type CompanionEtapa,
@@ -9,71 +10,79 @@ import {
 } from "@/components/companion";
 import { HabitCard } from "@/components/habit-card";
 import { MoodPicker } from "@/components/mood-picker";
-import type { DailyOverviewRow } from "@/lib/types";
+import { MOOD_BY_KEY, type DailyOverviewRow } from "@/lib/types";
 
 /**
- * La lista de hábitos de Hoy, más la hoja que sale al terminar de marcarlos.
+ * El cierre del día: marcar los hábitos y contar cómo fue.
  *
- * La idea es que la bitácora se llene, y esto es la segunda forma de intentarlo.
- * La primera fue bloquear la caja de escribir hasta cerrar el día, y estaba mal:
- * un candado convierte en obligación algo que la app quiere que apetezca, y
- * castiga —con una pantalla apagada— justo a quien todavía no ha hecho nada
- * malo. Esto lo hace al revés. Cuando marcas el último hábito del día, sale
- * sola: has terminado, cuéntalo mientras lo tienes fresco.
+ * La cara y la nota vivían además en un formulario siempre abierto al pie de
+ * Hoy. Con la hoja ya hecha, eso eran dos sitios para lo mismo en la misma
+ * pantalla: el formulario pidiendo la cara antes de haber marcado nada, y la
+ * hoja pidiéndola otra vez al terminar. Queda solo la hoja, que es el momento
+ * en que la pregunta tiene sentido — acabas de cerrar el día, cuéntalo mientras
+ * lo tienes fresco.
  *
- * Solo aparece cuando el último que quedaba pasa a marcado, y solo si ese día
- * todavía no habías puesto la cara. Si ya la habías puesto no hay nada que
- * pedir; y si la cierras, no vuelve a salir, porque no salta al navegar sino al
- * marcar, y ese momento ya pasó.
+ * Lo que queda en la pantalla es una línea, y solo cuando hace falta: si el día
+ * está cerrado y todavía no has dicho nada, para poder volver si cerraste la
+ * hoja o si marcaste desde el detalle de un hábito, donde la hoja no salta.
+ * Ese hueco era real: sin esa línea, cerrar la hoja dejaba Hoy sin ninguna
+ * puerta a la bitácora del día.
+ *
+ * El estado vive en un contexto porque las dos piezas caen en columnas
+ * distintas en escritorio —los hábitos a la izquierda, el ánimo a la derecha— y
+ * pasarlo por props obligaría a envolver media pantalla en un componente de
+ * cliente.
  */
-export function CierreDelDia({
-  habits,
+
+type Cierre = {
+  today: string;
+  moodDeHoy: string | null;
+  abrir: () => void;
+  /** Lo llama la lista al marcar: decide si ese fue el último del día. */
+  alMarcar: (habitId: string, habits: DailyOverviewRow[]) => void;
+};
+
+const Ctx = createContext<Cierre | null>(null);
+
+export function CierreDelDiaProvider({
   today,
   moodDeHoy,
   notaDeHoy,
   companion,
   etapa,
+  children,
 }: {
-  habits: DailyOverviewRow[];
   today: string;
   moodDeHoy: string | null;
   notaDeHoy: string | null;
   companion: CompanionKey;
   etapa: CompanionEtapa;
+  children: React.ReactNode;
 }) {
   const [abierto, setAbierto] = useState(false);
 
   /**
-   * Se decide en el momento del toque y con la foto de antes de marcar: si
-   * ningún OTRO hábito quedaba pendiente, el que se acaba de marcar era el
-   * último. Contarlo así en vez de esperar a que vuelvan los datos del servidor
-   * hace que no dependa de cuándo termine de recargarse la pantalla.
+   * Se decide con la foto de antes del toque: si ningún OTRO hábito quedaba
+   * pendiente, el que se acaba de marcar era el último. Contarlo así en vez de
+   * esperar a que vuelvan los datos del servidor hace que no dependa de cuándo
+   * termine de recargarse la pantalla.
    *
-   * Los días que no tocan no cuentan como pendientes. Un hábito de martes y
+   * Los días que no tocan no cuentan como pendientes: un hábito de martes y
    * jueves no puede impedir que el domingo se dé por cerrado.
    */
-  function alMarcar(habitId: string) {
+  function alMarcar(habitId: string, habits: DailyOverviewRow[]) {
     if (moodDeHoy) return;
     const quedaban = habits.filter(
-      (h) =>
-        h.habit_id !== habitId && h.toca_hoy && h.today_status === null,
+      (h) => h.habit_id !== habitId && h.toca_hoy && h.today_status === null,
     ).length;
     if (quedaban === 0) setAbierto(true);
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-2.5">
-        {habits.map((habit, i) => (
-          <HabitCard
-            key={habit.habit_id}
-            habit={habit}
-            today={today}
-            delay={0.18 + i * 0.06}
-            onMarcado={() => alMarcar(habit.habit_id)}
-          />
-        ))}
-      </div>
+    <Ctx.Provider
+      value={{ today, moodDeHoy, abrir: () => setAbierto(true), alMarcar }}
+    >
+      {children}
 
       {abierto && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
@@ -120,8 +129,6 @@ export function CierreDelDia({
               </button>
             </div>
 
-            {/* El mismo selector de Hoy, no una copia: si algún día cambian las
-                caras o cómo se guarda, cambian en los dos sitios a la vez. */}
             <MoodPicker
               today={today}
               selected={moodDeHoy}
@@ -140,6 +147,94 @@ export function CierreDelDia({
           </div>
         </div>
       )}
+    </Ctx.Provider>
+  );
+}
+
+/** Los hábitos de hoy. Avisan al contexto cuando se marca el último. */
+export function HabitosDeHoy({ habits }: { habits: DailyOverviewRow[] }) {
+  const cierre = useContext(Ctx);
+
+  return (
+    <>
+      {habits.map((habit, i) => (
+        <HabitCard
+          key={habit.habit_id}
+          habit={habit}
+          today={cierre?.today ?? ""}
+          delay={0.18 + i * 0.06}
+          onMarcado={() => cierre?.alMarcar(habit.habit_id, habits)}
+        />
+      ))}
     </>
+  );
+}
+
+/**
+ * La única huella del ánimo en la pantalla de Hoy.
+ *
+ * Tres estados, y en dos de ellos no ocupa nada:
+ * - el día sin cerrar: nada. Todavía no hay nada que contar.
+ * - cerrado y sin contar: una línea para abrir la hoja.
+ * - ya contado: la cara guardada, que es acuse de recibo, no un formulario.
+ */
+export function AnimoDeHoy({ pendientes }: { pendientes: number }) {
+  const cierre = useContext(Ctx);
+  if (!cierre) return null;
+
+  const guardado = cierre.moodDeHoy
+    ? MOOD_BY_KEY.get(cierre.moodDeHoy)
+    : undefined;
+
+  if (guardado) {
+    return (
+      <Link
+        href="/bitacora"
+        className="pulsable entrar mx-4 flex items-center gap-3 rounded-[22px] bg-card px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:mx-0"
+        style={{ animationDelay: "0.16s" }}
+      >
+        <span aria-hidden="true" className="text-[26px] leading-none">
+          {guardado.emoji}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-px">
+          <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
+            Hoy te sentiste {guardado.label.toLowerCase()}
+          </span>
+          <span className="text-[12.5px] text-label-2">Ver la bitácora</span>
+        </span>
+        <CaretRight
+          size={16}
+          weight="bold"
+          className="shrink-0 text-label-3"
+          aria-hidden="true"
+        />
+      </Link>
+    );
+  }
+
+  if (pendientes > 0) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={cierre.abrir}
+      className="pulsable entrar mx-4 flex items-center gap-3 rounded-[22px] bg-card px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul lg:mx-0"
+      style={{ animationDelay: "0.16s" }}
+    >
+      <span className="flex min-w-0 flex-1 flex-col gap-px">
+        <span className="text-[15px] font-semibold tracking-[-0.01em] text-label">
+          Te falta contar cómo te fue
+        </span>
+        <span className="text-[12.5px] text-label-2">
+          Ya cerraste el día. Una cara y, si quieres, dos líneas.
+        </span>
+      </span>
+      <CaretRight
+        size={16}
+        weight="bold"
+        className="shrink-0 text-label-3"
+        aria-hidden="true"
+      />
+    </button>
   );
 }

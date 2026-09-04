@@ -2,11 +2,14 @@ import { Plus } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CierreDeReto } from "@/components/cierre-de-reto";
-import { CierreDelDia } from "@/components/cierre-del-dia";
+import {
+  AnimoDeHoy,
+  CierreDelDiaProvider,
+  HabitosDeHoy,
+} from "@/components/cierre-del-dia";
 import { CravingButton } from "@/components/craving-button";
 import { RetoCarrusel } from "@/components/reto-carrusel";
 import { Isotipo } from "@/components/logo";
-import { MoodPicker } from "@/components/mood-picker";
 import {
   daysBetween,
   longDate,
@@ -97,6 +100,9 @@ export default async function HoyPage() {
   // El botón de emergencia solo tiene sentido sobre lo que se deja.
   const paraDejar = habits.filter((h) => h.kind === "quit");
 
+  // Lo que falta por marcar de lo que toca hoy. Con cero, el día está cerrado.
+  const pendientes = deHoy.filter((h) => h.today_status === null).length;
+
   /**
    * De qué humor está el compañero. Sale del estado real, no de un valor fijo:
    * un muñeco que se ve igual el día que llevas veinte seguidos y el día que
@@ -154,56 +160,60 @@ export default async function HoyPage() {
         </span>
       </header>
 
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-6">
-        <div className="flex flex-col gap-4">
-          {cumplidos.length > 0 && (
-            <div className="flex flex-col gap-3 px-4 lg:px-0">
-              {cumplidos.map((habit) => (
-                <CierreDeReto
-                  key={habit.habit_id}
-                  habit={habit}
-                  companion={profile.companion ?? "brote"}
-                />
-              ))}
-            </div>
-          )}
+      {/* El proveedor envuelve las dos columnas porque las dos piezas del
+          cierre caen en columnas distintas: los hábitos a la izquierda y el
+          rastro del ánimo a la derecha. Los hijos siguen siendo servidor; solo
+          el estado de la hoja es de cliente. */}
+      <CierreDelDiaProvider
+        today={today}
+        moodDeHoy={entry.data?.mood ?? null}
+        notaDeHoy={entry.data?.note ?? null}
+        companion={profile.companion ?? "brote"}
+        etapa={etapaDeRacha(rachaViva)}
+      >
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-6">
+          <div className="flex flex-col gap-4">
+            {cumplidos.length > 0 && (
+              <div className="flex flex-col gap-3 px-4 lg:px-0">
+                {cumplidos.map((habit) => (
+                  <CierreDeReto
+                    key={habit.habit_id}
+                    habit={habit}
+                    companion={profile.companion ?? "brote"}
+                  />
+                ))}
+              </div>
+            )}
 
-          <RetoCarrusel
-            habits={habits}
-            companion={profile.companion ?? "brote"}
-            humor={humor}
-            etapa={etapaDeRacha(rachaViva)}
-          />
+            <RetoCarrusel
+              habits={habits}
+              companion={profile.companion ?? "brote"}
+              humor={humor}
+              etapa={etapaDeRacha(rachaViva)}
+            />
 
-          <section className="flex flex-col gap-2.5">
-            <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
-              Tus hábitos
-            </h2>
+            <section className="flex flex-col gap-2.5">
+              <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+                Tus hábitos
+              </h2>
 
-            <div className="flex flex-col gap-2.5 px-4 lg:px-0">
-              <CierreDelDia
-                habits={habits}
-                today={today}
-                moodDeHoy={entry.data?.mood ?? null}
-                notaDeHoy={entry.data?.note ?? null}
-                companion={profile.companion ?? "brote"}
-                etapa={etapaDeRacha(rachaViva)}
-              />
+              <div className="flex flex-col gap-2.5 px-4 lg:px-0">
+                <HabitosDeHoy habits={habits} />
 
-              <Link
-                href="/habito/nuevo"
-                className="entrar pulsable flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-separator py-4 text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                style={{ animationDelay: `${0.18 + habits.length * 0.06}s` }}
-              >
-                <Plus size={18} weight="bold" aria-hidden="true" />
-                {habits.length === 0
-                  ? "Crear tu primer hábito"
-                  : "Agregar hábito"}
-              </Link>
-            </div>
-          </section>
+                <Link
+                  href="/habito/nuevo"
+                  className="entrar pulsable flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-separator py-4 text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                  style={{ animationDelay: `${0.18 + habits.length * 0.06}s` }}
+                >
+                  <Plus size={18} weight="bold" aria-hidden="true" />
+                  {habits.length === 0
+                    ? "Crear tu primer hábito"
+                    : "Agregar hábito"}
+                </Link>
+              </div>
+            </section>
 
-          {/* Debajo de los hábitos, y no encima.
+            {/* Debajo de los hábitos, y no encima.
               Arriba competía con lo que se abre a mirar todos los días —cómo va
               el reto— y lo primero de la pantalla acababa siendo la salida de
               emergencia. Aquí abajo se llega después de haber marcado, que es
@@ -211,138 +221,131 @@ export default async function HoyPage() {
 
               Solo si hay algo que dejar: en un hábito que se construye no hay
               antojo que aguantar. */}
-          {paraDejar.length > 0 && (
-            <div className="px-4 lg:px-0">
-              <CravingButton
-                habits={paraDejar}
-                companion={profile.companion ?? "brote"}
-                etapa={etapaDeRacha(rachaViva)}
-                hoy={antojosHoy.count ?? 0}
-              />
-            </div>
-          )}
-        </div>
+            {paraDejar.length > 0 && (
+              <div className="px-4 lg:px-0">
+                <CravingButton
+                  habits={paraDejar}
+                  companion={profile.companion ?? "brote"}
+                  etapa={etapaDeRacha(rachaViva)}
+                  hoy={antojosHoy.count ?? 0}
+                />
+              </div>
+            )}
+          </div>
 
-        <div className="flex flex-col gap-4">
-          {/* El resumen del día. Antes solo existía en escritorio, así que en
+          <div className="flex flex-col gap-4">
+            {/* El resumen del día. Antes solo existía en escritorio, así que en
               teléfono —donde se usa la app— no había ni un número que dijera
               cómo va el día en conjunto. Ahora va en las dos. */}
-          {habits.length > 0 && (
-            <section
-              className="entrar mx-4 flex flex-col gap-3.5 rounded-[22px] bg-card p-4 lg:mx-0 lg:p-5"
-              style={{ animationDelay: "0.09s" }}
-            >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-                    Hoy
-                  </span>
-                  <span className="tnum text-[13px] font-semibold text-label-2">
-                    {marcadosHoy} de {totalDeHoy}{" "}
-                    {totalDeHoy === 1 ? "marcado" : "marcados"}
-                  </span>
-                </div>
-                <div
-                  className="flex gap-1"
-                  role="progressbar"
-                  aria-valuenow={marcadosHoy}
-                  aria-valuemin={0}
-                  aria-valuemax={totalDeHoy}
-                  aria-label="Hábitos marcados hoy"
-                >
-                  {/* Solo los de hoy, más cualquiera de un día libre que se
+            {habits.length > 0 && (
+              <section
+                className="entrar mx-4 flex flex-col gap-3.5 rounded-[22px] bg-card p-4 lg:mx-0 lg:p-5"
+                style={{ animationDelay: "0.09s" }}
+              >
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
+                      Hoy
+                    </span>
+                    <span className="tnum text-[13px] font-semibold text-label-2">
+                      {marcadosHoy} de {totalDeHoy}{" "}
+                      {totalDeHoy === 1 ? "marcado" : "marcados"}
+                    </span>
+                  </div>
+                  <div
+                    className="flex gap-1"
+                    role="progressbar"
+                    aria-valuenow={marcadosHoy}
+                    aria-valuemin={0}
+                    aria-valuemax={totalDeHoy}
+                    aria-label="Hábitos marcados hoy"
+                  >
+                    {/* Solo los de hoy, más cualquiera de un día libre que se
                       haya marcado igual. Un hábito de martes y jueves no debe
                       dejar un hueco gris en la barra cada domingo. */}
-                  {habits
-                    .filter((h) => h.toca_hoy || h.today_status !== null)
-                    .map((habit) => (
-                      <span
-                        key={habit.habit_id}
-                        className={`h-2.5 flex-1 rounded-full ${
-                          habit.today_status === "success"
-                            ? "bg-menta"
-                            : habit.today_status === "relapse"
-                              ? "bg-ambar"
-                              : "bg-fill"
-                        }`}
-                      />
-                    ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 border-t border-separator pt-3.5">
-                {(
-                  [
-                    [totalLimpios, "Días limpios", "text-label"],
-                    [mejorRacha, "Mejor racha", "text-naranja"],
-                    [
-                      habits.length,
-                      habits.length === 1 ? "Hábito" : "Hábitos",
-                      "text-label",
-                    ],
-                  ] as const
-                ).map(([valor, etiqueta, tono]) => (
-                  <div
-                    key={etiqueta}
-                    className="flex flex-col items-center gap-0.5"
-                  >
-                    <b
-                      className={`tnum font-display text-[26px] font-bold leading-none lg:text-[28px] ${tono}`}
-                    >
-                      {valor}
-                    </b>
-                    <small className="text-center text-[12px] text-label-2">
-                      {etiqueta}
-                    </small>
+                    {habits
+                      .filter((h) => h.toca_hoy || h.today_status !== null)
+                      .map((habit) => (
+                        <span
+                          key={habit.habit_id}
+                          className={`h-2.5 flex-1 rounded-full ${
+                            habit.today_status === "success"
+                              ? "bg-menta"
+                              : habit.today_status === "relapse"
+                                ? "bg-ambar"
+                                : "bg-fill"
+                          }`}
+                        />
+                      ))}
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
+                </div>
 
-          {/* Tus propias palabras antes que las de nadie más. La frase del
+                <div className="grid grid-cols-3 gap-2 border-t border-separator pt-3.5">
+                  {(
+                    [
+                      [totalLimpios, "Días limpios", "text-label"],
+                      [mejorRacha, "Mejor racha", "text-naranja"],
+                      [
+                        habits.length,
+                        habits.length === 1 ? "Hábito" : "Hábitos",
+                        "text-label",
+                      ],
+                    ] as const
+                  ).map(([valor, etiqueta, tono]) => (
+                    <div
+                      key={etiqueta}
+                      className="flex flex-col items-center gap-0.5"
+                    >
+                      <b
+                        className={`tnum font-display text-[26px] font-bold leading-none lg:text-[28px] ${tono}`}
+                      >
+                        {valor}
+                      </b>
+                      <small className="text-center text-[12px] text-label-2">
+                        {etiqueta}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Tus propias palabras antes que las de nadie más. La frase del
               catálogo solo aparece mientras todavía no hay historial que
               releer. */}
-          {recuerdo ? (
-            <section
-              className="entrar mx-4 flex flex-col gap-2 rounded-[22px] bg-card px-5 py-4 lg:mx-0 lg:px-6 lg:py-6"
-              style={{ animationDelay: "0.12s" }}
-            >
-              <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-                Tú escribiste, hace{" "}
-                {daysBetween(recuerdo.entry_date as string, today)} días
-              </span>
-              <p className="text-pretty font-display text-[16px] font-medium leading-[1.45] text-label lg:text-[18px]">
-                {recuerdo.note as string}
-              </p>
-            </section>
-          ) : (
-            frase && (
+            {recuerdo ? (
               <section
-                className="entrar mx-4 rounded-[22px] bg-card px-5 py-4 lg:mx-0 lg:px-6 lg:py-6"
+                className="entrar mx-4 flex flex-col gap-2 rounded-[22px] bg-card px-5 py-4 lg:mx-0 lg:px-6 lg:py-6"
                 style={{ animationDelay: "0.12s" }}
               >
-                <p className="text-pretty font-display text-[16px] font-medium leading-[1.4] text-label lg:text-[19px] lg:leading-[1.45]">
-                  {frase.text}
+                <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
+                  Tú escribiste, hace{" "}
+                  {daysBetween(recuerdo.entry_date as string, today)} días
+                </span>
+                <p className="text-pretty font-display text-[16px] font-medium leading-[1.45] text-label lg:text-[18px]">
+                  {recuerdo.note as string}
                 </p>
               </section>
-            )
-          )}
+            ) : (
+              frase && (
+                <section
+                  className="entrar mx-4 rounded-[22px] bg-card px-5 py-4 lg:mx-0 lg:px-6 lg:py-6"
+                  style={{ animationDelay: "0.12s" }}
+                >
+                  <p className="text-pretty font-display text-[16px] font-medium leading-[1.4] text-label lg:text-[19px] lg:leading-[1.45]">
+                    {frase.text}
+                  </p>
+                </section>
+              )
+            )}
 
-          <section className="flex flex-col gap-2.5">
-            <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
-              ¿Cómo te sentiste hoy?
-            </h2>
-            <div className="px-4 lg:px-0">
-              <MoodPicker
-                today={today}
-                selected={entry.data?.mood ?? null}
-                nota={entry.data?.note ?? null}
-              />
-            </div>
-          </section>
+            {/* El ánimo ya no vive aquí como formulario abierto: se pregunta en
+              la hoja que sale al cerrar el día. Esto es solo el rastro — una
+              línea, y solo cuando hace falta. */}
+            <AnimoDeHoy pendientes={pendientes} />
+          </div>
         </div>
-      </div>
+      </CierreDelDiaProvider>
     </div>
   );
 }
