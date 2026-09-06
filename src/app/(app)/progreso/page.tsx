@@ -93,7 +93,7 @@ export default async function ProgresoPage() {
 
   // Debajo de cada barra va el rango de fechas, no "S1, S2": nadie sabía si
   // eso era la primera semana del reto, del mes o de la gráfica.
-  const weeks = ((semanas.data ?? []) as SemanaRow[]).map((s) => ({
+  const todas = ((semanas.data ?? []) as SemanaRow[]).map((s) => ({
     label: s.semana === WEEKS - 1 ? "Esta semana" : rangoCorto(s.inicio, s.fin),
     range: rangoCorto(s.inicio, s.fin),
     // Sin días esperados no hay nota que poner: es una semana anterior al
@@ -101,6 +101,18 @@ export default async function ProgresoPage() {
     value:
       s.esperados === 0 ? null : Math.round((s.cumplidos / s.esperados) * 100),
   }));
+
+  /*
+   * La gráfica empieza donde empezó el reto.
+   *
+   * SQL devuelve seis semanas fijas, y las de antes del primer hábito venían
+   * con raya. A quien se creó la cuenta hoy le salían cinco semanas de julio
+   * y agosto con "—", como si hubiera faltado a algo. Se cortan las semanas
+   * vacías del principio; las vacías de en medio se quedan, porque esas sí
+   * son una semana sin marcar.
+   */
+  const primera = todas.findIndex((week) => week.value !== null);
+  const weeks = primera === -1 ? todas.slice(-1) : todas.slice(primera);
 
   const measured = weeks.filter((week) => week.value !== null);
   const average =
@@ -128,7 +140,11 @@ export default async function ProgresoPage() {
     <div className="flex flex-col gap-4 pt-11 lg:pt-0">
       <header className="entrar flex flex-col gap-0.5 px-5 lg:px-0">
         <span className="text-[12.5px] font-semibold uppercase tracking-[0.06em] text-label-3">
-          Últimas {WEEKS} semanas
+          {weeks.length < WEEKS
+            ? weeks.length === 1
+              ? "Tu primera semana"
+              : `Tus primeras ${weeks.length} semanas`
+            : `Últimas ${WEEKS} semanas`}
         </span>
         <h1 className="font-display text-[26px] font-semibold leading-none tracking-[-0.01em] text-label lg:text-[30px]">
           Progreso
@@ -205,7 +221,9 @@ export default async function ProgresoPage() {
               <span className="text-[14px] tracking-[-0.01em] text-label-2">
                 {average === null
                   ? "todavía sin datos suficientes"
-                  : `promedio de ${measured.length} ${measured.length === 1 ? "semana" : "semanas"}`}
+                  : measured.length === 1
+                    ? "esta semana. Cada domingo se suma una barra."
+                    : `promedio de ${measured.length} semanas`}
               </span>
             </p>
             <WeeklyBars weeks={weeks} />

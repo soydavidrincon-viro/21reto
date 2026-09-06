@@ -1,20 +1,19 @@
 import Link from "next/link";
 import { HabitIcon } from "@/components/habit-icon";
-import { faltaPara } from "@/lib/milestones";
 import { HABIT_SKIN, type DailyOverviewRow } from "@/lib/types";
 
 /**
- * Lo principal de Progreso: un bloque por reto con los días que lleva.
+ * Lo principal de Progreso: un bloque por reto con los días que le faltan.
  *
  * Antes lo primero que se veía era "Total acumulado", que suma días de retos
  * distintos y no le dice a nadie cómo va el suyo. Esto pone cada reto con su
- * color, su icono y su racha en grande, como en Hoy pero de un vistazo y
- * todos a la vez. Con uno solo ocupa el ancho entero; con dos o más, a dos
- * columnas.
+ * color, su icono y un número en grande. Con uno solo ocupa el ancho entero;
+ * con dos o más, a dos columnas.
  *
- * El número es la racha actual, no el total: "cuántos días llevas" es la
- * pregunta que se hace cualquiera al abrir Progreso, y el total ya sale
- * debajo en una línea.
+ * El número es lo que falta para la meta, no lo que se lleva: Hoy ya dice
+ * "18 de 21" en cada tarjeta, y repetirlo aquí era enseñar lo mismo dos
+ * veces. Progreso mira hacia adelante: cuántos días quedan para dejarlo.
+ * Cumplida la meta, el número es el total de días y se dice que se logró.
  */
 export function RetosEnNumeros({ habits }: { habits: DailyOverviewRow[] }) {
   if (habits.length === 0) return null;
@@ -25,8 +24,8 @@ export function RetosEnNumeros({ habits }: { habits: DailyOverviewRow[] }) {
     >
       {habits.map((habit, i) => {
         const skin = HABIT_SKIN[habit.color];
-        const falta = faltaPara(habit.current_streak, habit.target_days);
         const cumplido = habit.clean_days >= habit.target_days;
+        const faltan = Math.max(0, habit.target_days - habit.clean_days);
         const unico = habits.length === 1;
 
         return (
@@ -37,7 +36,11 @@ export function RetosEnNumeros({ habits }: { habits: DailyOverviewRow[] }) {
           >
             <Link
               href={`/habito/${habit.habit_id}`}
-              aria-label={`${habit.name}: racha de ${habit.current_streak} ${habit.current_streak === 1 ? "día" : "días"}`}
+              aria-label={
+                cumplido
+                  ? `${habit.name}: meta cumplida, ${habit.clean_days} días`
+                  : `${habit.name}: ${faltan} ${faltan === 1 ? "día" : "días"} para tu meta`
+              }
               className={`pulsable flex h-full flex-col justify-between gap-4 rounded-[24px] p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
                 unico ? "min-h-[150px] lg:p-6" : "min-h-[160px]"
               }`}
@@ -53,9 +56,7 @@ export function RetosEnNumeros({ habits }: { habits: DailyOverviewRow[] }) {
                 <span className="text-right text-[11px] font-bold uppercase tracking-[0.08em] opacity-70">
                   {cumplido
                     ? "Meta cumplida"
-                    : habit.kind === "build"
-                      ? "Empezando"
-                      : "Dejando"}
+                    : "Te faltan"}
                 </span>
               </div>
 
@@ -65,24 +66,22 @@ export function RetosEnNumeros({ habits }: { habits: DailyOverviewRow[] }) {
                     unico ? "text-[56px]" : "text-[44px]"
                   }`}
                 >
-                  {habit.current_streak}
+                  {cumplido ? habit.clean_days : faltan}
                 </span>
                 <span className="text-[13px] font-semibold opacity-80">
-                  {habit.current_streak === 1 ? "día seguido" : "días seguidos"}
-                  {" · "}
-                  <span className="tnum">meta {habit.target_days}</span>
+                  {cumplido
+                    ? `${habit.clean_days === 1 ? "día" : "días"} · lo lograste`
+                    : `${faltan === 1 ? "día" : "días"} para ${habit.kind === "build" ? "tu meta" : "dejarlo"}`}
                 </span>
                 <span className="mt-1 truncate font-display text-[16px] font-semibold leading-tight tracking-[-0.01em]">
                   {habit.name}
                 </span>
-                <span className="text-[12.5px] leading-[1.35] opacity-75">
+                <span className="tnum text-[12.5px] leading-[1.35] opacity-75">
                   {habit.pendientes.length > 0
                     ? `${habit.pendientes.length} ${habit.pendientes.length === 1 ? "día" : "días"} sin contestar`
                     : cumplido
-                      ? `${habit.clean_days} días en total`
-                      : habit.current_streak === 0
-                        ? "Hoy puede ser el día uno"
-                        : (falta?.texto ?? `${habit.clean_days} días en total`)}
+                      ? `Meta de ${habit.target_days}, y sigues`
+                      : `Llevas ${habit.clean_days} de ${habit.target_days}`}
                 </span>
               </div>
             </Link>
