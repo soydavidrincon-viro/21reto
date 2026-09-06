@@ -1,13 +1,13 @@
 "use client";
 
-import { Check } from "@phosphor-icons/react";
+import { Check, PencilSimple } from "@phosphor-icons/react";
 import { HabitIcon } from "@/components/habit-icon";
 import {
   COMPANIONS,
   Companion,
   type CompanionKey,
 } from "@/components/companion";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { createHabit } from "@/app/actions/habits";
 import { detectTimeZone } from "@/lib/dates";
 import {
@@ -80,6 +80,7 @@ export function HabitForm({
   const [companion, setCompanion] = useState<CompanionKey>("brote");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const campoPropio = useRef<HTMLInputElement>(null);
 
   const name = preset?.name ?? custom;
   const dejar = kind === "quit";
@@ -174,26 +175,71 @@ export function HabitForm({
         })}
       </div>
 
-      <div className="flex flex-col gap-[7px]">
-        <label
-          htmlFor="custom"
-          className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2"
-        >
-          O escríbelo tú
-        </label>
-        <input
-          id="custom"
-          value={custom}
-          onChange={(event) => {
-            setCustom(event.target.value);
-            setPreset(null);
-          }}
-          maxLength={80}
-          placeholder={
-            dejar ? "Lo que quieres dejar" : "Lo que quieres empezar"
-          }
-          className="mx-4 h-[50px] rounded-2xl bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-        />
+      {/* El nombre propio es la otra opción, no un añadido al chip.
+
+          Antes era un campo suelto debajo de los chips con "O escríbelo tú",
+          y en pruebas alguien lo leyó como un complemento del nombre elegido
+          —eligió Alcohol y se puso a escribir ahí—. Ahora chips y campo son
+          excluyentes a la vista: con un chip elegido, la tarjeta se contrae a
+          una línea que ofrece cambiar; sin chip, es un campo con su título.
+          Nunca se ven a la vez un chip encendido y un campo abierto. */}
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center gap-3 px-8" aria-hidden="true">
+          <span className="h-px flex-1 bg-separator" />
+          <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-label-3">
+            o
+          </span>
+          <span className="h-px flex-1 bg-separator" />
+        </div>
+
+        {preset ? (
+          <button
+            type="button"
+            onClick={() => {
+              setPreset(null);
+              // El foco entra en el campo en el mismo toque: quien quería
+              // escribir no tiene que buscar dónde.
+              requestAnimationFrame(() => campoPropio.current?.focus());
+            }}
+            className="pulsable mx-4 flex min-h-[50px] items-center gap-2.5 rounded-2xl border-2 border-dashed border-separator px-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          >
+            <PencilSimple
+              size={18}
+              weight="bold"
+              aria-hidden="true"
+              className="shrink-0 text-label-3"
+            />
+            <span className="text-[14.5px] leading-[1.35] tracking-[-0.01em] text-label-2">
+              Elegiste <b className="font-semibold text-label">{preset.name}</b>.
+              ¿Prefieres escribirlo tú?
+            </span>
+          </button>
+        ) : (
+          <div className="mx-4 flex flex-col gap-2 rounded-2xl border-2 border-dashed border-separator p-3">
+            <label
+              htmlFor="custom"
+              className="px-1 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2"
+            >
+              ¿No está en la lista?
+            </label>
+            <input
+              ref={campoPropio}
+              id="custom"
+              value={custom}
+              onChange={(event) => {
+                setCustom(event.target.value);
+                setPreset(null);
+              }}
+              maxLength={80}
+              placeholder={
+                dejar
+                  ? "Si no está lo que quieres dejar, escríbelo aquí"
+                  : "Si no está lo que quieres empezar, escríbelo aquí"
+              }
+              className="h-[46px] rounded-xl bg-card px-3.5 text-[17px] tracking-[-0.02em] text-label placeholder:text-[15px] placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+            />
+          </div>
+        )}
       </div>
 
       {/* El "por qué". Opcional y en una línea: es lo que la app va a
@@ -204,7 +250,7 @@ export function HabitForm({
           htmlFor="motivo"
           className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2"
         >
-          {dejar ? "Para qué lo dejas" : "Para qué lo haces"}
+          {dejar ? "Por qué lo dejas" : "Por qué lo haces"}
           <span className="ml-1.5 font-medium normal-case tracking-normal text-label-3">
             opcional
           </span>
@@ -214,9 +260,18 @@ export function HabitForm({
           value={motivo}
           onChange={(event) => setMotivo(event.target.value)}
           maxLength={MAX_MOTIVO}
-          placeholder="Una frase tuya. Se te enseña cuando más falta hace."
-          className="mx-4 h-[50px] rounded-2xl bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+          placeholder={
+            dejar
+              ? "Piensa por qué quieres dejar este hábito"
+              : "Piensa por qué quieres empezar con esto"
+          }
+          className="mx-4 h-[50px] rounded-2xl bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-[15px] placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
         />
+        <p className="px-8 text-[12.5px] leading-[1.4] text-label-2">
+          {dejar
+            ? "Te lo enseñamos cuando te den ganas de fallar."
+            : "Te lo enseñamos cuando te den ganas de saltarlo."}
+        </p>
       </div>
 
       <div className="flex flex-col gap-[7px]">

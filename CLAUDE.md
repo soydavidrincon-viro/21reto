@@ -27,6 +27,11 @@ huecos sí cuestan: no avanzan la meta, bajan el cumplimiento y salen grises. La
 regla vive en `get_habit_stats` y `huecos_pendientes` (migración 0010); no la
 reimplementes en TypeScript.
 
+Y dos costumbres más chicas: la bitácora de hoy se abre cuando todo lo que
+tocaba hoy tiene registro (lo comprueba `saveJournal`, además de la pantalla),
+y cada hábito nuevo recibe un color que ningún otro activo esté usando
+(`colorLibre` en `src/app/actions/habits.ts`).
+
 ## Cómo se trabaja aquí
 
 Antes de cada push: `npm run typecheck && npm run lint && npm run build`.

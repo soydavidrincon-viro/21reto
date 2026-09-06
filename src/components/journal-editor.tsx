@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, PencilSimple } from "@phosphor-icons/react";
+import { CheckCircle, Lock, PencilSimple } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { saveJournal } from "@/app/(app)/hoy/actions";
 import { longDate } from "@/lib/dates";
@@ -16,15 +16,24 @@ import { MOOD_BY_KEY, MOODS } from "@/lib/types";
  * a medio enviar: no hay diferencia visible entre "lo escribí" y "quedó
  * guardado". La entrada se sigue pudiendo editar hasta medianoche, pero eso es
  * un botón, no el estado por defecto.
+ *
+ * Y hasta que el día no está cerrado —todo lo que tocaba hoy con registro— la
+ * entrada de hoy sale con candado: un aviso y nada más. No manda a nadie a
+ * Hoy, porque a Bitácora también se entra a leer lo de antes; solo dice por
+ * qué todavía no se puede escribir. El servidor lo comprueba igual en
+ * `saveJournal`.
  */
 export function JournalEditor({
   date,
   initialMood,
   initialNote,
+  faltan,
 }: {
   date: string;
   initialMood: string | null;
   initialNote: string | null;
+  /** Hábitos que tocan hoy y siguen sin marcar. Con alguno, candado. */
+  faltan: number;
 }) {
   const [mood, setMood] = useState(initialMood);
   const [note, setNote] = useState(initialNote ?? "");
@@ -64,6 +73,20 @@ export function JournalEditor({
   }
 
   const caraGuardada = guardado.mood ? MOOD_BY_KEY.get(guardado.mood) : undefined;
+  const cerrado = faltan > 0;
+
+  const candado = (
+    <p className="flex items-start gap-2.5 rounded-xl bg-fill px-3.5 py-3 text-[13.5px] leading-[1.4] text-label-2">
+      <Lock size={18} weight="fill" aria-hidden="true" className="mt-px shrink-0 text-label-3" />
+      <span>
+        Se abre cuando marques{" "}
+        {faltan === 1 ? "tu hábito de hoy" : "tus hábitos de hoy"}.{" "}
+        <span className="tnum font-semibold text-label">
+          Te {faltan === 1 ? "falta" : "faltan"} {faltan}.
+        </span>
+      </span>
+    </p>
+  );
 
   return (
     <div className="flex flex-col gap-3 rounded-[22px] bg-card p-4">
@@ -77,7 +100,9 @@ export function JournalEditor({
         <span className="text-[12.5px] text-label-3">{longDate(date)}</span>
       </div>
 
-      {!editando && caraGuardada ? (
+      {cerrado && !caraGuardada ? (
+        candado
+      ) : (cerrado || !editando) && caraGuardada ? (
         <>
           <div className="flex items-start gap-3">
             <span
@@ -102,23 +127,27 @@ export function JournalEditor({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <span
-              aria-live="polite"
-              className="flex items-center gap-1.5 text-[13px] font-medium text-menta"
-            >
-              <CheckCircle size={16} weight="fill" aria-hidden="true" />
-              Guardada
-            </span>
-            <button
-              type="button"
-              onClick={() => setEditando(true)}
-              className="pulsable flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-fill px-3.5 text-[14px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-            >
-              <PencilSimple size={15} weight="bold" aria-hidden="true" />
-              Editar
-            </button>
-          </div>
+          {cerrado ? (
+            candado
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <span
+                aria-live="polite"
+                className="flex items-center gap-1.5 text-[13px] font-medium text-menta"
+              >
+                <CheckCircle size={16} weight="fill" aria-hidden="true" />
+                Guardada
+              </span>
+              <button
+                type="button"
+                onClick={() => setEditando(true)}
+                className="pulsable flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-fill px-3.5 text-[14px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+              >
+                <PencilSimple size={15} weight="bold" aria-hidden="true" />
+                Editar
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <>

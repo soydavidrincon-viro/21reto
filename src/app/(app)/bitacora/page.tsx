@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CalendarioDeBitacora } from "@/components/calendario-de-bitacora";
 import { JournalEditor } from "@/components/journal-editor";
 import {
   DiaDeBitacora,
@@ -9,7 +10,13 @@ import {
 import { longDate, shiftISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
-import type { Profile } from "@/lib/types";
+import { conDiasPorDefecto, type DailyOverviewRow, type Profile } from "@/lib/types";
+
+/** Hasta dónde llega el calendario: el reto más largo que se puede crear. */
+const DIAS_ATRAS = 365;
+
+/** Cuántos días salen como tarjeta antes del calendario. */
+const ULTIMOS = 3;
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Bitácora · Antídoto" };
@@ -27,9 +34,9 @@ export default async function BitacoraPage() {
     .single<Pick<Profile, "timezone">>();
 
   const today = todayIn(profile?.timezone ?? "UTC");
-  const since = shiftISO(today, -120);
+  const since = shiftISO(today, -DIAS_ATRAS);
 
-  const [{ data: entries }, { data: logs }, { data: habits }, { data: cravings }] =
+  const [{ data: entries }, { data: logs }, { data: habits }, { data: cravings }, overview] =
     await Promise.all([
       supabase
         .from("journal_entries")
@@ -45,7 +52,13 @@ export default async function BitacoraPage() {
         .from("cravings")
         .select("habit_id, local_date, local_hour, trigger_key, resisted, note")
         .gte("local_date", since),
+      // Para saber si el día está cerrado: lo que toca hoy y sigue sin marcar.
+      supabase.rpc("get_daily_overview", { p_date: today }),
     ]);
+
+  const faltan = ((overview.data ?? []) as DailyOverviewRow[])
+    .map(conDiasPorDefecto)
+    .filter((h) => h.toca_hoy && h.today_status === null).length;
 
   const habitById = new Map(
     (habits ?? []).map((habit) => [habit.id as string, habit]),
@@ -122,6 +135,13 @@ export default async function BitacoraPage() {
 
   const entradaDeHoy = porDia.get(today);
 
+  /**
+   * Arriba, solo los últimos días como tarjeta; el resto vive en el
+   * calendario. Noventa tarjetas seguidas no eran un historial, eran una
+   * pared: para leer el primer día había que pasarlas todas.
+   */
+  const ultimos = historial.slice(0, ULTIMOS);
+
   return (
     <div className="flex flex-col gap-4 pt-11 lg:pt-0">
       <header className="entrar flex flex-col gap-0.5 px-5 lg:px-0">
@@ -144,33 +164,49 @@ export default async function BitacoraPage() {
             date={today}
             initialMood={entradaDeHoy?.mood ?? null}
             initialNote={entradaDeHoy?.nota ?? null}
+            faltan={faltan}
           />
         </section>
 
-        <section
-          className="entrar flex flex-col gap-2.5"
-          style={{ animationDelay: "0.12s" }}
-        >
-          <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
-            Historial
-          </h2>
+        <div className="flex flex-col gap-4">
+          <section
+            className="entrar flex flex-col gap-2.5"
+            style={{ animationDelay: "0.12s" }}
+          >
+            <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+              Últimos días
+            </h2>
 
-          {historial.length === 0 ? (
-            <p className="mx-4 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2 lg:mx-0">
-              Todavía no hay nada. Marca un día o escribe arriba y aparece aquí.
-            </p>
-          ) : (
-            <ol className="mx-4 flex flex-col gap-2 lg:mx-0">
-              {historial.map((d) => (
-                <DiaDeBitacora
-                  key={d.fecha}
-                  dia={d}
-                  esHoy={d.fecha === today}
-                />
-              ))}
-            </ol>
-          )}
-        </section>
+            {ultimos.length === 0 ? (
+              <p className="mx-4 text-pretty rounded-2xl bg-card px-4 py-5 text-center text-[15px] leading-[1.4] text-label-2 lg:mx-0">
+                Todavía no hay nada. Marca un día o escribe arriba y aparece aquí.
+              </p>
+            ) : (
+              <ol className="mx-4 flex flex-col gap-2 lg:mx-0">
+                {ultimos.map((d) => (
+                  <DiaDeBitacora
+                    key={d.fecha}
+                    dia={d}
+                    esHoy={d.fecha === today}
+                    bloqueado={faltan}
+                  />
+                ))}
+              </ol>
+            )}
+          </section>
+
+          <section
+            className="entrar flex flex-col gap-2.5"
+            style={{ animationDelay: "0.18s" }}
+          >
+            <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+              Todos tus días
+            </h2>
+            <div className="mx-4 lg:mx-0">
+              <CalendarioDeBitacora dias={historial} today={today} faltan={faltan} />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );

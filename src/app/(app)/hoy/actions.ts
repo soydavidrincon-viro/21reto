@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { esFechaISO, shiftISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import {
+  conDiasPorDefecto,
   DIAS_PARA_CONTESTAR,
   LOG_STATUSES,
   MOOD_BY_KEY,
+  type DailyOverviewRow,
   type LogStatus,
   type Profile,
 } from "@/lib/types";
@@ -141,6 +143,22 @@ export async function clearDay(habitId: string, dateISO: string) {
  * nota escriben en la misma fila, y un upsert plano haría que cambiar el emoji
  * borrara lo que la persona acababa de escribir.
  */
+/**
+ * Cuántos hábitos que tocan hoy siguen sin registro. Null si la consulta
+ * falla: no se puede decidir sin el dato, y decidir "abierto" a ciegas es
+ * saltarse la regla.
+ */
+async function habitosSinMarcar(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  hoy: string,
+): Promise<number | null> {
+  const { data, error } = await supabase.rpc("get_daily_overview", { p_date: hoy });
+  if (error) return null;
+  return ((data ?? []) as DailyOverviewRow[])
+    .map(conDiasPorDefecto)
+    .filter((h) => h.toca_hoy && h.today_status === null).length;
+}
+
 export async function saveJournal(
   dateISO: string,
   patch: { mood?: string; intensity?: number; note?: string | null },
@@ -161,10 +179,35 @@ export async function saveJournal(
     .select("timezone")
     .eq("id", user.id)
     .single<Pick<Profile, "timezone">>();
-  if (dateISO > todayIn(perfil?.timezone ?? "UTC")) {
+  const hoy = todayIn(perfil?.timezone ?? "UTC");
+  if (dateISO > hoy) {
     return { error: "Ese día todavía no ha llegado." };
   }
   const fecha = dateISO;
+
+  /*
+   * La entrada de hoy va después de cerrar el día, no antes.
+   *
+   * Cerrado quiere decir que todo lo que tocaba hoy tiene registro —limpio,
+   * recaída o saltado—; lo que no toca hoy no bloquea. Es la misma regla con
+   * la que Hoy decide si salta la hoja del cierre, y aquí se vuelve a
+   * comprobar porque una acción la puede llamar cualquiera con sesión. Los
+   * días pasados no se comprueban: ya pasaron.
+   */
+  if (fecha === hoy) {
+    const faltan = await habitosSinMarcar(supabase, hoy);
+    if (faltan === null) {
+      return { error: "No se pudo comprobar el día. Inténtalo de nuevo." };
+    }
+    if (faltan > 0) {
+      return {
+        error:
+          faltan === 1
+            ? "Marca primero tu hábito de hoy."
+            : "Marca primero tus hábitos de hoy.",
+      };
+    }
+  }
 
   if (patch.mood !== undefined && !MOOD_BY_KEY.has(patch.mood)) {
     return { error: "Esa cara no existe." };

@@ -34,7 +34,9 @@ export function WeeklyBars({
                 style={{ height: `${bar}px` }}
                 className={`block w-full rounded-t ${empty ? "bg-fill" : "bg-azul"}`}
               />
-              <span className="text-[10.5px] font-medium text-label-2">{week.label}</span>
+              <span className="tnum text-center text-[9.5px] font-medium leading-[1.2] text-label-2">
+                {week.label}
+              </span>
             </li>
           );
         })}

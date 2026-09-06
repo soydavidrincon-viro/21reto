@@ -71,8 +71,9 @@ onboarding con compañero y "para qué", pantalla de instalar en iPhone, Hoy con
 carrusel de retos con el check dentro, racha en pausa con pregunta por los días
 sin marcar, "cuánto falta" para el próximo hito, botón de emergencia con
 registro de impulsos y el porqué a la vista, detalle de hábito con calendario
-navegable y tarjeta compartible, bitácora escribible por día, progreso con
-cumplimiento semanal, rejilla de impulsos y línea de ánimo, hitos con
+navegable y tarjeta compartible, bitácora que se abre al cerrar el día, con
+calendario para leer cualquier día, progreso con la racha de cada reto en
+grande, cumplimiento semanal, rejilla de impulsos y línea de ánimo, hitos con
 confetti, cierre del reto al llegar a la meta, recordatorios push con la hora
 de cada quien, y perfil con foto, tema, zona horaria, exportación y borrado de
 cuenta.

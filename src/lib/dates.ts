@@ -123,6 +123,24 @@ export function longDate(dateISO: string): string {
   return `${WEEKDAYS[date.getDay()]} ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
 }
 
+const MESES_CORTOS = [
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic",
+];
+
+/**
+ * "18–24 ago", o "29 ago–4 sep" cuando cruza de mes. Para etiquetar una semana
+ * debajo de una barra sin que ocupe media gráfica.
+ */
+export function rangoCorto(inicioISO: string, finISO: string): string {
+  const a = parseISO(inicioISO);
+  const b = parseISO(finISO);
+  if (a.getMonth() === b.getMonth()) {
+    return `${a.getDate()}–${b.getDate()} ${MESES_CORTOS[a.getMonth()]}`;
+  }
+  return `${a.getDate()} ${MESES_CORTOS[a.getMonth()]}–${b.getDate()} ${MESES_CORTOS[b.getMonth()]}`;
+}
+
 /** Nombre del mes, para el encabezado del heatmap. */
 export function monthName(dateISO: string): string {
   const name = MONTHS[parseISO(dateISO).getMonth()];
