@@ -19,8 +19,10 @@ export function WeeklyBars({
 
           return (
             <li
-              key={week.label}
-              className="flex h-full w-full flex-col items-center justify-end gap-1.5"
+              key={week.range}
+              // Ancho fijo por barra, no repartido: con una sola semana, una
+              // barra que ocupa toda la tarjeta parece un error de diseño.
+              className="flex h-full w-full max-w-[72px] flex-col items-center justify-end gap-1.5"
             >
               <span className="tnum text-[10.5px] font-semibold text-label-2">
                 {empty ? "—" : `${week.value}%`}
@@ -53,7 +55,7 @@ export function WeeklyBars({
           </thead>
           <tbody>
             {weeks.map((week) => (
-              <tr key={week.label} className="border-t border-separator">
+              <tr key={week.range} className="border-t border-separator">
                 <td className="py-1">{week.range}</td>
                 <td className="tnum py-1">{week.value === null ? "—" : `${week.value}%`}</td>
               </tr>
