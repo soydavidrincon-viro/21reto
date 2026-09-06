@@ -40,6 +40,19 @@ en la pantalla de inicio si viene por HTTPS, y eso descarta `localhost`.
 Cada push a la rama por defecto vuelve a desplegar solo. Si añades o cambias
 variables de entorno, hay que **redesplegar**: se leen al construir.
 
+### Si fusionaste y la app sigue igual
+
+Antes de buscar el error en el código, mira si Vercel llegó a construir. En
+**Deployments** la última fila de *Production* tiene que ser el commit del
+merge. Si no está, Vercel se perdió el aviso de GitHub (pasa de vez en
+cuando): en esa misma pestaña, el menú de los tres puntos → **Create
+Deployment**, eliges la rama por defecto y listo. Otra forma es fundir
+cualquier cambio pequeño, que dispara el aviso otra vez.
+
+Y en el iPhone con la app instalada: ciérrala del todo (deslizar hacia arriba
+en el selector de apps) y vuelve a abrirla. Abierta desde hace horas, sigue
+enseñando la versión con la que se abrió.
+
 ### Instalarla en el iPhone
 
 Abre la URL en **Safari** (no Chrome — solo Safari puede instalar en iOS).
