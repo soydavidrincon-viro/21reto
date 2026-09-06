@@ -47,7 +47,7 @@ export function MotivoDelHabito({
     <section className="flex flex-col gap-2.5 rounded-[22px] bg-card px-4 py-4 lg:px-5 lg:py-5">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-label">
-          {kind === "build" ? "Para qué lo haces" : "Para qué lo dejas"}
+          {kind === "build" ? "Por qué lo haces" : "Por qué lo dejas"}
         </h2>
         {!editando && (
           <button
@@ -64,7 +64,7 @@ export function MotivoDelHabito({
       {editando ? (
         <>
           <label className="sr-only" htmlFor={`motivo-${habitId}`}>
-            Para qué
+            Por qué
           </label>
           <textarea
             id={`motivo-${habitId}`}
@@ -72,7 +72,11 @@ export function MotivoDelHabito({
             maxLength={MAX_MOTIVO}
             value={texto}
             onChange={(event) => setTexto(event.target.value)}
-            placeholder="Una frase tuya. Se te enseña cuando más falta hace."
+            placeholder={
+              kind === "build"
+                ? "Piensa por qué quieres empezar con esto"
+                : "Piensa por qué quieres dejar este hábito"
+            }
             className="resize-none rounded-xl bg-fill p-3 text-[15px] leading-[1.45] text-label placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
           />
           {error && (

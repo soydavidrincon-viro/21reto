@@ -1,4 +1,7 @@
+import { CaretRight } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { AccionDelDia } from "@/components/accion-del-dia";
+import { Carrusel } from "@/components/carrusel";
 import {
   Companion,
   type CompanionEtapa,
@@ -28,9 +31,14 @@ const MAX_CASILLAS = 31;
  * teléfono eso eran dos pantallas de scroll para llegar al botón de
  * emergencia.
  *
- * Scroll con `scroll-snap` y nada de JavaScript, así que funciona con el dedo
- * en el teléfono, con la rueda en escritorio y sin hidratar. Solo los botones
- * de dentro son de cliente.
+ * Scroll con `scroll-snap`, así que funciona con el dedo en el teléfono y con
+ * la rueda en escritorio. Las tarjetas se pintan en el servidor; de cliente
+ * son solo los botones de dentro y el envoltorio que cuenta los puntos.
+ *
+ * Con más de un reto la tarjeta no ocupa el ancho entero: la siguiente asoma
+ * por el borde, que es la única señal de "hay más" que todo el mundo entiende
+ * sin leer nada. Y el nombre es un enlace al detalle, con su flecha: la
+ * tarjeta es lo único que se ve del reto en Hoy y tiene que abrirse.
  */
 export function RetoCarrusel({
   habits,
@@ -52,12 +60,7 @@ export function RetoCarrusel({
   if (enMarcha.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2">
-      <div
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 lg:px-0"
-        style={{ scrollbarWidth: "none" }}
-        aria-label="Tus retos activos"
-      >
+    <Carrusel total={enMarcha.length} etiqueta="Tus retos activos">
         {enMarcha.map((habit, i) => {
           const skin = HABIT_SKIN[habit.color];
           const progreso = Math.min(
@@ -67,34 +70,42 @@ export function RetoCarrusel({
           const porDias = habit.target_days <= MAX_CASILLAS;
           const falta = faltaPara(habit.current_streak, habit.target_days);
           const conHuecos = habit.pendientes.length > 0;
+          const detalle = `/habito/${habit.habit_id}`;
 
           return (
             <section
               key={habit.habit_id}
-              className="entrar relative w-full shrink-0 snap-center overflow-hidden rounded-[26px] px-5 pb-5 pt-6 lg:px-7 lg:pb-7 lg:pt-8"
+              className={`entrar relative shrink-0 snap-center overflow-hidden rounded-[26px] px-5 pb-5 pt-6 lg:px-7 lg:pb-7 lg:pt-8 ${
+                enMarcha.length > 1 ? "w-[86%] lg:w-full" : "w-full"
+              }`}
               style={{
                 background: skin.fondo,
                 animationDelay: `${0.06 + i * 0.05}s`,
               }}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                  <span
-                    className="text-[11.5px] font-bold uppercase tracking-[0.1em] opacity-65"
-                    style={{ color: skin.tinta }}
-                  >
+                <Link
+                  href={detalle}
+                  aria-label={`Ver el reto ${habit.name}`}
+                  className="flex min-w-0 flex-col gap-1 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
+                  style={{ color: skin.tinta }}
+                >
+                  <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] opacity-65">
                     {habit.kind === "build"
                       ? "Hábito en marcha"
                       : "Reto activo"}
                     {enMarcha.length > 1 && ` · ${i + 1} de ${enMarcha.length}`}
                   </span>
-                  <h2
-                    className="font-display text-[27px] font-semibold leading-[1.1] tracking-[-0.01em] lg:text-[32px]"
-                    style={{ color: skin.tinta }}
-                  >
-                    {habit.name}
+                  <h2 className="flex items-center gap-1 font-display text-[27px] font-semibold leading-[1.1] tracking-[-0.01em] lg:text-[32px]">
+                    <span className="min-w-0 text-pretty">{habit.name}</span>
+                    <CaretRight
+                      size={20}
+                      weight="bold"
+                      aria-hidden="true"
+                      className="shrink-0 opacity-70"
+                    />
                   </h2>
-                </div>
+                </Link>
 
                 <div className="flex flex-col items-end">
                   <span
@@ -196,16 +207,20 @@ export function RetoCarrusel({
               <div className="relative mt-3">
                 <AccionDelDia habit={habit} today={today} variante="grande" />
               </div>
+
+              {/* Segunda puerta al detalle, para quien no adivina que el
+                  título se toca. */}
+              <Link
+                href={detalle}
+                className="mt-3 flex h-9 items-center justify-center gap-1 rounded-lg text-[13.5px] font-semibold opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                style={{ color: skin.tinta }}
+              >
+                Ver calendario y ajustes
+                <CaretRight size={13} weight="bold" aria-hidden="true" />
+              </Link>
             </section>
           );
         })}
-      </div>
-
-      {enMarcha.length > 1 && (
-        <p className="px-6 text-[12px] text-label-3 lg:px-0">
-          Desliza para ver tus otros retos.
-        </p>
-      )}
-    </div>
+    </Carrusel>
   );
 }

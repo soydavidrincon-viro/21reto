@@ -221,21 +221,24 @@ export default async function HoyPage() {
               </div>
             )}
 
-            {/* La fila compacta solo sale con tres o más retos. */}
+            {/* La fila compacta sale desde dos retos y trae dentro el botón
+              de agregar; con uno o ninguno, el botón va suelto aquí. */}
             <HabitosDeHoy habits={habits} />
 
-            <div className="px-4 lg:px-0">
-              <Link
-                href="/habito/nuevo"
-                className="entrar pulsable flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-separator py-4 text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                style={{ animationDelay: "0.2s" }}
-              >
-                <Plus size={18} weight="bold" aria-hidden="true" />
-                {habits.length === 0
-                  ? "Crear tu primer hábito"
-                  : "Agregar hábito"}
-              </Link>
-            </div>
+            {habits.length < 2 && (
+              <div className="px-4 lg:px-0">
+                <Link
+                  href="/habito/nuevo"
+                  className="entrar pulsable flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-separator py-4 text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+                  style={{ animationDelay: "0.2s" }}
+                >
+                  <Plus size={18} weight="bold" aria-hidden="true" />
+                  {habits.length === 0
+                    ? "Crear tu primer hábito"
+                    : "Agregar hábito"}
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-4">

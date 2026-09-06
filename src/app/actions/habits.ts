@@ -47,6 +47,30 @@ function metaValida(dias: unknown): dias is number {
   return Number.isInteger(dias) && (dias as number) >= 1 && (dias as number) <= MAX_TARGET_DAYS;
 }
 
+/**
+ * El orden en que se reparten los colores cuando el del preset ya está en uso.
+ * Son los cinco que se distinguen a la vista: `pink` pinta igual que `orange`
+ * en `HABIT_SKIN`, así que cuenta como el mismo.
+ */
+const ORDEN_DE_COLORES: HabitColor[] = ["blue", "orange", "green", "yellow", "purple"];
+
+const mismoTono = (c: HabitColor): HabitColor => (c === "pink" ? "orange" : c);
+
+/**
+ * Cada hábito con un color distinto.
+ *
+ * Dos retos del mismo color se confundían en Hoy y en Progreso: dos tarjetas
+ * naranjas seguidas parecen el mismo reto dos veces. El preset propone un
+ * color; si ya lo tiene otro hábito activo, se toma el primero libre. Con los
+ * cinco ocupados no queda otra que repetir, y ahí manda el del preset. Un
+ * nombre propio, que antes era azul siempre, entra por el mismo reparto.
+ */
+function colorLibre(pedido: HabitColor, enUso: HabitColor[]): HabitColor {
+  const ocupados = new Set(enUso.map(mismoTono));
+  if (!ocupados.has(mismoTono(pedido))) return pedido;
+  return ORDEN_DE_COLORES.find((c) => !ocupados.has(c)) ?? pedido;
+}
+
 export type NewHabit = {
   name: string;
   /**
@@ -151,12 +175,21 @@ export async function createHabit(input: NewHabit) {
   // El reto arranca hoy según el reloj del usuario, no el del servidor.
   const startDate = todayIn(zone);
 
+  const { data: activos } = await supabase
+    .from("habits")
+    .select("color")
+    .eq("status", "active");
+  const color = colorLibre(
+    input.color,
+    (activos ?? []).map((h) => h.color as HabitColor),
+  );
+
   const base = {
     user_id: user.id,
     name,
     kind: input.kind,
     icon,
-    color: input.color,
+    color,
     target_days: input.targetDays,
     relapse_policy: input.relapsePolicy,
     start_date: startDate,

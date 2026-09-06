@@ -2,7 +2,7 @@
 
 import { Portal, useHojaModal } from "@/components/portal";
 
-import { CaretRight, X } from "@phosphor-icons/react";
+import { CaretRight, Plus, X } from "@phosphor-icons/react";
 import Link from "next/link";
 import { createContext, useContext, useState } from "react";
 import {
@@ -198,14 +198,15 @@ function HojaDeCierre({
 /**
  * La fila compacta de hábitos: una línea por hábito, con su check.
  *
- * Solo aparece con tres o más retos. Con uno o dos, el carrusel ya los enseña
- * enteros y una lista debajo era decir lo mismo dos veces: dos pantallas de
- * scroll para llegar al botón de emergencia. Con tres o más, deslizar para
- * encontrar el cuarto cansa, y esta fila es el atajo.
+ * Aparece desde dos retos. Con uno, el carrusel lo enseña entero y una lista
+ * debajo era decir lo mismo dos veces. Con dos o más, esta fila es la vista
+ * de conjunto que el carrusel no da —todos a la vez, cada uno con su color—
+ * y termina en el botón de agregar, que es donde alguien que ya tiene varios
+ * lo va a buscar.
  */
 export function HabitosDeHoy({ habits }: { habits: DailyOverviewRow[] }) {
   const cierre = useContext(Ctx);
-  if (habits.length < 3) return null;
+  if (habits.length < 2) return null;
 
   return (
     <section className="flex flex-col gap-2.5">
@@ -248,6 +249,15 @@ export function HabitosDeHoy({ habits }: { habits: DailyOverviewRow[] }) {
           );
         })}
       </ul>
+      <div className="px-4 lg:px-0">
+        <Link
+          href="/habito/nuevo"
+          className="pulsable flex items-center justify-center gap-2 rounded-[22px] border-2 border-dashed border-separator py-4 text-[15px] font-semibold text-label-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        >
+          <Plus size={18} weight="bold" aria-hidden="true" />
+          Agregar hábito
+        </Link>
+      </div>
     </section>
   );
 }
@@ -255,8 +265,10 @@ export function HabitosDeHoy({ habits }: { habits: DailyOverviewRow[] }) {
 /**
  * La única huella del ánimo en la pantalla de Hoy.
  *
- * Tres estados, y en dos de ellos no ocupa nada:
- * - el día sin cerrar: nada. Todavía no hay nada que contar.
+ * Tres estados:
+ * - el día sin cerrar: una línea que dice cuántos faltan por marcar. Antes no
+ *   había nada, y con varios retos nadie entendía por qué la hoja del cierre
+ *   no saltaba ni por qué la bitácora de hoy estaba cerrada.
  * - cerrado y sin contar: una línea para abrir la hoja.
  * - ya contado: la cara guardada, que es acuse de recibo, no un formulario.
  */
@@ -294,7 +306,19 @@ export function AnimoDeHoy({ pendientes }: { pendientes: number }) {
     );
   }
 
-  if (pendientes > 0) return null;
+  if (pendientes > 0) {
+    return (
+      <p
+        className="entrar mx-4 rounded-[22px] bg-card px-4 py-3 text-[13.5px] leading-[1.4] text-label-2 lg:mx-0"
+        style={{ animationDelay: "0.16s" }}
+      >
+        <span className="font-semibold text-label">
+          Te {pendientes === 1 ? "falta" : "faltan"} {pendientes} por marcar
+        </span>{" "}
+        para cerrar el día. Después se abre la bitácora de hoy.
+      </p>
+    );
+  }
 
   return (
     <button

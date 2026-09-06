@@ -1,12 +1,24 @@
-import { Plant } from "@phosphor-icons/react/dist/ssr";
 import { redirect } from "next/navigation";
 import { CravingGrid } from "@/components/craving-grid";
 import { MoodLine } from "@/components/mood-line";
+import { RetosEnNumeros } from "@/components/retos-en-numeros";
 import { WeeklyBars } from "@/components/weekly-bars";
-import { lastSevenDays, shiftISO, todayIn, weekdayInitial } from "@/lib/dates";
+import {
+  lastSevenDays,
+  rangoCorto,
+  shiftISO,
+  todayIn,
+  weekdayInitial,
+} from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
-import type { CravingGridCell, CravingSummary, Profile } from "@/lib/types";
+import {
+  conDiasPorDefecto,
+  type CravingGridCell,
+  type CravingSummary,
+  type DailyOverviewRow,
+  type Profile,
+} from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Progreso · Antídoto" };
@@ -48,17 +60,16 @@ export default async function ProgresoPage() {
    * El cumplimiento por semana lo calcula SQL con las mismas reglas que la
    * racha; aquí solo se pinta.
    */
-  const [semanas, { data: entries }, activos, { count: totalClean }, rejilla, resumenImpulsos] =
+  const [semanas, { data: entries }, overview, { count: totalClean }, rejilla, resumenImpulsos] =
     await Promise.all([
       supabase.rpc("cumplimiento_semanal", { p_today: today, p_semanas: WEEKS }),
       supabase
         .from("journal_entries")
         .select("entry_date, mood")
         .gte("entry_date", shiftISO(today, -6)),
-      supabase
-        .from("habits")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "active"),
+      // Cada reto con su racha, para los bloques de arriba. Es la misma
+      // consulta que Hoy, así que los dos números no pueden discrepar.
+      supabase.rpc("get_daily_overview", { p_date: today }),
       supabase
         .from("habit_logs")
         .select("id", { count: "exact", head: true })
@@ -68,7 +79,10 @@ export default async function ProgresoPage() {
       supabase.rpc("get_craving_summary", { p_since: desdeImpulsos }),
     ]);
 
-  const activeHabits = activos.count ?? 0;
+  const habits = ((overview.data ?? []) as DailyOverviewRow[]).map(
+    conDiasPorDefecto,
+  );
+  const activeHabits = habits.length;
 
   const celdas = ((rejilla.data ?? []) as CravingGridCell[]).map((c) => ({
     ...c,
@@ -77,9 +91,11 @@ export default async function ProgresoPage() {
   }));
   const resumen = ((resumenImpulsos.data ?? []) as CravingSummary[])[0] ?? null;
 
+  // Debajo de cada barra va el rango de fechas, no "S1, S2": nadie sabía si
+  // eso era la primera semana del reto, del mes o de la gráfica.
   const weeks = ((semanas.data ?? []) as SemanaRow[]).map((s) => ({
-    label: s.semana === WEEKS - 1 ? "Esta" : `S${s.semana + 1}`,
-    range: `${s.inicio.slice(8)}/${s.inicio.slice(5, 7)} – ${s.fin.slice(8)}/${s.fin.slice(5, 7)}`,
+    label: s.semana === WEEKS - 1 ? "Esta semana" : rangoCorto(s.inicio, s.fin),
+    range: rangoCorto(s.inicio, s.fin),
     // Sin días esperados no hay nota que poner: es una semana anterior al
     // reto, no una semana suspendida.
     value:
@@ -119,30 +135,22 @@ export default async function ProgresoPage() {
         </h1>
       </header>
 
-      <section
-        className="entrar mx-4 lg:mx-0 flex items-center gap-3.5 rounded-[22px] bg-card px-4 py-4 lg:px-6 lg:py-5"
-        style={{ animationDelay: "0.06s" }}
-      >
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-menta text-menta-tinta">
-          <Plant size={24} weight="fill" aria-hidden="true" />
-        </span>
-        <div className="flex flex-1 flex-col gap-px">
-          <span className="text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
-            Total acumulado
-          </span>
-          <p className="flex items-baseline gap-2">
-            <span className="tnum font-display text-[34px] font-bold leading-[1.1] tracking-[-0.03em] text-label">
-              {totalClean ?? 0}
-            </span>
-            <span className="text-[15px] font-medium tracking-[-0.01em] text-label-2">
-              {totalClean === 1 ? "día cumplido" : "días cumplidos"}
-            </span>
+      {/* Lo primero: cada reto con su racha en grande. El total de días va
+          debajo en una línea, porque suma retos distintos y no le dice a
+          nadie cómo va el suyo. */}
+      {habits.length > 0 && (
+        <section className="flex flex-col gap-2.5">
+          <h2 className="px-6 text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3 lg:px-0">
+            Tus retos
+          </h2>
+          <RetosEnNumeros habits={habits} />
+          <p className="tnum px-6 text-[13px] text-label-2 lg:px-0">
+            <span className="font-semibold text-label">{totalClean ?? 0}</span>{" "}
+            {totalClean === 1 ? "día cumplido" : "días cumplidos"} en total ·{" "}
+            {activeHabits} {activeHabits === 1 ? "hábito" : "hábitos"}
           </p>
-        </div>
-        <span className="tnum shrink-0 rounded-lg bg-fill px-2.5 py-1.5 text-[13px] font-semibold text-label-2">
-          {activeHabits} {activeHabits === 1 ? "hábito" : "hábitos"}
-        </span>
-      </section>
+        </section>
+      )}
 
       <section
         className="entrar flex flex-col gap-2.5"
@@ -185,6 +193,9 @@ export default async function ProgresoPage() {
         >
           <h2 className="px-6 text-[12.5px] lg:px-0 font-bold uppercase tracking-[0.08em] text-label-3">
             Cumplimiento por semana
+            <span className="ml-1.5 font-semibold normal-case tracking-normal text-label-3">
+              de los días que tocaban
+            </span>
           </h2>
           <div className="mx-4 lg:mx-0 flex flex-col gap-3.5 rounded-[22px] bg-card px-3.5 py-4 lg:px-5 lg:py-5">
             <p className="flex items-baseline gap-1.5">
