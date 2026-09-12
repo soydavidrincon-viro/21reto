@@ -1,11 +1,12 @@
 \set ON_ERROR_STOP on
 \pset pager off
 
--- Pruebas de la política de recaída y del cumplimiento.
+-- Pruebas de la recaída y del cumplimiento.
 --
--- Lo que se comprueba es que la pregunta del alta signifique algo: que
--- "sigo contando" y "vuelvo a empezar de cero" den resultados distintos sobre
--- exactamente los mismos registros. Antes daban lo mismo.
+-- Hasta 0010 esto comprobaba que "sigo contando" y "vuelvo a empezar" dieran
+-- resultados distintos. Desde 0011 la política ya no manda: los dos hábitos
+-- de abajo, uno con cada valor guardado, tienen que dar lo mismo. El
+-- cumplimiento sigue midiéndose contra los días que tocaban.
 --
 -- Usuarios propios; los ficheros anteriores borran los suyos al probar
 -- cascadas. Aquí es Gabi.
@@ -39,8 +40,8 @@ cross join (values
   ('c2222222-2222-2222-2222-222222222222'::uuid)
 ) as k(h);
 
-\echo '--- 1. EL CASO: la política cambia la racha sobre los mismos registros ---'
-\echo '    "sigo contando" espera 4 (la recaída no parte). "vuelvo a cero" espera 2.'
+\echo '--- 1. EL CASO: la política guardada ya no cambia nada; la recaída reinicia ---'
+\echo '    Los dos esperan 2 (los limpios de después de la recaída).'
 do $$
 declare sigue integer; cero integer;
 begin
@@ -49,31 +50,31 @@ begin
   select current_streak into cero
   from public.get_habit_stats('c2222222-2222-2222-2222-222222222222', date '2026-08-07');
 
-  if sigue <> 4 then
-    raise exception 'FALLO: con "sigo contando" la racha salió %, se esperaba 4', sigue;
+  if sigue <> 2 then
+    raise exception 'FALLO: con "continue" guardado la racha salió %, se esperaba 2', sigue;
   end if;
   if cero <> 2 then
-    raise exception 'FALLO: con "vuelvo a cero" la racha salió %, se esperaba 2', cero;
+    raise exception 'FALLO: con "reset" la racha salió %, se esperaba 2', cero;
   end if;
-  raise notice 'OK: sigo contando = 4, vuelvo a cero = 2. La opción significa algo.';
+  raise notice 'OK: 2 y 2. La recaída reinicia el reto, diga lo que diga la columna.';
 end $$;
 
-\echo '--- 2. la mejor racha también respeta la política (4 vs 2) ---'
+\echo '--- 2. la mejor racha recuerda el tramo anterior (2 y 2) ---'
 select
   (select best_streak from public.get_habit_stats('c1111111-1111-1111-1111-111111111111', date '2026-08-07')) as sigo_contando,
   (select best_streak from public.get_habit_stats('c2222222-2222-2222-2222-222222222222', date '2026-08-07')) as vuelvo_a_cero;
 
-\echo '--- 3. un día sin marcar es un hueco: pausa la racha, no la rompe (esperado: 4) ---'
+\echo '--- 3. un día sin marcar es un hueco: pausa la racha, no la rompe (esperado: 2) ---'
 \echo '    (el 9 de agosto, con el 8 en blanco)'
 do $$
 declare r integer;
 begin
   select current_streak into r
   from public.get_habit_stats('c1111111-1111-1111-1111-111111111111', date '2026-08-09');
-  if r <> 4 then
-    raise exception 'FALLO: un día en blanco dejó la racha en %, se esperaba 4', r;
+  if r <> 2 then
+    raise exception 'FALLO: un día en blanco dejó la racha en %, se esperaba 2', r;
   end if;
-  raise notice 'OK: el hueco pausa; la racha sigue en 4';
+  raise notice 'OK: el hueco pausa; la racha sigue en 2';
 end $$;
 
 \echo '--- 4. cumplimiento sobre los días que tocaban, no sobre los registrados ---'
@@ -131,7 +132,7 @@ begin
   raise notice 'OK: sin días transcurridos, ni premio ni castigo';
 end $$;
 
-\echo '--- 8. los días de la semana siguen respetándose junto con la política ---'
+\echo '--- 8. los días de la semana siguen respetándose con la recaída ---'
 insert into public.habits
   (id, user_id, name, kind, target_days, start_date, active_dows, relapse_policy)
 values ('c4444444-4444-4444-4444-444444444444',
@@ -146,13 +147,13 @@ declare r integer; c integer;
 begin
   select current_streak, completion_rate into r, c
   from public.get_habit_stats('c4444444-4444-4444-4444-444444444444', date '2026-08-07');
-  -- Lun limpio, mié recaída (perdonada), vie limpio -> racha 2.
+  -- Lun limpio, mié recaída (reinicia), vie limpio -> racha 1.
   -- Tocaban 3 días (lun, mié, vie), 2 limpios -> 67%.
-  if r <> 2 then
-    raise exception 'FALLO: lun/mié/vie con recaída perdonada dio racha %, se esperaba 2', r;
+  if r <> 1 then
+    raise exception 'FALLO: lun/mié/vie con recaída dio racha %, se esperaba 1', r;
   end if;
   if c <> 67 then
     raise exception 'FALLO: el cumplimiento salió %, se esperaba 67', c;
   end if;
-  raise notice 'OK: días de la semana y política de recaída conviven';
+  raise notice 'OK: días de la semana y recaída conviven';
 end $$;

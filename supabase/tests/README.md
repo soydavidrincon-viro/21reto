@@ -29,6 +29,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
                      -f supabase/migrations/0008_recordatorios.sql \
                      -f supabase/migrations/0009_auditoria.sql \
                      -f supabase/migrations/0010_racha_en_pausa.sql \
+                     -f supabase/migrations/0011_reto_de_cero.sql \
                      -f supabase/seed.sql \
                      -f supabase/tests/01-esquema.sql \
                      -f supabase/tests/02-antojos.sql \
@@ -36,7 +37,8 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
                      -f supabase/tests/04-recaida-y-cumplimiento.sql \
                      -f supabase/tests/05-recordatorios.sql \
                      -f supabase/tests/06-auditoria.sql \
-                     -f supabase/tests/07-racha-en-pausa.sql
+                     -f supabase/tests/07-racha-en-pausa.sql \
+                     -f supabase/tests/08-reto-de-cero.sql
 ```
 
 La base tiene que estar vacía y el rol `app_user` no debe existir de antes:
@@ -75,9 +77,9 @@ borrar la cuenta se los lleva todos.
 gimnasio lunes, miércoles y viernes no se le pida marcar el martes, y que un
 lunes sin marcar quede como hueco (desde 0010 pausa la racha, no la rompe).
 
-`04-recaida-y-cumplimiento.sql` comprueba que "sigo contando" y "vuelvo a
-empezar" den rachas distintas sobre los mismos registros, y que el cumplimiento
-se mida contra los días que tocaban y no contra los que se marcaron.
+`04-recaida-y-cumplimiento.sql` comprueba que la política guardada ya no
+cambie nada (desde 0011 la recaída siempre reinicia) y que el cumplimiento se
+mida contra los días que tocaban y no contra los que se marcaron.
 
 `05-recordatorios.sql` fija instantes concretos para comprobar que la hora del
 aviso es la de cada quien, que el tope de uno al día lo impone la llave primaria
@@ -89,7 +91,12 @@ zona horaria inventada no entra en el perfil, y un registro con fecha futura no
 cuenta para la racha.
 
 `07-racha-en-pausa.sql` cubre la regla de 0010: un día sin marcar pausa la
-racha y no la rompe; la recaída rompe solo con "vuelvo a cero"; los huecos de
+racha y no la rompe; la recaída rompe; los huecos de
 los últimos siete días se listan de viejo a nuevo y contestarlos los quita; los
 días que no tocan no son huecos; y `get_daily_overview` trae el porqué y los
 huecos. Los tests 01, 03 y 04 se actualizaron a esa regla.
+
+`08-reto-de-cero.sql` cubre la regla de 0011: una recaída reinicia el reto
+aunque el hábito tenga `continue` guardado, los días del reto son los de
+después de la última recaída, la mejor racha recuerda el tramo anterior, y el
+cumplimiento sigue midiendo desde el inicio.

@@ -4,8 +4,8 @@
 -- Pruebas de la racha en pausa (migración 0010).
 --
 -- Lo que se comprueba es la promesa: un día sin marcar no rompe la racha,
--- una recaída sí (solo con "vuelvo a empezar"), los huecos se listan durante
--- siete días y contestarlos los saca de la lista.
+-- una recaída sí (desde 0011, siempre), los huecos se listan durante siete
+-- días y contestarlos los saca de la lista.
 
 reset role;
 select set_config('request.jwt.claim.sub', '', false);
@@ -41,7 +41,7 @@ cross join (values
 ) as k(h);
 
 \echo '--- 1. EL CASO: el miércoles en blanco no rompe la racha ---'
-\echo '    El jueves 6, "sigo contando" espera 3 (lun, mar, jue). Antes daba 1.'
+\echo '    El jueves 6 espera 3 (lun, mar, jue). Antes daba 1.'
 do $$
 declare r integer;
 begin
@@ -53,8 +53,8 @@ begin
   raise notice 'OK: un día sin marcar pausa, no rompe';
 end $$;
 
-\echo '--- 2. la recaída con "vuelvo a cero" sí rompe; con "sigo contando" no ---'
-\echo '    El sábado 8: sigo contando = 4 limpios; vuelvo a cero = 1 (solo el sábado).'
+\echo '--- 2. la recaída del viernes rompe, con cualquier política guardada ---'
+\echo '    El sábado 8: 1 (solo el sábado) en los dos hábitos, mejor 3.'
 do $$
 declare sigue integer; cero integer; mejor integer;
 begin
@@ -62,16 +62,16 @@ begin
   from public.get_habit_stats('c7c7c7c7-c7c7-c7c7-c7c7-c7c7c7c7c7c7', date '2026-08-08');
   select current_streak, best_streak into cero, mejor
   from public.get_habit_stats('d7d7d7d7-d7d7-d7d7-d7d7-d7d7d7d7d7d7', date '2026-08-08');
-  if sigue <> 4 then
-    raise exception 'FALLO: "sigo contando" salió %, se esperaba 4', sigue;
+  if sigue <> 1 then
+    raise exception 'FALLO: con "continue" guardado salió %, se esperaba 1', sigue;
   end if;
   if cero <> 1 then
-    raise exception 'FALLO: "vuelvo a cero" salió %, se esperaba 1', cero;
+    raise exception 'FALLO: con "reset" salió %, se esperaba 1', cero;
   end if;
   if mejor <> 3 then
-    raise exception 'FALLO: la mejor racha con "vuelvo a cero" salió %, se esperaba 3', mejor;
+    raise exception 'FALLO: la mejor racha salió %, se esperaba 3', mejor;
   end if;
-  raise notice 'OK: sigo contando = 4, vuelvo a cero = 1 con mejor 3';
+  raise notice 'OK: 1 y 1, con mejor 3';
 end $$;
 
 \echo '--- 3. una semana sin abrir la app: la racha sigue donde estaba ---'
@@ -80,14 +80,14 @@ declare r integer; c integer;
 begin
   select current_streak, completion_rate into r, c
   from public.get_habit_stats('c7c7c7c7-c7c7-c7c7-c7c7-c7c7c7c7c7c7', date '2026-08-16');
-  if r <> 4 then
-    raise exception 'FALLO: tras una semana en blanco la racha salió %, se esperaba 4', r;
+  if r <> 1 then
+    raise exception 'FALLO: tras una semana en blanco la racha salió %, se esperaba 1', r;
   end if;
   -- 13 días tocaban (3 al 15; el 16 sin marcar no cuenta aún), 4 limpios -> 31%.
   if c <> 31 then
     raise exception 'FALLO: el cumplimiento salió %, se esperaba 31', c;
   end if;
-  raise notice 'OK: la racha se queda en 4 y el cumplimiento sí baja a 31%%';
+  raise notice 'OK: la racha se queda en 1 y el cumplimiento sí baja a 31%%';
 end $$;
 
 \echo '--- 4. los huecos se listan: los últimos siete días, de viejo a nuevo ---'

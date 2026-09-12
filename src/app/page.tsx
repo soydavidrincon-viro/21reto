@@ -46,8 +46,8 @@ const CLAIMS = [
     Icon: TrendUp,
     color: "var(--c-menta)",
     tinta: "var(--c-menta-tinta)",
-    title: "Rachas sin castigo",
-    detail: "La recaída se registra, no borra lo andado.",
+    title: "Recaer no es fallar",
+    detail: "Se anota en amarillo y el reto vuelve a empezar.",
   },
 ];
 

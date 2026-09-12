@@ -15,17 +15,20 @@ marca a las 23:40 en Ciudad de México vería su check caer en el día siguiente
 perdería la racha sin haber hecho nada mal. Las funciones SQL reciben la fecha
 como parámetro justamente por esto.
 
-**La recaída no se castiga.** Se guarda en amarillo (`--c-ambar`), nunca en
-rojo, y no borra los días acumulados. El rojo queda reservado para acciones
-destructivas como eliminar la cuenta. El copy trata la recaída como un dato del
-proceso, no como una falta.
+**La recaída no se castiga, pero reinicia el reto.** Se guarda en amarillo
+(`--c-ambar`), nunca en rojo; el calendario conserva cada día y la mejor racha
+recuerda el tramo anterior. El rojo queda reservado para acciones destructivas
+como eliminar la cuenta. Desde la migración 0011 no hay política que elegir:
+`relapse_policy` sigue en la tabla pero siempre vale `reset` y ninguna función
+la consulta. El copy trata la recaída como un dato del proceso, no como una
+falta, y dice sin rodeos que el reto vuelve a cero.
 
 **Un día sin marcar pausa la racha, no la rompe.** Es un hueco: ni suma ni
 resta, y la app lo pregunta después ("¿Seguiste limpio?") durante siete días.
-Lo único que rompe la racha es una recaída, y solo con la política `reset`. Los
-huecos sí cuestan: no avanzan la meta, bajan el cumplimiento y salen grises. La
-regla vive en `get_habit_stats` y `huecos_pendientes` (migración 0010); no la
-reimplementes en TypeScript.
+Lo único que rompe la racha es una recaída. Los huecos sí cuestan: no avanzan
+la meta, bajan el cumplimiento y salen grises. La regla vive en
+`get_habit_stats` (0011) y `huecos_pendientes` (0010); no la reimplementes en
+TypeScript.
 
 Y dos costumbres más chicas: la bitácora de hoy se abre cuando todo lo que
 tocaba hoy tiene registro (lo comprueba `saveJournal`, además de la pantalla),

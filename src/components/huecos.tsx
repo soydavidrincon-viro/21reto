@@ -14,9 +14,9 @@ import type { DailyOverviewRow } from "@/lib/types";
  * que se pregunta, uno a uno y del más viejo al más nuevo, con un toque por
  * día. Siete días para contestar; después el hueco se queda como hueco.
  *
- * "Caí" aquí registra una recaída en ese día, con la misma política que
- * eligió la persona. No pide confirmación como el botón de emergencia porque
- * está contestando una pregunta directa, no tocando un botón grande.
+ * "Caí" aquí registra una recaída en ese día, y el reto vuelve a empezar
+ * desde ahí. No pide confirmación como el botón de emergencia porque está
+ * contestando una pregunta directa, no tocando un botón grande.
  */
 export function Huecos({
   habit,

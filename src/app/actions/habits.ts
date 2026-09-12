@@ -86,7 +86,6 @@ export type NewHabit = {
    * mandan siempre los siete.
    */
   activeDows: number[];
-  relapsePolicy: "reset" | "continue";
   /** Solo en el alta inicial: cierra el onboarding al crear el primer hábito. */
   finishOnboarding?: boolean;
   /**
@@ -132,9 +131,6 @@ export async function createHabit(input: NewHabit) {
     return { error: "Elige si quieres dejar algo o empezar algo." };
   }
   if (!HABIT_COLORS.includes(input.color)) return { error: "Ese color no existe." };
-  if (input.relapsePolicy !== "reset" && input.relapsePolicy !== "continue") {
-    return { error: "Elige qué pasa si tienes una recaída." };
-  }
   if (!metaValida(input.targetDays)) {
     return { error: `La meta va de 1 a ${MAX_TARGET_DAYS} días.` };
   }
@@ -191,7 +187,9 @@ export async function createHabit(input: NewHabit) {
     icon,
     color,
     target_days: input.targetDays,
-    relapse_policy: input.relapsePolicy,
+    // Desde 0011 no hay política que elegir: una recaída reinicia el reto.
+    // La columna se queda por compatibilidad y siempre dice 'reset'.
+    relapse_policy: "reset",
     start_date: startDate,
     description: motivo,
   };
