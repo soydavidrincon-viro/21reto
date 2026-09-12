@@ -84,8 +84,8 @@ export function HabitActions({
         <div className="flex flex-col gap-2 rounded-[14px] bg-card p-4">
           <p className="text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label">
             {construye
-              ? "Registrar que hoy te lo saltaste. Queda como parte de tu historial, no borra los días que ya llevas."
-              : "Registrar una recaída de hoy. Queda como parte de tu historial, no borra los días que ya llevas."}
+              ? "Registrar que hoy te lo saltaste. El reto vuelve a empezar de cero; el día queda en tu historial."
+              : "Registrar una recaída de hoy. El reto vuelve a empezar de cero; el día queda en tu historial."}
           </p>
           <div className="flex gap-2">
             <button

@@ -242,9 +242,10 @@ request en borrador.
 Regla vigente desde la migración 0010:
 
 - Un día sin marcar es un hueco: pausa la racha, no la rompe.
-- Lo único que rompe la racha es una recaída, y solo con "vuelvo a empezar de
-  cero". Con "sigo contando", nada la rompe y la racha coincide con los días
-  limpios.
+- Lo único que rompe la racha es una recaída. Desde 0011 siempre: la pregunta
+  "¿sigo contando o vuelvo a cero?" desapareció del alta, los días del reto son
+  los de después de la última recaída, y `relapse_policy` queda en la tabla
+  solo por compatibilidad.
 - Los huecos cuestan: no avanzan la meta, bajan el cumplimiento y salen grises
   en el calendario.
 - Se pueden contestar durante siete días desde Hoy ("¿Seguiste limpio?" /

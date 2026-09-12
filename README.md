@@ -54,15 +54,15 @@ supabase/migrations/ Esquema, RLS y funciones SQL
 de Postgres, quien marca a las 23:40 en Ciudad de México vería su check caer en
 el día siguiente y perdería la racha sin haber hecho nada mal.
 
-**La recaída no se castiga.** Se guarda en amarillo, nunca en rojo, y no borra
-los días acumulados. La app acompaña un proceso; no sustituye atención
-profesional, y eso está escrito al pie de Perfil — una vez, y no en cada
-pantalla.
+**La recaída no se castiga, pero reinicia el reto.** Se guarda en amarillo,
+nunca en rojo; el calendario conserva cada día y la mejor racha recuerda lo
+que se llevaba. La app acompaña un proceso; no sustituye atención profesional,
+y eso está escrito al pie de Perfil — una vez, y no en cada pantalla.
 
-**Olvidarse tampoco.** Un día sin marcar pausa la racha en vez de romperla, y
-la app pregunta por él durante siete días con un toque de respuesta. Lo único
-que rompe la racha es una recaída con "vuelvo a empezar de cero". Los huecos
-sí cuestan: no avanzan la meta y bajan el cumplimiento.
+**Olvidarse no rompe nada.** Un día sin marcar pausa la racha en vez de
+romperla, y la app pregunta por él durante siete días con un toque de
+respuesta. Lo único que rompe la racha es una recaída. Los huecos sí cuestan:
+no avanzan la meta y bajan el cumplimiento.
 
 ## Estado
 

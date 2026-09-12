@@ -43,7 +43,8 @@ export function CravingSheet({
 
   /**
    * Después de "Caí" la hoja no se cierra: se queda con lo que importa decir
-   * en ese momento —que los días siguen ahí— y con el porqué que la persona
+   * en ese momento —que el reto vuelve a empezar y lo hecho no se borra del
+   * calendario— y con el porqué que la persona
    * escribió, si lo escribió. Cerrarla de golpe dejaba a quien acaba de caer
    * mirando la pantalla de Hoy como si nada.
    */
@@ -130,13 +131,12 @@ export function CravingSheet({
             <>
               <div className="flex flex-col gap-2 rounded-[16px] bg-ambar/20 px-4 py-3.5">
                 <p className="text-[15px] font-semibold text-label">
-                  Queda anotado. Tus {elegido.clean_days}{" "}
-                  {elegido.clean_days === 1 ? "día" : "días"} siguen ahí.
+                  Queda anotado. El reto vuelve a empezar mañana.
                 </p>
                 <p className="text-pretty text-[13.5px] leading-[1.45] text-label-2">
-                  {elegido.relapse_policy === "reset"
-                    ? "La racha vuelve a empezar mañana. Lo que ya hiciste no se borra."
-                    : "La racha sigue contando. Una caída es un dato, no un veredicto."}
+                  {elegido.clean_days > 0
+                    ? `Los ${elegido.clean_days} ${elegido.clean_days === 1 ? "día" : "días"} que llevabas quedan en tu calendario y en tu mejor racha. Una caída es un dato, no un veredicto.`
+                    : "Una caída es un dato, no un veredicto. Mañana es el día uno."}
                 </p>
               </div>
               {elegido.motivo && (
@@ -283,9 +283,9 @@ export function CravingSheet({
             tiene que decirlo con el dedo todavía en el aire. */}
           {confirmandoCaida && elegido && (
             <p className="rounded-xl bg-ambar/20 px-3.5 py-2.5 text-pretty text-[13.5px] leading-[1.4] text-label">
-              Esto marca hoy como recaída en <b>{elegido.name}</b>. Queda en tu
-              historial y no borra los días que ya llevas. Toca otra vez para
-              confirmar.
+              Esto marca hoy como recaída en <b>{elegido.name}</b> y el reto
+              vuelve a empezar de cero. El día queda en tu historial. Toca otra
+              vez para confirmar.
             </p>
           )}
 

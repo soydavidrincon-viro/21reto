@@ -21,6 +21,7 @@ export type DailyOverviewRow = {
   color: HabitColor;
   target_days: number;
   start_date: string;
+  /** Desde 0011 siempre "reset": una recaída reinicia el reto. Se conserva por compatibilidad. */
   relapse_policy: "reset" | "continue";
   /** Días de la semana en que toca, 0 = domingo. Por defecto, los siete. */
   active_dows: number[];

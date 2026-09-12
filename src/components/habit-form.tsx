@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, PencilSimple } from "@phosphor-icons/react";
+import { PencilSimple } from "@phosphor-icons/react";
 import { HabitIcon } from "@/components/habit-icon";
 import {
   COMPANIONS,
@@ -76,7 +76,6 @@ export function HabitForm({
    * ofrecer "elige tus días" ahí sería ofrecer una excusa con forma de ajuste.
    */
   const [dows, setDows] = useState<number[]>(TODOS_LOS_DIAS);
-  const [policy, setPolicy] = useState<"reset" | "continue">("continue");
   const [companion, setCompanion] = useState<CompanionKey>("brote");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -102,7 +101,6 @@ export function HabitForm({
         // no: si alguien elige "empezar", pica días y luego cambia a "dejar",
         // los días elegidos no deben viajar con él.
         activeDows: dejar ? TODOS_LOS_DIAS : dows,
-        relapsePolicy: policy,
         finishOnboarding,
         timezone: detectTimeZone(),
         companion: finishOnboarding ? companion : undefined,
@@ -401,61 +399,15 @@ export function HabitForm({
         </div>
       )}
 
-      <div className="flex flex-col gap-[7px]">
-        <span className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2">
-          {dejar ? "Si tengo una recaída" : "Si me salto un día"}
-        </span>
-        <div
-          role="radiogroup"
-          aria-label={dejar ? "Si tengo una recaída" : "Si me salto un día"}
-          className="mx-4 overflow-hidden rounded-2xl bg-card"
-        >
-          {(
-            [
-              [
-                "continue",
-                "Sigo contando",
-                dejar
-                  ? "El reto continúa y la recaída queda registrada"
-                  : "El reto continúa y el día saltado queda registrado",
-              ],
-              [
-                "reset",
-                "Vuelvo a empezar de cero",
-                "La racha se reinicia ese día",
-              ],
-            ] as const
-          ).map(([value, title, detail], i) => (
-            <div key={value}>
-              {i > 0 && <div className="ml-3.5 h-px bg-separator" />}
-              <button
-                type="button"
-                role="radio"
-                aria-checked={policy === value}
-                onClick={() => setPolicy(value)}
-                className="flex w-full items-center gap-3 px-3.5 py-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-azul"
-              >
-                <span className="flex flex-1 flex-col gap-px">
-                  <span className="text-[17px] font-medium tracking-[-0.02em] text-label">
-                    {title}
-                  </span>
-                  <span className="text-[13px] tracking-[-0.01em] text-label-2">
-                    {detail}
-                  </span>
-                </span>
-                {policy === value && (
-                  <Check
-                    size={22}
-                    weight="bold"
-                    className="text-azul"
-                    aria-hidden="true"
-                  />
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Ya no se pregunta qué pasa con una recaída: siempre reinicia el reto.
+          Con "sigo contando" la gente marcaba caídas y el reto seguía como si
+          nada, y un reto que no se puede perder tampoco se cumple. Se dice
+          aquí, antes de empezar, para que nadie se lo encuentre después. */}
+      <p className="px-8 text-[12.5px] leading-[1.4] text-label-2">
+        {dejar
+          ? "Si recaes, el reto vuelve a empezar de cero. Queda anotado, sin drama, y el calendario guarda lo que llevabas."
+          : "Si te lo saltas un día que tocaba, el reto vuelve a empezar de cero. Queda anotado, sin drama."}
+      </p>
 
       <div className="mt-auto flex flex-col gap-3 px-5 pt-4">
         {error && (
