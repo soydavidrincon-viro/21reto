@@ -33,7 +33,7 @@ const TEXTOS: Record<
   }),
   racha: (habito, dato) => ({
     title: `Llevas ${dato} días`,
-    body: `Todavía no marcaste ${habito ?? "hoy"}. Un toque y el día queda cerrado.`,
+    body: `Todavía no marcaste ${habito ?? "hoy"}. Si a medianoche sigue sin marcar, el reto vuelve a cero.`,
     url: "/hoy",
   }),
   hito: (habito) => ({
@@ -41,19 +41,20 @@ const TEXTOS: Record<
     body: `Un día más y cumples tu meta con ${habito ?? "tu reto"}.`,
     url: "/hoy",
   }),
-  // `dato` trae cuántos días de los últimos siete quedaron sin contestar. Con
-  // alguno, el aviso lo dice: un hueco se contesta con un toque y la racha
-  // sigue; sin decirlo, el hueco se queda y a los siete días ya no se toca.
-  dia: (_, huecos) =>
-    huecos > 0
+  // `dato` trae cuántos hábitos que tocaban hoy siguen sin marcar. Con
+  // alguno, el aviso dice lo que está en juego: desde 0012 un día sin marcar
+  // reinicia el reto, y el momento de decirlo es antes de medianoche, no
+  // después.
+  dia: (_, sinMarcar) =>
+    sinMarcar > 0
       ? {
-          title: huecos === 1 ? "Ayer quedó sin marcar" : `${huecos} días sin marcar`,
-          body: "Un toque y sigue contando. La racha no se rompe, pero el hueco se queda si no contestas.",
+          title: sinMarcar === 1 ? "Te falta marcar hoy" : `Te faltan ${sinMarcar} por marcar`,
+          body: "Un toque antes de medianoche. Si el día queda sin marcar, el reto vuelve a cero.",
           url: "/hoy",
         }
       : {
           title: "¿Cómo te fue hoy?",
-          body: "Marca tus hábitos y cuéntalo en dos líneas mientras lo tienes fresco.",
+          body: "Ya marcaste todo. Cuéntalo en dos líneas mientras lo tienes fresco.",
           url: "/hoy",
         },
 };

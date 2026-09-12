@@ -23,12 +23,14 @@ como eliminar la cuenta. Desde la migración 0011 no hay política que elegir:
 la consulta. El copy trata la recaída como un dato del proceso, no como una
 falta, y dice sin rodeos que el reto vuelve a cero.
 
-**Un día sin marcar pausa la racha, no la rompe.** Es un hueco: ni suma ni
-resta, y la app lo pregunta después ("¿Seguiste limpio?") durante siete días.
-Lo único que rompe la racha es una recaída. Los huecos sí cuestan: no avanzan
-la meta, bajan el cumplimiento y salen grises. La regla vive en
-`get_habit_stats` (0011) y `huecos_pendientes` (0010); no la reimplementes en
-TypeScript.
+**Cada día se marca ese día.** Un día que tocaba y quedó sin marcar reinicia
+el reto igual que una recaída; hoy no cuenta hasta que termina, y los días que
+no tocan no cuentan nunca. No hay ventana hacia atrás: `markDay` solo acepta
+hoy y el calendario del detalle enseña el pasado sin dejar tocarlo. La regla
+vive en `get_habit_stats` (migración 0012, la aritmética de islas sobre
+`dias_que_tocan_hasta`); no la reimplementes en TypeScript. Entre 0010 y 0012
+existió una "racha en pausa" con huecos que se contestaban después; se quitó
+porque con ella daba igual abrir la app.
 
 Y dos costumbres más chicas: la bitácora de hoy se abre cuando todo lo que
 tocaba hoy tiene registro (lo comprueba `saveJournal`, además de la pantalla),

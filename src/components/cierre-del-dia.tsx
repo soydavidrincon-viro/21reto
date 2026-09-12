@@ -236,11 +236,9 @@ export function HabitosDeHoy({ habits }: { habits: DailyOverviewRow[] }) {
                     {habit.name}
                   </span>
                   <span className="tnum text-[12.5px] text-label-2">
-                    {habit.pendientes.length > 0
-                      ? `${habit.pendientes.length} ${habit.pendientes.length === 1 ? "día" : "días"} sin contestar`
-                      : habit.current_streak === 0
-                        ? "Sin racha todavía"
-                        : `Racha de ${habit.current_streak}`}
+                    {habit.current_streak === 0
+                      ? "Sin racha todavía"
+                      : `Racha de ${habit.current_streak}`}
                   </span>
                 </span>
               </Link>

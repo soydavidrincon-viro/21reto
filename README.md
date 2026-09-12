@@ -59,17 +59,16 @@ nunca en rojo; el calendario conserva cada día y la mejor racha recuerda lo
 que se llevaba. La app acompaña un proceso; no sustituye atención profesional,
 y eso está escrito al pie de Perfil — una vez, y no en cada pantalla.
 
-**Olvidarse no rompe nada.** Un día sin marcar pausa la racha en vez de
-romperla, y la app pregunta por él durante siete días con un toque de
-respuesta. Lo único que rompe la racha es una recaída. Los huecos sí cuestan:
-no avanzan la meta y bajan el cumplimiento.
+**Cada día se marca ese día.** Un día que tocaba y quedó sin marcar reinicia
+el reto, igual que una recaída. Hoy no cuenta hasta que termina, y los días
+que no tocan no cuentan nunca. Es a propósito: el reto obliga a entrar cada
+día, y eso es lo que lo hace reto.
 
 ## Estado
 
 Listo: esquema con RLS y pruebas, entrada por Google o enlace al correo,
 onboarding con compañero y "para qué", pantalla de instalar en iPhone, Hoy con
-carrusel de retos con el check dentro, racha en pausa con pregunta por los días
-sin marcar, "cuánto falta" para el próximo hito, botón de emergencia con
+carrusel de retos con el check dentro, "cuánto falta" para el próximo hito, botón de emergencia con
 registro de impulsos y el porqué a la vista, detalle de hábito con calendario
 navegable y tarjeta compartible, bitácora que se abre al cerrar el día, con
 calendario para leer cualquier día, progreso con la racha de cada reto en

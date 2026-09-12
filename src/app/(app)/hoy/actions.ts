@@ -1,11 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { esFechaISO, shiftISO, todayIn } from "@/lib/dates";
+import { esFechaISO, todayIn } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import {
   conDiasPorDefecto,
-  DIAS_PARA_CONTESTAR,
   LOG_STATUSES,
   MOOD_BY_KEY,
   type DailyOverviewRow,
@@ -19,10 +18,10 @@ const MAX_NOTA = 4000;
 /**
  * ¿Es una fecha que la app puede aceptar para esta cuenta?
  *
- * Con forma de `yyyy-MM-dd`, no después de hoy — de SU hoy, el de la zona del
- * perfil— y no más de siete días atrás. Un registro con fecha futura inflaba
- * la racha; uno de hace un mes reescribe el pasado. Los huecos se contestan
- * durante una semana; después se quedan como estaban.
+ * Solo hoy — SU hoy, el de la zona del perfil—. Desde 0012 un día se marca ese
+ * día o se pierde: sin ventana hacia atrás, porque con ella daba igual abrir
+ * la app, y sin fechas futuras, porque inflaban la racha. El día lo resuelve
+ * el servidor con la zona del perfil; la acción nunca lo deduce del cliente.
  */
 async function fechaAceptable(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -39,9 +38,7 @@ async function fechaAceptable(
 
   const hoy = todayIn(profile?.timezone ?? "UTC");
   if (dateISO > hoy) return { fecha: null, error: "Ese día todavía no ha llegado." };
-  if (dateISO < shiftISO(hoy, -DIAS_PARA_CONTESTAR)) {
-    return { fecha: null, error: "Ese día ya no se puede cambiar." };
-  }
+  if (dateISO < hoy) return { fecha: null, error: "Ese día ya pasó. Solo se marca el de hoy." };
   return { fecha: dateISO, error: "" };
 }
 

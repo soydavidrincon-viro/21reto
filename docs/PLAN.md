@@ -237,21 +237,59 @@ Todo el desarrollo va en la rama `claude/antidoto-app-plan-cj964q`, con commits 
 request en borrador.
 
 
-## Racha en pausa (septiembre 2026)
+## Reto estricto (septiembre 2026)
 
-Regla vigente desde la migración 0010:
+Regla vigente desde las migraciones 0011 y 0012:
 
-- Un día sin marcar es un hueco: pausa la racha, no la rompe.
-- Lo único que rompe la racha es una recaída. Desde 0011 siempre: la pregunta
-  "¿sigo contando o vuelvo a cero?" desapareció del alta, los días del reto son
-  los de después de la última recaída, y `relapse_policy` queda en la tabla
-  solo por compatibilidad.
-- Los huecos cuestan: no avanzan la meta, bajan el cumplimiento y salen grises
-  en el calendario.
-- Se pueden contestar durante siete días desde Hoy ("¿Seguiste limpio?" /
-  "¿Lo hiciste?"), un toque por día. Después el hueco se queda.
-- Mientras haya huecos sin contestar, el compañero sale dormido y el aviso de
-  la noche lo dice.
+- Una recaída reinicia el reto. La pregunta "¿sigo contando o vuelvo a
+  cero?" desapareció del alta; `relapse_policy` queda en la tabla solo por
+  compatibilidad (0011).
+- Un día que tocaba y quedó sin marcar también reinicia el reto. Hoy no
+  cuenta hasta que termina; los días que no tocan no cuentan nunca (0012).
+- Solo se marca hoy. Sin ventana hacia atrás: el calendario del detalle
+  enseña el pasado sin dejar tocarlo.
+- El cumplimiento sigue midiendo el esfuerzo entero desde el inicio, y la
+  mejor racha recuerda la tira más larga. El calendario lo guarda todo.
+- Entre 0010 y 0012 existió la "racha en pausa": un día sin marcar era un
+  hueco que se contestaba durante siete días. Se quitó porque con ella daba
+  igual abrir la app, y un reto que no obliga a entrar cada día no es reto.
 
 Y el "por qué": una frase opcional por hábito que se enseña en el botón de
 emergencia y después de "Caí".
+
+## Niveles dentro del reto (idea, sin implementar)
+
+La pregunta que resuelve: "llevo cinco días" motiva menos que "ya soy nivel
+tres". El reto de 21 días se juega por niveles, y subir de nivel es lo que
+se celebra, no solo el número.
+
+Propuesta de partida, para discutir:
+
+- **Escalones fijos por reto**, a partir de los hitos que ya existen en
+  `src/lib/milestones.ts` (1, 3, 7, 14, 21, 30, 60, 90, 180, 365): el nivel
+  es el último hito alcanzado dentro de la racha actual. Para 21 días serían
+  cinco niveles: día 1, día 3, día 7, día 14 y día 21. Para 30, seis. Para
+  60 y 90, uno más cada uno.
+- **Nombre por nivel, no número**, y distinto para dejar y para empezar. Un
+  borrador: Día uno · Arranque · Una semana · Dos semanas · Reto cumplido.
+  Si se quiere arquetipo, se cuelga del compañero: Brote pasa por Semilla,
+  Brote, Tallo, Rama, Árbol; Roco por Piedra, Canto, Roca, Peña, Montaña;
+  y así con Chispa y Nube. El compañero ya tiene etapas a los 7 y 21 días
+  (`etapaDeRacha`), así que el dibujo cambia con el nivel sin trabajo extra.
+- **Dónde se ve**: en la tarjeta de Hoy, una insignia con el nivel al lado
+  del número grande y la línea de "cuánto falta" pasa a decir "Nivel 3 en 2
+  días". En Progreso, el bloque del reto lleva el nivel. En el detalle, una
+  fila de cinco casillas con los niveles conseguidos.
+- **Qué pasa al reiniciar**: el nivel vuelve a cero con la racha, pero el
+  detalle guarda "nivel máximo alcanzado" (sale de `best_streak`, no hace
+  falta columna nueva). Es lo que hace que caer no sea perder todo.
+- **Celebración**: la que ya existe al llegar a un hito
+  (`MilestoneCelebration`) pasa a decir "Nivel 3: una semana" en vez de solo
+  el número, y la tarjeta compartible lleva el nivel.
+- **Sin migración**: todo sale de `current_streak` y `best_streak` que ya
+  devuelve `get_daily_overview`. Es trabajo de pantalla y de copy, no de
+  esquema.
+
+Lo que hay que decidir antes de hacerlo: si los niveles son por hito fijo o
+proporcionales a la meta (para un reto de 90 días, cinco niveles cada 18
+días), y si los nombres son genéricos o por compañero.
