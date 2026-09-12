@@ -8,7 +8,6 @@ import {
   type CompanionKey,
   type CompanionMood,
 } from "@/components/companion";
-import { Huecos } from "@/components/huecos";
 import { faltaPara } from "@/lib/milestones";
 import { HABIT_SKIN, type DailyOverviewRow } from "@/lib/types";
 
@@ -26,8 +25,7 @@ const MAX_CASILLAS = 31;
  * Los retos activos, uno al lado del otro y con arrastre.
  *
  * Es la única vista de los hábitos en Hoy: cada tarjeta trae su botón de
- * marcar, la pregunta por los días sin contestar y cuánto falta para lo
- * próximo. Antes había además una lista debajo con los mismos números, y en
+ * marcar y cuánto falta para lo próximo. Antes había además una lista debajo con los mismos números, y en
  * teléfono eso eran dos pantallas de scroll para llegar al botón de
  * emergencia.
  *
@@ -69,7 +67,6 @@ export function RetoCarrusel({
           );
           const porDias = habit.target_days <= MAX_CASILLAS;
           const falta = faltaPara(habit.current_streak, habit.target_days);
-          const conHuecos = habit.pendientes.length > 0;
           const detalle = `/habito/${habit.habit_id}`;
 
           return (
@@ -172,12 +169,6 @@ export function RetoCarrusel({
                 )}
               </div>
 
-              {conHuecos && (
-                <div className="mt-4">
-                  <Huecos habit={habit} today={today} tinta={skin.tinta} />
-                </div>
-              )}
-
               <div className="mt-4 flex items-end justify-between gap-3">
                 <p
                   className="max-w-[62%] text-pretty text-[14px] leading-[1.4] opacity-80"
@@ -192,14 +183,13 @@ export function RetoCarrusel({
                       ? `Racha de ${habit.current_streak}. ${falta.texto}.`
                       : `Racha de ${habit.current_streak} ${habit.current_streak === 1 ? "día" : "días"}.`}
                 </p>
-                {/* El compañero va en todas las tarjetas. Se duerme cuando hay
-                    días sin contestar: no regaña, espera. */}
+                {/* El compañero va en todas las tarjetas, con el humor del día. */}
                 <Companion
                   who={companion}
                   size={92}
-                  mood={conHuecos ? "dormido" : humor}
+                  mood={humor}
                   etapa={etapa}
-                  className={`shrink-0 ${humor === "apagado" || conHuecos ? "" : "flota"}`}
+                  className={`shrink-0 ${humor === "apagado" ? "" : "flota"}`}
                   sombra={false}
                 />
               </div>

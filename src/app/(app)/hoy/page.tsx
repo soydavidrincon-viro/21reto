@@ -114,12 +114,10 @@ export default async function HoyPage() {
    */
   const { hour: horaLocal } = zonedNow(profile.timezone);
   const esDeNoche = horaLocal >= 23 || horaLocal < 6;
-  const rompioLaRacha = rachaViva === 0 && habits.some((h) => h.clean_days > 0);
-  // Días sin contestar en cualquier reto: el compañero se duerme hasta que
-  // se contesten. Es la única señal de que hay algo pendiente, y no regaña.
-  const hayHuecos = habits.some((h) => h.pendientes.length > 0);
+  // Con la racha en cero y algún día hecho antes, se acaba de perder el reto.
+  const rompioLaRacha = rachaViva === 0 && habits.some((h) => h.best_streak > 0);
 
-  const humor: CompanionMood = esDeNoche || hayHuecos
+  const humor: CompanionMood = esDeNoche
     ? "dormido"
     : rompioLaRacha
       ? "apagado"

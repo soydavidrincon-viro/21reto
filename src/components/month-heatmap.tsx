@@ -4,9 +4,8 @@ import { CaretLeft, CaretRight, Lightning } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
 import { useCelebracion } from "@/components/celebracion";
-import { longDate, monthGrid, monthName, shiftISO } from "@/lib/dates";
+import { longDate, monthGrid, monthName } from "@/lib/dates";
 import {
-  DIAS_PARA_CONTESTAR,
   DOW_INICIALES,
   TRIGGER_BY_KEY,
   type LogStatus,
@@ -32,9 +31,9 @@ const SEMANA = [1, 2, 3, 4, 5, 6, 0];
  * Ahora se puede ir atrás hasta el mes en que arrancó el reto —más atrás no hay
  * nada que ver— y adelante hasta el mes de hoy.
  *
- * Y al tocar un día ya no salen solo los botones de corregir: sale lo que pasó
- * ese día. Un calendario en el que un cuadro azul no se puede abrir es un
- * gráfico, no un diario.
+ * Al tocar hoy salen los botones de marcar y lo que pasó; los días pasados se
+ * abren solo para leer: nota e impulsos. Un calendario en el que un cuadro
+ * azul no se puede abrir es un gráfico, no un diario.
  *
  * El mes se calcula en el cliente porque los registros ya vienen todos: el
  * detalle del hábito los pide sin filtro de fecha, así que cambiar de mes no
@@ -76,9 +75,9 @@ export function MonthHeatmap({
   const [pending, startTransition] = useTransition();
   const { celebrar, elemento } = useCelebracion();
 
-  // Hasta dónde se puede corregir: los últimos siete días. Más atrás el
-  // calendario se mira, no se toca — un hueco viejo se queda como hueco.
-  const limite = shiftISO(today, -DIAS_PARA_CONTESTAR);
+  // Solo hoy se puede corregir. Desde 0012 un día se marca ese día o se
+  // pierde; los pasados se abren para leer la nota y los impulsos, nada más.
+  const limite = today;
 
   const status: Record<string, LogStatus> = { ...initial };
   for (const [fecha, estado] of Object.entries(pendientes)) {
@@ -191,7 +190,6 @@ export function MonthHeatmap({
           const state = status[date];
           const isToday = date === today;
           const future = date > today;
-          const cerrado = date < limite;
           const abierto = editing === date;
           const tuvoImpulsos = impulsos.some((im) => im.local_date === date);
 
@@ -208,7 +206,7 @@ export function MonthHeatmap({
             <button
               key={date}
               type="button"
-              disabled={future || cerrado || pending}
+              disabled={future || pending}
               onClick={() => setEditing(abierto ? null : date)}
               aria-label={`${longDate(date)}: ${
                 state === "success"
@@ -217,9 +215,7 @@ export function MonthHeatmap({
                     ? recaida.toLowerCase()
                     : future
                       ? "por venir"
-                      : cerrado
-                        ? "sin registro, ya no se puede cambiar"
-                        : "sin registro"
+                      : "sin registro"
               }${tuvoImpulsos ? ", con impulsos registrados" : ""}`}
               className={`tnum relative flex aspect-square w-full max-w-[42px] items-center justify-center justify-self-center rounded-lg text-[11px] font-semibold transition-transform active:scale-90 disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-azul ${tone} ${
                 future ? "opacity-40" : ""
@@ -302,6 +298,11 @@ export function MonthHeatmap({
             </ul>
           )}
 
+          {editing < limite ? (
+            <p className="text-[12.5px] leading-[1.4] text-label-3">
+              Ese día ya pasó. Lo que quedó, quedó.
+            </p>
+          ) : (
           <div className="flex gap-2">
             <button
               type="button"
@@ -325,6 +326,7 @@ export function MonthHeatmap({
               Borrar
             </button>
           </div>
+          )}
         </div>
       )}
     </div>

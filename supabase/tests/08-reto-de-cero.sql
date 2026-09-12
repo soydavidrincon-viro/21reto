@@ -78,17 +78,17 @@ begin
   raise notice 'OK: día de recaída = 0 de 21, mejor 4';
 end $$;
 
-\echo '--- 4. un hueco después de la recaída sigue pausando, no rompiendo ---'
-\echo '    El martes 11 con el lunes 10 en blanco: sigue en 2.'
+\echo '--- 4. el lunes 10 sin marcar reinicia otra vez (desde 0012) ---'
+\echo '    El martes 11 con el lunes 10 en blanco: 0. La mejor racha sigue en 4.'
 do $$
-declare r integer;
+declare r integer; m integer;
 begin
-  select clean_days into r from public.get_habit_stats(
+  select clean_days, best_streak into r, m from public.get_habit_stats(
     'c8c8c8c8-c8c8-c8c8-c8c8-c8c8c8c8c8c8', date '2026-08-11');
-  if r <> 2 then
-    raise exception 'FALLO: con un hueco los días del reto salieron %, se esperaba 2', r;
+  if r <> 0 or m <> 4 then
+    raise exception 'FALLO: con el lunes en blanco salió % (mejor %), se esperaba 0 (mejor 4)', r, m;
   end if;
-  raise notice 'OK: el hueco pausa; el reto sigue en 2';
+  raise notice 'OK: el lunes en blanco reinicia; mejor racha 4';
 end $$;
 
 \echo '--- 5. Hoy recibe el número que vuelve a cero ---'
