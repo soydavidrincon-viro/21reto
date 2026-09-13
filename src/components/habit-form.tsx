@@ -15,6 +15,7 @@ import {
   DOW_INICIALES,
   DOW_LABELS,
   MAX_MOTIVO,
+  MAX_PREMIO,
   TODOS_LOS_DIAS,
   type HabitColor,
 } from "@/lib/types";
@@ -67,6 +68,7 @@ export function HabitForm({
   const [custom, setCustom] = useState("");
   const [targetDays, setTargetDays] = useState(21);
   const [motivo, setMotivo] = useState("");
+  const [premio, setPremio] = useState("");
 
   /**
    * En qué días de la semana toca.
@@ -105,6 +107,7 @@ export function HabitForm({
         timezone: detectTimeZone(),
         companion: finishOnboarding ? companion : undefined,
         motivo: motivo.trim() || undefined,
+        premio: premio.trim() || undefined,
       });
       if (result?.error) setError(result.error);
     });
@@ -269,6 +272,31 @@ export function HabitForm({
           {dejar
             ? "Te lo enseñamos cuando te den ganas de fallar."
             : "Te lo enseñamos cuando te den ganas de saltarlo."}
+        </p>
+      </div>
+
+      {/* El premio: lo que se da si cumple. Queda bajo llave hasta la meta y
+          se abre solo al llegar. El porqué es la razón; esto es el trato. */}
+      <div className="flex flex-col gap-[7px]">
+        <label
+          htmlFor="premio"
+          className="px-8 text-[13px] font-semibold uppercase tracking-[0.02em] text-label-2"
+        >
+          ¿Qué te vas a dar si lo cumples?
+          <span className="ml-1.5 font-medium normal-case tracking-normal text-label-3">
+            opcional
+          </span>
+        </label>
+        <input
+          id="premio"
+          value={premio}
+          onChange={(event) => setPremio(event.target.value)}
+          maxLength={MAX_PREMIO}
+          placeholder="Una cena en ese restaurante, un fin de semana fuera…"
+          className="mx-4 h-[50px] rounded-2xl bg-card px-4 text-[17px] tracking-[-0.02em] text-label placeholder:text-[15px] placeholder:text-label-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        />
+        <p className="tnum px-8 text-[12.5px] leading-[1.4] text-label-2">
+          Queda bajo llave hasta el día {targetDays}. Cuando llegues, se abre.
         </p>
       </div>
 

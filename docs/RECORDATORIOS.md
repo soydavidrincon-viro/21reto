@@ -22,13 +22,17 @@ pg_cron (Supabase, cada hora)
 
 ## Las cuatro reglas
 
-- **Uno al día como máximo.** Lo garantiza la llave primaria de
-  `notification_log`, `(user_id, local_date)`, y el orden del enviador: primero
-  anota, y solo manda a quien consiguió anotar. Así dos corridas solapadas del
-  cron —un reintento, un `curl` a mano— no mandan dos veces, y un bucle mal
-  escrito no puede provocar una tormenta.
+- **Dos al día, a horas fijas.** A las 9 (`manana`: por dónde va el reto y
+  su porqué) y a las 21 (`noche`: lo que falta por marcar antes de
+  medianoche, o la bitácora si ya marcó todo; la víspera de la meta, "Mañana
+  llegas"). La hora difícil va aparte (`impulso`) cuando hay patrón. Cada
+  aviso lleva su franja y la llave primaria de `notification_log`,
+  `(user_id, local_date, slot)`, deja pasar uno por franja y día. El
+  enviador primero anota y solo manda a quien consiguió anotar: dos corridas
+  solapadas del cron —un reintento, un `curl` a mano— no mandan dos veces.
 - **Apagados de fábrica.** `reminder_hour` nace nulo y la función ni mira a
-  quien lo tenga vacío.
+  quien lo tenga vacío. Desde 0013 es solo el interruptor: la hora no se
+  elige.
 - **La hora es la de cada quien.** `timezone(p.timezone, now())`, igual que el
   resto de la app.
 - **Nada de "te echamos de menos".** Ese aviso le llega a alguien que

@@ -30,11 +30,9 @@ export type DailyOverviewRow = {
   today_status: LogStatus | null;
   /** Para qué lo hace, en sus palabras. Opcional. */
   motivo: string | null;
-  /**
-   * Los días de los últimos siete que tocaban y quedaron sin registro, de más
-   * viejo a más nuevo. Son los que Hoy pregunta uno a uno.
-   */
-  pendientes: string[];
+  /** Lo que se da si cumple el reto. Bajo llave hasta la meta. Opcional. */
+  premio: string | null;
+  /** Días del reto: seguidos, de los que tocaban, hasta el último día cerrado. */
   clean_days: number;
   current_streak: number;
   best_streak: number;
@@ -62,18 +60,24 @@ export function conDiasPorDefecto(fila: DailyOverviewRow): DailyOverviewRow {
       : TODOS_LOS_DIAS,
     toca_hoy: typeof fila.toca_hoy === "boolean" ? fila.toca_hoy : true,
     motivo: typeof fila.motivo === "string" ? fila.motivo : null,
-    pendientes: Array.isArray(fila.pendientes) ? fila.pendientes : [],
+    premio: typeof fila.premio === "string" ? fila.premio : null,
   };
 }
 
 /** El tope del "por qué": una frase, no un ensayo. */
 export const MAX_MOTIVO = 200;
 
+/** El tope del premio, igual que el porqué. */
+export const MAX_PREMIO = 200;
+
 /**
- * Cuántos días hacia atrás se puede contestar un hueco. Después de eso el día
- * se queda como estaba: gris en el calendario, sin contar para nada.
+ * Las horas fijas de los dos avisos del día, en la hora local de cada quien.
+ * Viven también en `avisos_pendientes()` (migración 0013): si cambian, cambian
+ * en los dos sitios.
  */
-export const DIAS_PARA_CONTESTAR = 7;
+export const HORA_AVISO_MANANA = 9;
+export const HORA_AVISO_NOCHE = 21;
+
 
 export type Quote = { id: string; text: string; author: string | null };
 
@@ -92,8 +96,6 @@ export type Profile = {
   avisa_hora_dificil: boolean;
 };
 
-/** La hora que se propone al encender los avisos por primera vez. */
-export const HORA_AVISO_POR_DEFECTO = 21;
 
 /**
  * Cada color de hábito con su tinta. El blanco sobre naranja, menta y ámbar no

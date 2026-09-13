@@ -17,7 +17,7 @@ import {
   suscribirse,
 } from "@/lib/push";
 import { PasosDeInstalacion } from "@/components/pasos-de-instalacion";
-import { HORA_AVISO_POR_DEFECTO, type Profile } from "@/lib/types";
+import { HORA_AVISO_MANANA, HORA_AVISO_NOCHE, type Profile } from "@/lib/types";
 
 type Entorno = {
   soporta: boolean;
@@ -143,8 +143,9 @@ export function Recordatorios({
 }
 
 function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
-  const [hora, setHora] = useState<number | null>(profile.reminder_hour);
-  const [racha, setRacha] = useState(profile.avisa_racha);
+  // `reminder_hour` es solo el interruptor: nulo es apagados. Las horas son
+  // fijas (9 y 21) desde 0013, así que aquí no se elige nada.
+  const [encendidos, setEncendidos] = useState(profile.reminder_hour !== null);
   const [hito, setHito] = useState(profile.avisa_hito);
   const [dificil, setDificil] = useState(profile.avisa_hora_dificil);
   const [error, setError] = useState<string | null>(null);
@@ -156,8 +157,6 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
   // la primera pintada tiene que decir "todavía no sé" y la segunda ya el
   // valor real. Es exactamente para lo que sirve el snapshot de servidor.
   const entorno = useSyncExternalStore(sinCambios, leerEntorno, () => null);
-
-  const encendidos = hora !== null;
 
   function encender() {
     setError(null);
@@ -178,10 +177,8 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
         return;
       }
 
-      const nueva = hora ?? HORA_AVISO_POR_DEFECTO;
       const prefs = await guardarAvisos({
-        reminderHour: nueva,
-        avisaRacha: racha,
+        encendidos: true,
         avisaHito: hito,
         avisaHoraDificil: dificil,
       });
@@ -189,7 +186,7 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
         setError(prefs.error);
         return;
       }
-      setHora(nueva);
+      setEncendidos(true);
     });
   }
 
@@ -198,41 +195,28 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
     startTransition(async () => {
       const endpoint = await desuscribirse();
       if (endpoint) await olvidarDispositivo(endpoint);
-      // La hora a null es lo que apaga todo: la función que reparte los avisos
-      // ni mira a quien la tiene vacía.
+      // Apagar es dejar el interruptor en nulo: la función que reparte los
+      // avisos ni mira a quien lo tiene vacío.
       await guardarAvisos({
-        reminderHour: null,
-        avisaRacha: racha,
+        encendidos: false,
         avisaHito: hito,
         avisaHoraDificil: dificil,
       });
-      setHora(null);
+      setEncendidos(false);
     });
   }
 
-  function actualizar(
-    patch: Partial<{
-      hora: number;
-      racha: boolean;
-      hito: boolean;
-      dificil: boolean;
-    }>,
-  ) {
+  function actualizar(patch: Partial<{ hito: boolean; dificil: boolean }>) {
     const siguiente = {
-      hora: patch.hora ?? hora ?? HORA_AVISO_POR_DEFECTO,
-      racha: patch.racha ?? racha,
       hito: patch.hito ?? hito,
       dificil: patch.dificil ?? dificil,
     };
-    setHora(siguiente.hora);
-    setRacha(siguiente.racha);
     setHito(siguiente.hito);
     setDificil(siguiente.dificil);
 
     startTransition(async () => {
       const r = await guardarAvisos({
-        reminderHour: siguiente.hora,
-        avisaRacha: siguiente.racha,
+        encendidos: true,
         avisaHito: siguiente.hito,
         avisaHoraDificil: siguiente.dificil,
       });
@@ -263,8 +247,10 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
               <h2 className="font-display text-[22px] font-semibold leading-none tracking-[-0.01em] text-label">
                 Recordatorios
               </h2>
-              <p className="text-[13.5px] leading-[1.4] text-label-2">
-                Uno al día como mucho. Nunca para hacerte sentir mal.
+              <p className="tnum text-[13.5px] leading-[1.4] text-label-2">
+                Dos al día: a las {HORA_AVISO_MANANA} para recordarte el reto y a
+                las {HORA_AVISO_NOCHE} para que marques antes de medianoche. Hora
+                tuya.
               </p>
             </div>
             <button
@@ -323,32 +309,16 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
 
           {encendidos && (
             <>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[12.5px] font-bold uppercase tracking-[0.08em] text-label-3">
-                  ¿A qué hora?
+              <div className="tnum flex flex-col gap-1 rounded-[16px] bg-fill px-4 py-3 text-[13.5px] leading-[1.45] text-label-2">
+                <span>
+                  <b className="font-semibold text-label">{HORA_AVISO_MANANA}:00</b>{" "}
+                  Cuántos días llevas y por qué lo haces.
                 </span>
-                <div className="flex items-center gap-3 rounded-[16px] bg-fill px-4 py-3">
-                  <label className="sr-only" htmlFor="hora-aviso">
-                    Hora del recordatorio
-                  </label>
-                  <select
-                    id="hora-aviso"
-                    value={hora ?? HORA_AVISO_POR_DEFECTO}
-                    onChange={(e) =>
-                      actualizar({ hora: Number(e.target.value) })
-                    }
-                    className="tnum h-10 flex-1 rounded-xl bg-card px-3 text-[16px] text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-                  >
-                    {Array.from({ length: 24 }, (_, h) => (
-                      <option key={h} value={h}>
-                        {String(h).padStart(2, "0")}:00
-                      </option>
-                    ))}
-                  </select>
-                  <span className="shrink-0 text-[12.5px] text-label-2">
-                    hora tuya
-                  </span>
-                </div>
+                <span>
+                  <b className="font-semibold text-label">{HORA_AVISO_NOCHE}:00</b>{" "}
+                  Si falta algo por marcar, te lo dice antes de que el reto
+                  vuelva a cero. Si ya marcaste, te pide la bitácora.
+                </span>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -361,13 +331,6 @@ function Hoja({ profile, onClose }: { profile: Profile; onClose: () => void }) {
                     detalle="Un rato antes del momento en que suele darte, cuando ya hay patrón"
                     activo={dificil}
                     onChange={(v) => actualizar({ dificil: v })}
-                  />
-                  <div className="ml-4 h-px bg-separator" />
-                  <Interruptor
-                    titulo="Racha en riesgo"
-                    detalle="Tarde, solo si tienes algo que perder y sigue sin marcar"
-                    activo={racha}
-                    onChange={(v) => actualizar({ racha: v })}
                   />
                   <div className="ml-4 h-px bg-separator" />
                   <Interruptor

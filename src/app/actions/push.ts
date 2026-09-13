@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { HORA_AVISO_NOCHE } from "@/lib/types";
 
 /**
  * Guardar el dispositivo y la hora del recordatorio.
@@ -80,9 +81,11 @@ export async function olvidarDispositivo(endpoint: string) {
 }
 
 export type PreferenciasDeAviso = {
-  /** Hora local del recordatorio del día. null apaga todos los avisos. */
-  reminderHour: number | null;
-  avisaRacha: boolean;
+  /**
+   * Encendidos o apagados. Las horas son fijas (9 y 21, en la zona de cada
+   * quien): `reminder_hour` se queda como interruptor, nulo es apagados.
+   */
+  encendidos: boolean;
   avisaHito: boolean;
   avisaHoraDificil: boolean;
 };
@@ -95,18 +98,12 @@ export async function guardarAvisos(prefs: PreferenciasDeAviso) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Necesitas iniciar sesión." };
 
-  const hora = prefs.reminderHour;
-  if (hora !== null && (!Number.isInteger(hora) || hora < 0 || hora > 23)) {
-    return { error: "Esa hora no es válida." };
-  }
-
   const { error } = await supabase
     .from("profiles")
     .update({
-      reminder_hour: hora,
-      avisa_racha: prefs.avisaRacha,
-      avisa_hito: prefs.avisaHito,
-      avisa_hora_dificil: prefs.avisaHoraDificil,
+      reminder_hour: prefs.encendidos ? HORA_AVISO_NOCHE : null,
+      avisa_hito: prefs.avisaHito === true,
+      avisa_hora_dificil: prefs.avisaHoraDificil === true,
     })
     .eq("id", user.id);
 

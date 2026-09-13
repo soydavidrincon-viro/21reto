@@ -45,7 +45,7 @@ begin
   raise notice 'OK: 7 de reto, 1 recaída, 95%%, racha 7, mejor 11';
 end $$;
 
-\echo '--- 3. la racha no se rompe por días sin marcar: se pausa ---'
+\echo '--- 3. hoy sin marcar no cuenta; un día pasado sin marcar reinicia ---'
 do $$
 declare hoy integer; luego integer;
 begin
@@ -53,10 +53,12 @@ begin
   from public.get_habit_stats('33333333-3333-3333-3333-333333333333', date '2026-08-20');
   select current_streak into luego
   from public.get_habit_stats('33333333-3333-3333-3333-333333333333', date '2026-08-22');
-  if hoy <> 7 or luego <> 7 then
-    raise exception 'FALLO: racha % hoy y % dos días después, se esperaba 7 y 7', hoy, luego;
+  -- Hoy (el 20) sin marcar no cuenta todavía: 7. Dos días después, con el
+  -- 20 y el 21 en blanco, el reto ya se reinició: 0.
+  if hoy <> 7 or luego <> 0 then
+    raise exception 'FALLO: racha % hoy y % dos días después, se esperaba 7 y 0', hoy, luego;
   end if;
-  raise notice 'OK: 7 con hoy sin marcar, y 7 dos días después';
+  raise notice 'OK: 7 con hoy sin marcar, y 0 dos días después';
 end $$;
 
 \echo '--- 4. frase del día: una sola, y la misma al repetir la consulta ---'

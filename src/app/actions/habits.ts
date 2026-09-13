@@ -8,6 +8,7 @@ import {
   COMPANION_KEYS,
   HABIT_COLORS,
   MAX_MOTIVO,
+  MAX_PREMIO,
   MAX_TARGET_DAYS,
   type HabitColor,
   type Profile,
@@ -99,16 +100,24 @@ export type NewHabit = {
   companion?: string;
   /** Para qué lo hace, en sus palabras. Opcional. */
   motivo?: string;
+  /** Lo que se da si cumple el reto. Opcional. */
+  premio?: string;
 };
 
-/** El "por qué" limpio, o null si no vino. Devuelve undefined si no vale. */
-function limpiarMotivo(motivo: unknown): string | null | undefined {
-  if (motivo === undefined || motivo === null) return null;
-  if (typeof motivo !== "string") return undefined;
-  const limpio = motivo.trim();
-  if (limpio.length > MAX_MOTIVO) return undefined;
+/**
+ * Una frase corta limpia, o null si no vino. Devuelve undefined si no vale.
+ * Sirve para el porqué y para el premio, que tienen el mismo tope.
+ */
+function limpiarFrase(texto: unknown, tope: number): string | null | undefined {
+  if (texto === undefined || texto === null) return null;
+  if (typeof texto !== "string") return undefined;
+  const limpio = texto.trim();
+  if (limpio.length > tope) return undefined;
   return limpio || null;
 }
+
+const limpiarMotivo = (motivo: unknown) => limpiarFrase(motivo, MAX_MOTIVO);
+const limpiarPremio = (premio: unknown) => limpiarFrase(premio, MAX_PREMIO);
 
 export async function createHabit(input: NewHabit) {
   const supabase = await createClient();
@@ -141,6 +150,10 @@ export async function createHabit(input: NewHabit) {
   const motivo = limpiarMotivo(input.motivo);
   if (motivo === undefined) {
     return { error: `El porqué cabe en ${MAX_MOTIVO} caracteres.` };
+  }
+  const premio = limpiarPremio(input.premio);
+  if (premio === undefined) {
+    return { error: `El premio cabe en ${MAX_PREMIO} caracteres.` };
   }
 
   // Un array vacío que llegue hasta Postgres vuelve como un error de CHECK, y
@@ -192,6 +205,7 @@ export async function createHabit(input: NewHabit) {
     relapse_policy: "reset",
     start_date: startDate,
     description: motivo,
+    reward: premio,
   };
 
   let { error } = await supabase
@@ -250,6 +264,36 @@ export async function setHabitMotivo(habitId: string, motivo: string | null) {
   const { error } = await supabase
     .from("habits")
     .update({ description: limpio })
+    .eq("id", habitId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/hoy");
+  revalidatePath(`/habito/${habitId}`);
+  return { error: null };
+}
+
+/**
+ * El premio del reto, editable desde su detalle. Mismo trato que el porqué:
+ * una frase, un tope, y la pantalla decide si está abierto o bajo llave.
+ */
+export async function setHabitPremio(habitId: string, premio: string | null) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  const limpio = limpiarPremio(premio);
+  if (limpio === undefined) {
+    return { error: `El premio cabe en ${MAX_PREMIO} caracteres.` };
+  }
+
+  const { error } = await supabase
+    .from("habits")
+    .update({ reward: limpio })
     .eq("id", habitId)
     .eq("user_id", user.id);
 

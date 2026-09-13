@@ -4,8 +4,9 @@
 -- Pruebas de a quién le toca aviso.
 --
 -- Lo que se comprueba es lo que puede salir caro: que nadie reciba dos avisos
--- el mismo día, que la hora sea la SUYA y no la del servidor, y que quien no
--- pidió avisos no reciba ninguno.
+-- en la misma franja del mismo día, que la hora sea la SUYA y no la del
+-- servidor (las horas son fijas desde 0013: 9 y 21), y que quien no pidió
+-- avisos no reciba ninguno.
 --
 -- Los momentos se fijan con `set timezone` y una hora concreta, porque estas
 -- funciones dependen de now() y sin fijarlo la prueba pasaría o fallaría según
@@ -21,9 +22,9 @@ insert into auth.users (id, email) values
   ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'hugo@antidoto.test'),
   ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'ines@antidoto.test');
 
--- Hugo en Bogotá (UTC-5) quiere el aviso a las 21:00 suyas.
--- Inés en Madrid (UTC+2 en agosto) también a las 21:00 suyas.
--- A la misma hora UTC no les toca a los dos: esa es la prueba.
+-- Hugo en Bogotá (UTC-5) e Inés en Madrid (UTC+2 en agosto). El aviso de la
+-- noche es a las 21:00 de cada quien: a la misma hora UTC no les toca a los
+-- dos. Esa es la prueba. `reminder_hour` solo dice que están encendidos.
 update public.profiles set timezone = 'America/Bogota', reminder_hour = 21
 where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
 update public.profiles set timezone = 'Europe/Madrid', reminder_hour = 21
@@ -54,8 +55,8 @@ begin
   select string_agg(email, ', ' order by email) into quienes
   from auth.users u
   join public.profiles p on p.id = u.id
-  where extract(hour from timezone(p.timezone, timestamptz '2026-08-15 02:00:00+00'))::int
-        = p.reminder_hour;
+  where p.reminder_hour is not null
+    and extract(hour from timezone(p.timezone, timestamptz '2026-08-15 02:00:00+00'))::int = 21;
 
   if quienes is distinct from 'hugo@antidoto.test' then
     raise exception 'FALLO: a las 02:00 UTC le tocaba a "%", se esperaba solo a Hugo', quienes;
@@ -70,8 +71,8 @@ begin
   select string_agg(email, ', ' order by email) into quienes
   from auth.users u
   join public.profiles p on p.id = u.id
-  where extract(hour from timezone(p.timezone, timestamptz '2026-08-15 19:00:00+00'))::int
-        = p.reminder_hour;
+  where p.reminder_hour is not null
+    and extract(hour from timezone(p.timezone, timestamptz '2026-08-15 19:00:00+00'))::int = 21;
 
   if quienes is distinct from 'ines@antidoto.test' then
     raise exception 'FALLO: a las 19:00 UTC le tocaba a "%", se esperaba solo a Inés', quienes;
@@ -110,19 +111,23 @@ begin
   raise notice 'OK: sin dispositivo, no se le busca aviso';
 end $$;
 
-\echo '--- 5. EL TOPE: un aviso al día, impuesto por el esquema ---'
-insert into public.notification_log (user_id, local_date, kind)
-values ('dddddddd-dddd-dddd-dddd-dddddddddddd', date '2026-08-15', 'dia');
+\echo '--- 5. EL TOPE: uno por franja y día, impuesto por el esquema ---'
+insert into public.notification_log (user_id, local_date, kind, slot)
+values ('dddddddd-dddd-dddd-dddd-dddddddddddd', date '2026-08-15', 'noche', 'noche');
 do $$
 begin
   begin
-    insert into public.notification_log (user_id, local_date, kind)
-    values ('dddddddd-dddd-dddd-dddd-dddddddddddd', date '2026-08-15', 'racha');
-    raise exception 'FALLO: entró un segundo aviso el mismo día';
+    insert into public.notification_log (user_id, local_date, kind, slot)
+    values ('dddddddd-dddd-dddd-dddd-dddddddddddd', date '2026-08-15', 'dia', 'noche');
+    raise exception 'FALLO: entró un segundo aviso en la misma franja';
   exception
     when unique_violation then
-      raise notice 'OK: la llave primaria impide el segundo aviso del día';
+      raise notice 'OK: la llave primaria impide el segundo aviso de la franja';
   end;
+  -- Otra franja el mismo día sí entra: el de la mañana.
+  insert into public.notification_log (user_id, local_date, kind, slot)
+  values ('dddddddd-dddd-dddd-dddd-dddddddddddd', date '2026-08-15', 'manana', 'manana');
+  raise notice 'OK: la franja de la mañana entra aparte';
 end $$;
 
 \echo '--- 6. y quien ya recibió hoy no vuelve a salir en la lista ---'
@@ -140,18 +145,35 @@ end $$;
 
 \echo '--- 7. un tipo de aviso apagado no se manda ---'
 update public.profiles
-set avisa_racha = false, avisa_hito = false, avisa_hora_dificil = false
+set avisa_hito = false, avisa_hora_dificil = false
 where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
 do $$
 declare n integer;
 begin
   select count(*) into n from public.avisos_pendientes()
   where user_id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'
-    and kind in ('racha', 'hito', 'hora_dificil');
+    and kind in ('hito', 'hora_dificil');
   if n <> 0 then
     raise exception 'FALLO: llegó un aviso de un tipo apagado';
   end if;
   raise notice 'OK: los interruptores apagan de verdad';
+end $$;
+
+\echo '--- 7b. lo que devuelve la función trae franja, y una fila por franja ---'
+do $$
+declare malas integer; repes integer;
+begin
+  select count(*) into malas from public.avisos_pendientes()
+  where slot not in ('manana', 'noche', 'impulso')
+     or kind not in ('manana', 'noche', 'dia', 'hito', 'hora_dificil');
+  select count(*) into repes from (
+    select user_id, slot from public.avisos_pendientes()
+    group by user_id, slot having count(*) > 1
+  ) r;
+  if malas <> 0 or repes <> 0 then
+    raise exception 'FALLO: % filas con franja o tipo raro, % franjas repetidas', malas, repes;
+  end if;
+  raise notice 'OK: cada fila trae su franja y no hay dos por franja';
 end $$;
 
 \echo '--- 8. RLS: nadie con sesión puede preguntar por los avisos de otros ---'

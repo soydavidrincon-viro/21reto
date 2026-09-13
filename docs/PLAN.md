@@ -237,21 +237,38 @@ Todo el desarrollo va en la rama `claude/antidoto-app-plan-cj964q`, con commits 
 request en borrador.
 
 
-## Racha en pausa (septiembre 2026)
+## Reto estricto (septiembre 2026)
 
-Regla vigente desde la migración 0010:
+Regla vigente desde las migraciones 0011 y 0012:
 
-- Un día sin marcar es un hueco: pausa la racha, no la rompe.
-- Lo único que rompe la racha es una recaída. Desde 0011 siempre: la pregunta
-  "¿sigo contando o vuelvo a cero?" desapareció del alta, los días del reto son
-  los de después de la última recaída, y `relapse_policy` queda en la tabla
-  solo por compatibilidad.
-- Los huecos cuestan: no avanzan la meta, bajan el cumplimiento y salen grises
-  en el calendario.
-- Se pueden contestar durante siete días desde Hoy ("¿Seguiste limpio?" /
-  "¿Lo hiciste?"), un toque por día. Después el hueco se queda.
-- Mientras haya huecos sin contestar, el compañero sale dormido y el aviso de
-  la noche lo dice.
+- Una recaída reinicia el reto. La pregunta "¿sigo contando o vuelvo a
+  cero?" desapareció del alta; `relapse_policy` queda en la tabla solo por
+  compatibilidad (0011).
+- Un día que tocaba y quedó sin marcar también reinicia el reto. Hoy no
+  cuenta hasta que termina; los días que no tocan no cuentan nunca (0012).
+- Solo se marca hoy. Sin ventana hacia atrás: el calendario del detalle
+  enseña el pasado sin dejar tocarlo.
+- El cumplimiento sigue midiendo el esfuerzo entero desde el inicio, y la
+  mejor racha recuerda la tira más larga. El calendario lo guarda todo.
+- Entre 0010 y 0012 existió la "racha en pausa": un día sin marcar era un
+  hueco que se contestaba durante siete días. Se quitó porque con ella daba
+  igual abrir la app, y un reto que no obliga a entrar cada día no es reto.
 
 Y el "por qué": una frase opcional por hábito que se enseña en el botón de
 emergencia y después de "Caí".
+
+## Premio y avisos (0013)
+
+- **El premio.** Al crear el reto, opcional: lo que la persona se da si lo
+  cumple. Vive en `habits.reward`. En Hoy y en el detalle sale bajo llave
+  (texto borroso, candado, "se abre el día N"); al llegar a la meta se abre
+  ("Te lo ganaste") en el detalle y en la tarjeta de reto cumplido. Si el
+  reto vuelve a cero, se vuelve a cerrar solo: abierto o cerrado lo decide
+  comparar días con meta, no una columna.
+- **Dos avisos al día, a horas fijas.** A las 9, por dónde va el reto y su
+  porqué. A las 21, lo que está en juego si falta algo por marcar, o la
+  bitácora si ya marcó todo. La hora difícil sigue aparte cuando hay patrón,
+  y la víspera de la meta el de la noche dice "Mañana llegas". Cada aviso
+  tiene su franja (`notification_log.slot`) y la llave primaria deja pasar
+  uno por franja y día. `reminder_hour` queda como interruptor; ya no se
+  elige hora. La idea de niveles se descartó.

@@ -77,11 +77,9 @@ export function RetosEnNumeros({ habits }: { habits: DailyOverviewRow[] }) {
                   {habit.name}
                 </span>
                 <span className="tnum text-[12.5px] leading-[1.35] opacity-75">
-                  {habit.pendientes.length > 0
-                    ? `${habit.pendientes.length} ${habit.pendientes.length === 1 ? "día" : "días"} sin contestar`
-                    : cumplido
-                      ? `Meta de ${habit.target_days}, y sigues`
-                      : `Llevas ${habit.clean_days} de ${habit.target_days}`}
+                  {cumplido
+                    ? `Meta de ${habit.target_days}, y sigues`
+                    : `Llevas ${habit.clean_days} de ${habit.target_days}`}
                 </span>
               </div>
             </Link>

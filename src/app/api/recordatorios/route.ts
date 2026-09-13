@@ -24,16 +24,26 @@ const EN_PARALELO = 25;
 
 const TEXTOS: Record<
   string,
-  (habito: string | null, dato: number) => { title: string; body: string; url: string }
+  (
+    habito: string | null,
+    dato: number,
+    extra: string | null,
+  ) => { title: string; body: string; url: string }
 > = {
+  // La mañana: por dónde va el reto y su porqué. Es el aviso que recuerda,
+  // no el que apura.
+  manana: (habito, dato, extra) => ({
+    title: "Hoy también cuenta",
+    body:
+      (dato > 0
+        ? `Llevas ${dato} ${dato === 1 ? "día" : "días"} con ${habito ?? "tu reto"}. Hoy suma uno más.`
+        : `Hoy puede ser el día uno con ${habito ?? "tu reto"}.`) +
+      (extra ? ` Tú dijiste: “${extra}”.` : ""),
+    url: "/hoy",
+  }),
   hora_dificil: () => ({
     title: "Suele darte por aquí",
     body: "A esta hora y este día es cuando más veces te ha pasado. Ya lo sabes, que no te agarre desprevenido.",
-    url: "/hoy",
-  }),
-  racha: (habito, dato) => ({
-    title: `Llevas ${dato} días`,
-    body: `Todavía no marcaste ${habito ?? "hoy"}. Un toque y el día queda cerrado.`,
     url: "/hoy",
   }),
   hito: (habito) => ({
@@ -41,29 +51,34 @@ const TEXTOS: Record<
     body: `Un día más y cumples tu meta con ${habito ?? "tu reto"}.`,
     url: "/hoy",
   }),
-  // `dato` trae cuántos días de los últimos siete quedaron sin contestar. Con
-  // alguno, el aviso lo dice: un hueco se contesta con un toque y la racha
-  // sigue; sin decirlo, el hueco se queda y a los siete días ya no se toca.
-  dia: (_, huecos) =>
-    huecos > 0
-      ? {
-          title: huecos === 1 ? "Ayer quedó sin marcar" : `${huecos} días sin marcar`,
-          body: "Un toque y sigue contando. La racha no se rompe, pero el hueco se queda si no contestas.",
-          url: "/hoy",
-        }
-      : {
-          title: "¿Cómo te fue hoy?",
-          body: "Marca tus hábitos y cuéntalo en dos líneas mientras lo tienes fresco.",
-          url: "/hoy",
-        },
+  // La noche, con algo sin marcar: lo que está en juego. Desde 0012 un día
+  // sin marcar reinicia el reto, y el momento de decirlo es antes de
+  // medianoche, no después.
+  noche: (_, sinMarcar) => ({
+    title: "Te queda hasta medianoche",
+    body:
+      sinMarcar === 1
+        ? "Te falta marcar uno. Si el día queda sin marcar, el reto vuelve a cero."
+        : `Te faltan ${sinMarcar} por marcar. Si el día queda sin marcar, el reto vuelve a cero.`,
+    url: "/hoy",
+  }),
+  // La noche, con todo marcado: solo falta contarlo.
+  dia: () => ({
+    title: "¿Cómo te fue hoy?",
+    body: "Ya marcaste todo. Cuéntalo en dos líneas mientras lo tienes fresco.",
+    url: "/hoy",
+  }),
 };
 
 type Aviso = {
   user_id: string;
   kind: string;
+  /** La franja del día: manana, noche o impulso. Una por franja y día. */
+  slot: string;
   local_date: string;
   habito: string | null;
   dato: number;
+  extra: string | null;
 };
 
 type Dispositivo = {
@@ -156,7 +171,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       seco: true,
       total: avisos.length,
-      avisos: avisos.map((a) => ({ kind: a.kind, habito: a.habito, dato: a.dato })),
+      avisos: avisos.map((a) => ({ kind: a.kind, slot: a.slot, habito: a.habito, dato: a.dato })),
     });
   }
 
@@ -174,7 +189,8 @@ export async function POST(request: NextRequest) {
    *
    * Con la fila puesta antes de enviar y `ignoreDuplicates`, la llave primaria
    * de `notification_log` hace de cerrojo: solo quien consigue insertar manda.
-   * Lo que devuelve el insert son justo las filas que entraron.
+   * Lo que devuelve el insert son justo las filas que entraron. Desde 0013 la
+   * llave es por franja (mañana, noche, impulso): dos avisos al día, no más.
    */
   const { data: reservados, error: errorLog } = await supabase
     .from("notification_log")
@@ -183,17 +199,20 @@ export async function POST(request: NextRequest) {
         user_id: a.user_id,
         local_date: a.local_date,
         kind: a.kind,
+        slot: a.slot,
       })),
-      { onConflict: "user_id,local_date", ignoreDuplicates: true },
+      { onConflict: "user_id,local_date,slot", ignoreDuplicates: true },
     )
-    .select("user_id");
+    .select("user_id, slot");
 
   if (errorLog) {
     return NextResponse.json({ error: errorLog.message }, { status: 500 });
   }
 
-  const conTurno = new Set((reservados ?? []).map((r) => r.user_id as string));
-  const aMandar = avisos.filter((a) => conTurno.has(a.user_id));
+  const conTurno = new Set(
+    (reservados ?? []).map((r) => `${r.user_id as string}:${r.slot as string}`),
+  );
+  const aMandar = avisos.filter((a) => conTurno.has(`${a.user_id}:${a.slot}`));
 
   // Una sola consulta para todos los dispositivos, no una por persona.
   const { data: dispositivos } = await supabase
@@ -235,7 +254,7 @@ export async function POST(request: NextRequest) {
             endpoint: dispositivo.endpoint,
             keys: { p256dh: dispositivo.p256dh, auth: dispositivo.auth },
           },
-          JSON.stringify(TEXTOS[aviso.kind](aviso.habito, aviso.dato)),
+          JSON.stringify(TEXTOS[aviso.kind](aviso.habito, aviso.dato, aviso.extra)),
         ),
       ),
     );
