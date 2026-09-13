@@ -257,39 +257,18 @@ Regla vigente desde las migraciones 0011 y 0012:
 Y el "por qué": una frase opcional por hábito que se enseña en el botón de
 emergencia y después de "Caí".
 
-## Niveles dentro del reto (idea, sin implementar)
+## Premio y avisos (0013)
 
-La pregunta que resuelve: "llevo cinco días" motiva menos que "ya soy nivel
-tres". El reto de 21 días se juega por niveles, y subir de nivel es lo que
-se celebra, no solo el número.
-
-Propuesta de partida, para discutir:
-
-- **Escalones fijos por reto**, a partir de los hitos que ya existen en
-  `src/lib/milestones.ts` (1, 3, 7, 14, 21, 30, 60, 90, 180, 365): el nivel
-  es el último hito alcanzado dentro de la racha actual. Para 21 días serían
-  cinco niveles: día 1, día 3, día 7, día 14 y día 21. Para 30, seis. Para
-  60 y 90, uno más cada uno.
-- **Nombre por nivel, no número**, y distinto para dejar y para empezar. Un
-  borrador: Día uno · Arranque · Una semana · Dos semanas · Reto cumplido.
-  Si se quiere arquetipo, se cuelga del compañero: Brote pasa por Semilla,
-  Brote, Tallo, Rama, Árbol; Roco por Piedra, Canto, Roca, Peña, Montaña;
-  y así con Chispa y Nube. El compañero ya tiene etapas a los 7 y 21 días
-  (`etapaDeRacha`), así que el dibujo cambia con el nivel sin trabajo extra.
-- **Dónde se ve**: en la tarjeta de Hoy, una insignia con el nivel al lado
-  del número grande y la línea de "cuánto falta" pasa a decir "Nivel 3 en 2
-  días". En Progreso, el bloque del reto lleva el nivel. En el detalle, una
-  fila de cinco casillas con los niveles conseguidos.
-- **Qué pasa al reiniciar**: el nivel vuelve a cero con la racha, pero el
-  detalle guarda "nivel máximo alcanzado" (sale de `best_streak`, no hace
-  falta columna nueva). Es lo que hace que caer no sea perder todo.
-- **Celebración**: la que ya existe al llegar a un hito
-  (`MilestoneCelebration`) pasa a decir "Nivel 3: una semana" en vez de solo
-  el número, y la tarjeta compartible lleva el nivel.
-- **Sin migración**: todo sale de `current_streak` y `best_streak` que ya
-  devuelve `get_daily_overview`. Es trabajo de pantalla y de copy, no de
-  esquema.
-
-Lo que hay que decidir antes de hacerlo: si los niveles son por hito fijo o
-proporcionales a la meta (para un reto de 90 días, cinco niveles cada 18
-días), y si los nombres son genéricos o por compañero.
+- **El premio.** Al crear el reto, opcional: lo que la persona se da si lo
+  cumple. Vive en `habits.reward`. En Hoy y en el detalle sale bajo llave
+  (texto borroso, candado, "se abre el día N"); al llegar a la meta se abre
+  ("Te lo ganaste") en el detalle y en la tarjeta de reto cumplido. Si el
+  reto vuelve a cero, se vuelve a cerrar solo: abierto o cerrado lo decide
+  comparar días con meta, no una columna.
+- **Dos avisos al día, a horas fijas.** A las 9, por dónde va el reto y su
+  porqué. A las 21, lo que está en juego si falta algo por marcar, o la
+  bitácora si ya marcó todo. La hora difícil sigue aparte cuando hay patrón,
+  y la víspera de la meta el de la noche dice "Mañana llegas". Cada aviso
+  tiene su franja (`notification_log.slot`) y la llave primaria deja pasar
+  uno por franja y día. `reminder_hour` queda como interruptor; ya no se
+  elige hora. La idea de niveles se descartó.

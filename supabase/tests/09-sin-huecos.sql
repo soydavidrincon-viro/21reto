@@ -136,10 +136,12 @@ insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values
 do $$
 declare d integer;
 begin
+  -- No se puede fijar now(); solo se comprueba que corre y que, si a Lola le
+  -- toca el de la noche, el número de sin marcar es coherente.
   select dato into d from public.avisos_pendientes()
-  where user_id = 'a9a9a9a9-a9a9-a9a9-a9a9-a9a9a9a9a9a9' and kind = 'dia';
-  if d is not null and d < 0 then
-    raise exception 'FALLO: el aviso de día salió con dato %', d;
+  where user_id = 'a9a9a9a9-a9a9-a9a9-a9a9-a9a9a9a9a9a9' and kind = 'noche';
+  if d is not null and d < 1 then
+    raise exception 'FALLO: el aviso de la noche salió con % sin marcar', d;
   end if;
   raise notice 'OK: avisos_pendientes corre sin huecos';
 end $$;

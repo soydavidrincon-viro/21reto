@@ -32,10 +32,12 @@ vive en `get_habit_stats` (migración 0012, la aritmética de islas sobre
 existió una "racha en pausa" con huecos que se contestaban después; se quitó
 porque con ella daba igual abrir la app.
 
-Y dos costumbres más chicas: la bitácora de hoy se abre cuando todo lo que
-tocaba hoy tiene registro (lo comprueba `saveJournal`, además de la pantalla),
-y cada hábito nuevo recibe un color que ningún otro activo esté usando
-(`colorLibre` en `src/app/actions/habits.ts`).
+Y tres costumbres más chicas: la bitácora de hoy se abre cuando todo lo que
+tocaba hoy tiene registro (lo comprueba `saveJournal`, además de la pantalla);
+cada hábito nuevo recibe un color que ningún otro activo esté usando
+(`colorLibre` en `src/app/actions/habits.ts`); y el premio del reto
+(`habits.reward`) no tiene estado: está abierto cuando `clean_days >=
+target_days` y cerrado si no, y eso lo decide la pantalla.
 
 ## Cómo se trabaja aquí
 

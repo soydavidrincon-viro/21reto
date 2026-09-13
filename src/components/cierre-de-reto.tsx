@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Archive, Trophy } from "@phosphor-icons/react";
+import { ArrowRight, Archive, Gift, Trophy } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { archiveHabit, extendHabit } from "@/app/actions/habits";
 import { Companion, type CompanionKey } from "@/components/companion";
@@ -81,6 +81,25 @@ export function CierreDeReto({
           className="salta shrink-0"
         />
       </div>
+
+      {/* El premio, abierto. Es lo primero que se ve al llegar: lo que la
+          persona se prometió el día que empezó. */}
+      {habit.premio && (
+        <div
+          className="mt-4 flex items-start gap-3 rounded-[16px] px-3.5 py-3"
+          style={{ background: "rgba(255,255,255,0.28)", color: skin.tinta }}
+        >
+          <Gift size={22} weight="fill" aria-hidden="true" className="mt-0.5 shrink-0" />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-[12px] font-bold uppercase tracking-[0.08em] opacity-80">
+              Te lo ganaste
+            </span>
+            <p className="text-pretty font-display text-[17px] font-medium leading-[1.35]">
+              “{habit.premio}”
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-5 flex flex-col gap-2">
         <button

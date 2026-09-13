@@ -7,6 +7,7 @@ import { DiasDelHabito } from "@/components/dias-del-habito";
 import { GestionDeReto } from "@/components/gestion-de-reto";
 import { HabitActions } from "@/components/habit-actions";
 import { MotivoDelHabito } from "@/components/motivo-del-habito";
+import { PremioDelHabito } from "@/components/premio-del-habito";
 import { faltaPara } from "@/lib/milestones";
 import {
   MonthHeatmap,
@@ -178,6 +179,15 @@ export default async function HabitoPage({
               habitId={habit.id}
               inicial={(habit.description as string | null) ?? null}
               kind={kind}
+            />
+          </div>
+
+          <div className="mx-4 lg:mx-0">
+            <PremioDelHabito
+              habitId={habit.id}
+              inicial={(habit.reward as string | null) ?? null}
+              dias={stats.clean_days}
+              meta={habit.target_days}
             />
           </div>
 

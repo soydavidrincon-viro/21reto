@@ -31,6 +31,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
                      -f supabase/migrations/0010_racha_en_pausa.sql \
                      -f supabase/migrations/0011_reto_de_cero.sql \
                      -f supabase/migrations/0012_sin_huecos.sql \
+                     -f supabase/migrations/0013_premio_y_dos_avisos.sql \
                      -f supabase/seed.sql \
                      -f supabase/tests/01-esquema.sql \
                      -f supabase/tests/02-antojos.sql \
@@ -39,7 +40,8 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
                      -f supabase/tests/05-recordatorios.sql \
                      -f supabase/tests/06-auditoria.sql \
                      -f supabase/tests/08-reto-de-cero.sql \
-                     -f supabase/tests/09-sin-huecos.sql
+                     -f supabase/tests/09-sin-huecos.sql \
+                     -f supabase/tests/10-premio.sql
 ```
 
 La base tiene que estar vacía y el rol `app_user` no debe existir de antes:
@@ -83,8 +85,9 @@ cambie nada (desde 0011 la recaída siempre reinicia) y que el cumplimiento se
 mida contra los días que tocaban y no contra los que se marcaron.
 
 `05-recordatorios.sql` fija instantes concretos para comprobar que la hora del
-aviso es la de cada quien, que el tope de uno al día lo impone la llave primaria
-y que nadie con sesión puede listar los avisos de todos.
+aviso (21, fija desde 0013) es la de cada quien, que el tope de uno por franja
+y día lo impone la llave primaria, y que nadie con sesión puede listar los
+avisos de todos.
 
 `06-auditoria.sql` cubre lo que cerró la migración 0009: el upsert del
 dispositivo funciona para el dueño y queda bloqueado para cualquier otro, una
@@ -104,3 +107,6 @@ un día pasado que tocaba y quedó sin marcar reinicia el reto, un día libre
 marcado "igual" no avanza, `huecos_pendientes` desapareció,
 `get_daily_overview` ya no trae `pendientes` y el aviso de la noche cuenta
 los hábitos sin marcar hoy.
+
+`10-premio.sql` cubre la columna del premio (0013): cabe en 200 y no en 201,
+`get_daily_overview` la trae y sin premio viene nula.

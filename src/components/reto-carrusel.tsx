@@ -1,4 +1,4 @@
-import { CaretRight } from "@phosphor-icons/react/dist/ssr";
+import { CaretRight, Lock } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { AccionDelDia } from "@/components/accion-del-dia";
 import { Carrusel } from "@/components/carrusel";
@@ -193,6 +193,18 @@ export function RetoCarrusel({
                   sombra={false}
                 />
               </div>
+
+              {/* El premio bajo llave: un recordatorio de lo que hay al final,
+                  sin decir qué es. Ya lo sabe; lo escribió. */}
+              {habit.premio && (
+                <p
+                  className="tnum mt-3 flex items-center gap-1.5 text-[12.5px] font-semibold opacity-75"
+                  style={{ color: skin.tinta }}
+                >
+                  <Lock size={13} weight="fill" aria-hidden="true" />
+                  Premio bajo llave · se abre el día {habit.target_days}
+                </p>
+              )}
 
               <div className="relative mt-3">
                 <AccionDelDia habit={habit} today={today} variante="grande" />

@@ -68,13 +68,14 @@ día, y eso es lo que lo hace reto.
 
 Listo: esquema con RLS y pruebas, entrada por Google o enlace al correo,
 onboarding con compañero y "para qué", pantalla de instalar en iPhone, Hoy con
-carrusel de retos con el check dentro, "cuánto falta" para el próximo hito, botón de emergencia con
+carrusel de retos con el check dentro, premio bajo llave que se abre al cumplir
+la meta, "cuánto falta" para el próximo hito, botón de emergencia con
 registro de impulsos y el porqué a la vista, detalle de hábito con calendario
 navegable y tarjeta compartible, bitácora que se abre al cerrar el día, con
 calendario para leer cualquier día, progreso con la racha de cada reto en
 grande, cumplimiento semanal, rejilla de impulsos y línea de ánimo, hitos con
-confetti, cierre del reto al llegar a la meta, recordatorios push con la hora
-de cada quien, y perfil con foto, tema, zona horaria, exportación y borrado de
+confetti, cierre del reto al llegar a la meta, dos recordatorios push al día a
+horas fijas en la zona de cada quien, y perfil con foto, tema, zona horaria, exportación y borrado de
 cuenta.
 
 Falta: modo offline con cola de cambios (el service worker solo recibe avisos,
