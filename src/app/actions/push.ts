@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { HORA_AVISO_NOCHE } from "@/lib/types";
 
 /**
- * Guardar el dispositivo y la hora del recordatorio.
+ * Guardar el dispositivo y el interruptor de los avisos.
  *
  * La suscripción la genera el navegador; aquí solo se guarda contra la cuenta.
  * El endpoint es único en la tabla, así que volver a entrar desde el mismo
