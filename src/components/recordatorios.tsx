@@ -132,7 +132,7 @@ export function Recordatorios({
           </span>
           <span className="text-[12.5px] text-label-2">
             {encendidos
-              ? `A las ${String(profile.reminder_hour).padStart(2, "0")}:00, hora tuya`
+              ? `A las ${HORA_AVISO_MANANA} y a las ${HORA_AVISO_NOCHE}, hora tuya`
               : "Apagados"}
           </span>
         </span>

@@ -232,8 +232,8 @@ export default async function HabitoPage({
             </div>
 
             <p className="text-[12px] leading-[1.35] text-label-2">
-              Toca un día para ver qué pasó. Los últimos siete se pueden
-              corregir; los de antes se quedan como quedaron.
+              Toca un día para ver qué pasó. Solo se marca el de hoy; lo de
+              antes se queda como quedó.
             </p>
           </section>
 
