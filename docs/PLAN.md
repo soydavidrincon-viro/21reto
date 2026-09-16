@@ -272,3 +272,24 @@ emergencia y después de "Caí".
   tiene su franja (`notification_log.slot`) y la llave primaria deja pasar
   uno por franja y día. `reminder_hour` queda como interruptor; ya no se
   elige hora. La idea de niveles se descartó.
+
+## Días asumidos y meta cumplida (0014)
+
+- **El día sin marcar queda como recaída.** Nada cambia en la cuenta: si
+  recaes, cero; si no apareces, cero. Lo nuevo es que el día que tocaba y
+  quedó sin marcar ya no se queda gris. Al abrir la app
+  (`cerrar_dias_sin_marcar`, llamada desde Hoy, Bitácora y el detalle) se
+  inserta como recaída con `asumido = true`, y Hoy pregunta una vez qué pasó
+  con una hoja: nota opcional (Guardar / Sin nota), `revisado_en` marca que
+  ya se contestó. Cerrar la hoja sin contestar la vuelve a enseñar la próxima
+  vez; lo de hace más de dos semanas nace revisado. Nada devuelve el reto: un
+  día pasado solo puede ser recaída. En el calendario del detalle esos días
+  dicen "Sin marcar · contó como recaída" y enseñan la nota.
+- **La recaída de hoy con nota.** "Registrar una recaída" abre la misma hoja
+  (fecha, "El reto vuelve a cero: tus N días quedan en el historial") con el
+  campo para escribir qué pasó. Caer desde el botón de impulso pasa la nota
+  del impulso al día.
+- **La meta, con su premio.** Al marcar el día que completa el reto sale un
+  modal con confeti, "Llegaste a tu meta" y el premio en grande ("Te lo
+  ganaste"). Salta con cualquier meta, no solo con los hitos fijos; si
+  coinciden, gana la meta. El hito 21 ya no dice "Cumpliste el reto".

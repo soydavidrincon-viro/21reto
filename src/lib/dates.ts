@@ -123,6 +123,35 @@ export function longDate(dateISO: string): string {
   return `${WEEKDAYS[date.getDay()]} ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
 }
 
+/**
+ * Varias fechas en una frase: "Lunes 15 de septiembre" si es una; "13, 14 y
+ * 15 de septiembre" si son varias del mismo mes; "30 y 31 de agosto, 1 de
+ * septiembre" si cruzan de mes. Para la hoja de los días sin marcar.
+ */
+export function listaDeDias(fechasISO: string[]): string {
+  const fechas = [...fechasISO].sort();
+  if (fechas.length === 0) return "";
+  if (fechas.length === 1) return longDate(fechas[0]);
+
+  const porMes = new Map<number, number[]>();
+  for (const iso of fechas) {
+    const d = parseISO(iso);
+    const dias = porMes.get(d.getMonth()) ?? [];
+    dias.push(d.getDate());
+    porMes.set(d.getMonth(), dias);
+  }
+
+  return [...porMes.entries()]
+    .map(([mes, dias]) => {
+      const numeros =
+        dias.length === 1
+          ? String(dias[0])
+          : `${dias.slice(0, -1).join(", ")} y ${dias[dias.length - 1]}`;
+      return `${numeros} de ${MONTHS[mes]}`;
+    })
+    .join(", ");
+}
+
 const MESES_CORTOS = [
   "ene", "feb", "mar", "abr", "may", "jun",
   "jul", "ago", "sep", "oct", "nov", "dic",
