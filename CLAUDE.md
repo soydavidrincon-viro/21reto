@@ -30,7 +30,11 @@ hoy y el calendario del detalle enseña el pasado sin dejar tocarlo. La regla
 vive en `get_habit_stats` (migración 0012, la aritmética de islas sobre
 `dias_que_tocan_hasta`); no la reimplementes en TypeScript. Entre 0010 y 0012
 existió una "racha en pausa" con huecos que se contestaban después; se quitó
-porque con ella daba igual abrir la app.
+porque con ella daba igual abrir la app. Desde 0014 el día que quedó sin marcar
+no se queda gris: al abrir la app (`cerrar_dias_sin_marcar`, desde Hoy,
+Bitácora y el detalle) se cierra como recaída con `asumido = true`, para que el
+calendario lo enseñe y la persona pueda anotar qué pasó. Eso no cambia la
+cuenta y nada devuelve el reto: un día pasado solo puede ser recaída.
 
 Y tres costumbres más chicas: la bitácora de hoy se abre cuando todo lo que
 tocaba hoy tiene registro (lo comprueba `saveJournal`, además de la pantalla);

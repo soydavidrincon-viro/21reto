@@ -87,7 +87,7 @@ export function milestoneCopy(day: number): { title: string; detail: string } {
     case 21:
       return {
         title: "Veintiún días",
-        detail: "Cumpliste el reto. Puedes cerrarlo o seguir contando.",
+        detail: "Tres semanas seguidas. Ya es más costumbre que esfuerzo.",
       };
     case 30:
       return { title: "Un mes", detail: "Un mes entero de decisiones tuyas." };

@@ -62,7 +62,12 @@ export function AccionDelDia({
         setError(result.error);
         return;
       }
-      celebrar(result.streak);
+      celebrar(result.streak, {
+        nombre: habit.name,
+        kind: habit.kind,
+        targetDays: habit.target_days,
+        premio: habit.premio,
+      });
       cierre?.alMarcar(habit.habit_id);
     });
   }

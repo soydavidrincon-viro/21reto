@@ -8,6 +8,7 @@ import {
   type ImpulsoDeBitacora,
 } from "@/components/dia-de-bitacora";
 import { longDate, shiftISO, todayIn } from "@/lib/dates";
+import { cerrarDiasSinMarcar } from "@/lib/supabase/cerrar-dias";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
 import { conDiasPorDefecto, type DailyOverviewRow, type Profile } from "@/lib/types";
@@ -35,6 +36,8 @@ export default async function BitacoraPage() {
 
   const today = todayIn(profile?.timezone ?? "UTC");
   const since = shiftISO(today, -DIAS_ATRAS);
+
+  await cerrarDiasSinMarcar(supabase, today);
 
   const [{ data: entries }, { data: logs }, { data: habits }, { data: cravings }, overview] =
     await Promise.all([

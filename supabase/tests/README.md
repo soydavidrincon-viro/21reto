@@ -32,6 +32,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
                      -f supabase/migrations/0011_reto_de_cero.sql \
                      -f supabase/migrations/0012_sin_huecos.sql \
                      -f supabase/migrations/0013_premio_y_dos_avisos.sql \
+                     -f supabase/migrations/0014_dias_asumidos.sql \
                      -f supabase/seed.sql \
                      -f supabase/tests/01-esquema.sql \
                      -f supabase/tests/02-antojos.sql \
@@ -41,7 +42,8 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
                      -f supabase/tests/06-auditoria.sql \
                      -f supabase/tests/08-reto-de-cero.sql \
                      -f supabase/tests/09-sin-huecos.sql \
-                     -f supabase/tests/10-premio.sql
+                     -f supabase/tests/10-premio.sql \
+                     -f supabase/tests/11-dias-asumidos.sql
 ```
 
 La base tiene que estar vacía y el rol `app_user` no debe existir de antes:
@@ -110,3 +112,10 @@ los hábitos sin marcar hoy.
 
 `10-premio.sql` cubre la columna del premio (0013): cabe en 200 y no en 201,
 `get_daily_overview` la trae y sin premio viene nula.
+
+`11-dias-asumidos.sql` cubre el cierre de días (0014): un día que tocaba y
+quedó sin marcar se cierra como recaída asumida al abrir la app, hoy no se
+toca, la cuenta del reto no cambia al cerrarlos, correrlo dos veces no
+duplica, lo que se construye se cierra solo en sus días, lo de hace
+más de dos semanas nace revisado, y ni los archivados ni los de otra persona
+se tocan.

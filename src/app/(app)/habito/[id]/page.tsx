@@ -14,6 +14,7 @@ import {
   type ImpulsoDelDia,
 } from "@/components/month-heatmap";
 import { todayIn } from "@/lib/dates";
+import { cerrarDiasSinMarcar } from "@/lib/supabase/cerrar-dias";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
 import type { LogStatus, Profile } from "@/lib/types";
@@ -47,6 +48,10 @@ export default async function HabitoPage({
 
   const today = todayIn(profile?.timezone ?? "UTC");
 
+  // Antes de leer: los días que tocaban y quedaron sin marcar se cierran como
+  // recaída, para que el calendario los enseñe aunque no se pase por Hoy.
+  await cerrarDiasSinMarcar(supabase, today);
+
   const [{ data: habit }, { data: statsRows }, { data: logs }, { data: impulsos }] =
     await Promise.all([
       supabase.from("habits").select("*").eq("id", id).maybeSingle(),
@@ -55,7 +60,7 @@ export default async function HabitoPage({
       // volver a consultar: el histórico entero ya está aquí.
       supabase
         .from("habit_logs")
-        .select("log_date, status, note")
+        .select("log_date, status, note, asumido")
         .eq("habit_id", id),
       supabase
         .from("cravings")
@@ -83,6 +88,13 @@ export default async function HabitoPage({
       .map((log) => [log.log_date as string, log.note as string]),
   );
 
+  // Los que cerró la app por quedar sin marcar, para decirlo en el calendario.
+  const asumidos = Object.fromEntries(
+    (logs ?? [])
+      .filter((log) => log.asumido === true)
+      .map((log) => [log.log_date as string, true as const]),
+  );
+
   const todayStatus = byDate.get(today) ?? null;
 
   // Lo que se construye no tiene "recaídas" ni "días limpios": tiene días
@@ -94,6 +106,12 @@ export default async function HabitoPage({
   const recaida = construye ? "Saltado" : "Recaída";
   const recaidas = construye ? "Saltados" : "Recaídas";
   const falta = faltaPara(stats.current_streak, habit.target_days);
+  const reto = {
+    nombre: habit.name as string,
+    kind,
+    targetDays: habit.target_days as number,
+    premio: (habit.reward as string | null) ?? null,
+  };
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -169,9 +187,12 @@ export default async function HabitoPage({
 
           <HabitActions
             habitId={habit.id}
+            nombre={habit.name}
             kind={kind}
             today={today}
             todayStatus={todayStatus}
+            cleanDays={stats.clean_days}
+            reto={reto}
           />
 
           <div className="mx-4 lg:mx-0">
@@ -213,6 +234,8 @@ export default async function HabitoPage({
               startDate={habit.start_date as string}
               initial={Object.fromEntries(byDate)}
               notas={notas}
+              asumidos={asumidos}
+              reto={reto}
               impulsos={(impulsos ?? []) as ImpulsoDelDia[]}
             />
 
@@ -232,8 +255,8 @@ export default async function HabitoPage({
             </div>
 
             <p className="text-[12px] leading-[1.35] text-label-2">
-              Toca un día para ver qué pasó. Los últimos siete se pueden
-              corregir; los de antes se quedan como quedaron.
+              Toca un día para ver qué pasó. Solo se marca el de hoy; lo de
+              antes se queda como quedó.
             </p>
           </section>
 

@@ -75,6 +75,8 @@ export async function logCraving(input: NuevoImpulso) {
   // Si cayó y el impulso cuelga de un hábito, la recaída del día se registra
   // sola. Pedirle a alguien que acaba de recaer que además vaya a otra pantalla
   // a marcarlo es pedir demasiado justo en el peor momento.
+  // Y la nota del impulso, si la hay, se queda también en el día: es el
+  // "qué pasó" de esa recaída, y no hay que escribirlo dos veces.
   if (!input.resisted && input.habitId) {
     await supabase.from("habit_logs").upsert(
       {
@@ -82,6 +84,7 @@ export async function logCraving(input: NuevoImpulso) {
         user_id: user.id,
         log_date: localDate,
         status: "relapse",
+        ...(input.note ? { note: input.note } : {}),
       },
       { onConflict: "habit_id,log_date" },
     );

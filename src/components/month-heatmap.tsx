@@ -3,7 +3,7 @@
 import { CaretLeft, CaretRight, Lightning } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
-import { useCelebracion } from "@/components/celebracion";
+import { useCelebracion, type RetoParaCelebrar } from "@/components/celebracion";
 import { longDate, monthGrid, monthName } from "@/lib/dates";
 import {
   DOW_INICIALES,
@@ -46,6 +46,8 @@ export function MonthHeatmap({
   startDate,
   initial,
   notas,
+  asumidos = {},
+  reto,
   impulsos,
 }: {
   habitId: string;
@@ -57,6 +59,10 @@ export function MonthHeatmap({
   initial: Record<string, LogStatus>;
   /** La nota que se guardó con el día, si la hubo. */
   notas: Record<string, string>;
+  /** Los días que la app cerró por quedar sin marcar (fecha -> true). */
+  asumidos?: Record<string, true>;
+  /** Para celebrar la meta con su premio al marcar el último día. */
+  reto: RetoParaCelebrar;
   impulsos: ImpulsoDelDia[];
 }) {
   /**
@@ -120,7 +126,7 @@ export function MonthHeatmap({
       } else {
         const result = await markDay(habitId, date, next);
         if (result.error) setError(result.error);
-        else if (next === "success") celebrar(result.streak);
+        else if (next === "success") celebrar(result.streak, reto);
       }
       // Con éxito, la página ya se revalidó y `initial` trae el cambio; con
       // error, lo que había en `initial` sigue siendo la verdad. En los dos
@@ -212,7 +218,9 @@ export function MonthHeatmap({
                 state === "success"
                   ? "limpio"
                   : state === "relapse"
-                    ? recaida.toLowerCase()
+                    ? asumidos[date]
+                      ? `sin marcar, contó como ${recaida.toLowerCase()}`
+                      : recaida.toLowerCase()
                     : future
                       ? "por venir"
                       : "sin registro"
@@ -252,7 +260,9 @@ export function MonthHeatmap({
               {status[editing] === "success"
                 ? "Limpio"
                 : status[editing] === "relapse"
-                  ? recaida
+                  ? asumidos[editing]
+                    ? `Sin marcar · contó como ${recaida.toLowerCase()}`
+                    : recaida
                   : "Sin registro"}
             </span>
           </div>

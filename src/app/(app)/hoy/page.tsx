@@ -8,6 +8,7 @@ import {
   HabitosDeHoy,
 } from "@/components/cierre-del-dia";
 import { CravingButton } from "@/components/craving-button";
+import { DiasSinMarcar, type DiasSinMarcarDeUnHabito } from "@/components/dias-sin-marcar";
 import { Recordatorios } from "@/components/recordatorios";
 import { RetoCarrusel } from "@/components/reto-carrusel";
 import { Isotipo } from "@/components/logo";
@@ -18,6 +19,7 @@ import {
   todayIn,
   zonedNow,
 } from "@/lib/dates";
+import { cerrarDiasSinMarcar } from "@/lib/supabase/cerrar-dias";
 import { createClient } from "@/lib/supabase/server";
 import { usuarioActual } from "@/lib/supabase/sesion";
 import { etapaDeRacha, type CompanionMood } from "@/components/companion";
@@ -43,7 +45,12 @@ export default async function HoyPage() {
   // El día se resuelve con la zona horaria del perfil, no con la del servidor.
   const today = todayIn(profile.timezone);
 
-  const [overview, quote, entry, pasadas, impulsosHoy] = await Promise.all([
+  // Primero se cierran los días que tocaban y quedaron sin marcar (como
+  // recaída), y solo después se lee: así el overview y la pregunta de "qué
+  // pasó" salen de la misma foto.
+  await cerrarDiasSinMarcar(supabase, today);
+
+  const [overview, quote, entry, pasadas, impulsosHoy, sinContestar] = await Promise.all([
     supabase.rpc("get_daily_overview", { p_date: today }),
     supabase.rpc("get_daily_quote", { p_date: today }),
     supabase
@@ -67,6 +74,13 @@ export default async function HoyPage() {
       .from("cravings")
       .select("id", { count: "exact", head: true })
       .eq("local_date", today),
+    // Los días que la app cerró como recaída y todavía no se han contestado.
+    supabase
+      .from("habit_logs")
+      .select("habit_id, log_date")
+      .eq("asumido", true)
+      .is("revisado_en", null)
+      .order("log_date"),
   ]);
 
   // `conDiasPorDefecto` es el seguro de la ventana entre el despliegue y la
@@ -76,6 +90,17 @@ export default async function HoyPage() {
     conDiasPorDefecto,
   );
   const frase = ((quote.data ?? []) as Quote[])[0];
+
+  // Agrupados por hábito, con el nombre del overview: la función solo cierra
+  // hábitos activos, así que siempre están ahí.
+  const porAnotar: DiasSinMarcarDeUnHabito[] = [];
+  for (const fila of (sinContestar.data ?? []) as { habit_id: string; log_date: string }[]) {
+    const habit = habits.find((h) => h.habit_id === fila.habit_id);
+    if (!habit) continue;
+    const grupo = porAnotar.find((g) => g.habitId === fila.habit_id);
+    if (grupo) grupo.fechas.push(fila.log_date);
+    else porAnotar.push({ habitId: habit.habit_id, nombre: habit.name, kind: habit.kind, fechas: [fila.log_date] });
+  }
   const firstName = profile.display_name?.split(" ")[0] ?? "";
 
   /**
@@ -182,6 +207,8 @@ export default async function HoyPage() {
       >
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-6">
           <div className="flex flex-col gap-4">
+            {porAnotar.length > 0 && <DiasSinMarcar pendientes={porAnotar} />}
+
             {cumplidos.length > 0 && (
               <div className="flex flex-col gap-3 px-4 lg:px-0">
                 {cumplidos.map((habit) => (

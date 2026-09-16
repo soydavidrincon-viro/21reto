@@ -3,24 +3,35 @@
 import { ArrowCounterClockwise, Check } from "@phosphor-icons/react";
 import { useState, useTransition } from "react";
 import { clearDay, markDay } from "@/app/(app)/hoy/actions";
-import { useCelebracion } from "@/components/celebracion";
+import { useCelebracion, type RetoParaCelebrar } from "@/components/celebracion";
+import { HojaDeRecaida } from "@/components/hoja-de-recaida";
+import { longDate } from "@/lib/dates";
 import type { LogStatus } from "@/lib/types";
 
 /**
- * Las dos acciones del día en el detalle. La recaída pide confirmación y usa
- * amarillo, no rojo: es un dato del proceso, no una falta que castigar.
+ * Las dos acciones del día en el detalle. La recaída abre una hoja que pide
+ * confirmar y deja escribir qué pasó, y usa amarillo, no rojo: es un dato del
+ * proceso, no una falta que castigar.
  */
 export function HabitActions({
   habitId,
+  nombre,
   kind,
   today,
   todayStatus,
+  cleanDays,
+  reto,
 }: {
   habitId: string;
+  nombre: string;
   /** Lo que se deja tiene recaídas; lo que se construye, días saltados. */
   kind: "quit" | "build";
   today: string;
   todayStatus: LogStatus | null;
+  /** Los días del reto que se pierden al registrar la recaída. */
+  cleanDays: number;
+  /** Para celebrar la meta con su premio al marcar el último día. */
+  reto: RetoParaCelebrar;
 }) {
   const construye = kind === "build";
   const [pending, startTransition] = useTransition();
@@ -37,7 +48,7 @@ export function HabitActions({
     startTransition(async () => {
       const result = await action();
       if (result.error) setError(result.error);
-      else if (result.streak !== undefined) celebrar(result.streak);
+      else if (result.streak !== undefined) celebrar(result.streak, reto);
       setConfirming(false);
     });
   }
@@ -80,51 +91,45 @@ export function HabitActions({
               : "Marcar hoy como limpio"}
       </button>
 
-      {confirming ? (
-        <div className="flex flex-col gap-2 rounded-[14px] bg-card p-4">
-          <p className="text-pretty text-[15px] leading-[1.4] tracking-[-0.01em] text-label">
-            {construye
-              ? "Registrar que hoy te lo saltaste. El reto vuelve a empezar de cero; el día queda en tu historial."
-              : "Registrar una recaída de hoy. El reto vuelve a empezar de cero; el día queda en tu historial."}
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => run(() => markDay(habitId, today, "relapse"))}
-              className="pulsable h-11 flex-1 rounded-xl bg-ambar text-[15px] font-semibold text-ambar-tinta disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-            >
-              Sí, registrar
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              className="pulsable h-11 flex-1 rounded-xl bg-fill text-[15px] font-semibold text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() =>
-            relapsed ? run(() => clearDay(habitId, today)) : setConfirming(true)
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() =>
+          relapsed ? run(() => clearDay(habitId, today)) : setConfirming(true)
+        }
+        className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-label-2 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+      >
+        {relapsed
+          ? construye
+            ? "Quitar el día saltado"
+            : "Quitar la recaída de hoy"
+          : construye
+            ? "Registrar que hoy me lo salté"
+            : "Registrar una recaída"}
+      </button>
+
+      {confirming && (
+        <HojaDeRecaida
+          fecha={longDate(today)}
+          subtitulo={`${nombre} · hoy`}
+          titulo={construye ? "Registrar el día saltado" : "Registrar una recaída"}
+          texto={
+            cleanDays > 0
+              ? `El reto vuelve a cero: tus ${cleanDays} ${cleanDays === 1 ? "día queda" : "días quedan"} en el historial y en tu mejor racha. Nada se borra.`
+              : "El reto sigue en cero. El día queda en tu historial, en amarillo."
           }
-          className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-label-2 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
-        >
-          {relapsed
-            ? construye
-              ? "Quitar el día saltado"
-              : "Quitar la recaída de hoy"
-            : construye
-              ? "Registrar que hoy me lo salté"
-              : "Registrar una recaída"}
-        </button>
+          accion="Registrar"
+          secundaria={{ label: "Cancelar", onClick: () => setConfirming(false) }}
+          pending={pending}
+          error={error}
+          onConfirmar={(nota) =>
+            run(() => markDay(habitId, today, "relapse", nota || undefined))
+          }
+          onClose={() => setConfirming(false)}
+        />
       )}
 
-      {error && (
+      {error && !confirming && (
         <p role="alert" className="text-center text-[13px] leading-[1.35] text-rojo">
           {error}
         </p>

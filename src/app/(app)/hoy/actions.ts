@@ -12,8 +12,12 @@ import {
   type Profile,
 } from "@/lib/types";
 
-/** Hasta 4000 caracteres, lo mismo que el `maxLength` de los editores. */
-const MAX_NOTA = 4000;
+/**
+ * El tope de la nota de un día: el `check` de `habit_logs.note` (0001). Antes
+ * decía 4000 y una nota larga pasaba la acción y reventaba en Postgres con un
+ * error crudo.
+ */
+const MAX_NOTA = 1000;
 
 /**
  * ¿Es una fecha que la app puede aceptar para esta cuenta?
@@ -250,5 +254,49 @@ export async function saveJournal(
   revalidatePath("/bitacora");
   // La línea de ánimo vive en Progreso.
   revalidatePath("/progreso");
+  return { error: null };
+}
+
+/**
+ * Contesta "¿qué pasó?" sobre días que la app cerró como recaída asumida.
+ *
+ * Aquí sí se aceptan fechas pasadas: no se toca el estado del día (sigue
+ * siendo recaída, y nada lo devuelve a limpio), solo se guarda la nota y se
+ * anota que la persona ya lo vio, para no volver a preguntar. La nota puede
+ * ir vacía: "Sin nota" también es contestar.
+ */
+export async function anotarDiasAsumidos(
+  habitId: string,
+  fechas: string[],
+  nota: string | null,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Necesitas iniciar sesión." };
+
+  if (
+    !Array.isArray(fechas) ||
+    fechas.length === 0 ||
+    fechas.length > 62 ||
+    !fechas.every(esFechaISO)
+  ) {
+    return { error: "Esas fechas no existen." };
+  }
+  const limpia = typeof nota === "string" ? nota.trim() : "";
+  if (limpia.length > MAX_NOTA) return { error: "La nota es demasiado larga." };
+
+  const { error } = await supabase
+    .from("habit_logs")
+    .update({ note: limpia || null, revisado_en: new Date().toISOString() })
+    .eq("habit_id", habitId)
+    .eq("user_id", user.id)
+    .eq("asumido", true)
+    .in("log_date", fechas);
+
+  if (error) return { error: "No se pudo guardar. Inténtalo otra vez." };
+
+  revalidarRegistros(habitId);
   return { error: null };
 }
