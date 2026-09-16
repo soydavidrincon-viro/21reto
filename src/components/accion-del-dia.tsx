@@ -81,19 +81,33 @@ export function AccionDelDia({
         : `Marcar ${habit.name} de hoy`;
 
   // Con recaída registrada el botón no ofrece "marcar": pisaría la recaída
-  // con un limpio de un toque. Se quita desde el detalle, con confirmación.
+  // con un limpio de un toque. Se quita desde la esquina de la tarjeta o el
+  // detalle, con confirmación. En la tarjeta el bloque trae el porqué que la
+  // persona escribió al crear el reto: es justo cuando más sirve leerlo.
   if (relapsed) {
+    if (variante === "fila") {
+      return (
+        <span
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-ambar text-ambar-tinta"
+          aria-label={construye ? "Hoy quedó saltado" : "Recaída registrada hoy"}
+        >
+          !
+        </span>
+      );
+    }
     return (
-      <span
-        className={
-          variante === "grande"
-            ? "flex h-[52px] items-center justify-center rounded-[16px] bg-ambar/25 text-[15px] font-semibold text-ambar-tinta"
-            : "flex size-11 shrink-0 items-center justify-center rounded-full bg-ambar text-ambar-tinta"
-        }
-        aria-label={construye ? "Hoy quedó saltado" : "Recaída registrada hoy"}
+      <div
+        role="status"
+        className="flex flex-col gap-1 rounded-[14px] bg-ambar px-4 py-3 text-ambar-tinta"
       >
-        {variante === "grande" ? (construye ? "Hoy quedó saltado" : "Recaída registrada hoy") : "!"}
-      </span>
+        <b className="text-[14.5px] font-semibold">
+          {construye ? "Hoy quedó saltado" : "Recaída registrada hoy"}
+        </b>
+        <p className="text-pretty text-[13px] leading-[1.35] opacity-90">
+          El reto vuelve a empezar mañana.
+          {habit.motivo && ` Tú dijiste: “${habit.motivo}”.`}
+        </p>
+      </div>
     );
   }
 

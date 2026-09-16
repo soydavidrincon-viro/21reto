@@ -97,7 +97,11 @@ export function HabitActions({
         onClick={() =>
           relapsed ? run(() => clearDay(habitId, today)) : setConfirming(true)
         }
-        className="flex h-11 items-center justify-center text-[15px] font-medium tracking-[-0.01em] text-label-2 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul"
+        // Un botón de verdad, no un texto gris: es la segunda acción del
+        // día y tiene que verse. Ámbar suave para no competir con el azul.
+        className={`pulsable mt-1 flex h-12 items-center justify-center rounded-[16px] text-[15px] font-semibold tracking-[-0.01em] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul ${
+          relapsed ? "bg-fill text-label" : "bg-ambar/25 text-ambar-tinta"
+        }`}
       >
         {relapsed
           ? construye
