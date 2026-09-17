@@ -211,20 +211,21 @@ export function RetoCarrusel({
                 <AccionDelDia habit={habit} today={today} variante="grande" />
               </div>
 
-              {/* Segunda puerta al detalle, para quien no adivina que el
-                  título se toca. Y al lado, al mismo peso, la otra salida
-                  del día: decir que recaíste. */}
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <Link
-                  href={detalle}
-                  className="flex h-9 items-center gap-1 rounded-lg px-1 text-[13.5px] font-semibold opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                  style={{ color: skin.tinta }}
-                >
-                  Ver calendario y ajustes
-                  <CaretRight size={13} weight="bold" aria-hidden="true" />
-                </Link>
+              {/* La otra salida del día, justo debajo: decir que recaíste. */}
+              <div className="mt-2">
                 <RecaidaDeHoy habit={habit} today={today} tinta={skin.tinta} />
               </div>
+
+              {/* Segunda puerta al detalle, para quien no adivina que el
+                  título se toca. */}
+              <Link
+                href={detalle}
+                className="mt-3 flex h-9 items-center justify-center gap-1 rounded-lg text-[13.5px] font-semibold opacity-75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                style={{ color: skin.tinta }}
+              >
+                Ver calendario y ajustes
+                <CaretRight size={13} weight="bold" aria-hidden="true" />
+              </Link>
             </section>
           );
         })}

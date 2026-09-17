@@ -9,12 +9,13 @@ import type { DailyOverviewRow } from "@/lib/types";
 /**
  * La segunda salida del día en la tarjeta de Hoy: decir que recaíste.
  *
- * Es texto y no botón a propósito. Va en la misma fila que "Ver calendario y
- * ajustes", al mismo peso: quien recayó lo encuentra porque está justo
- * debajo del botón que ya conoce, y quien va limpio no ve un botón ámbar
- * mirándolo cada mañana. La hoja pide confirmar y deja escribir qué pasó.
+ * Un botón con borde y sin relleno, del ancho de "Hoy sigo limpio" y un poco
+ * más bajo. Empezó como texto en una esquina y en el teléfono no se veía ni
+ * parecía tocable; el borde lo hace botón sin competir con el blanco, y sin
+ * meter un bloque ámbar que quien va limpio tenga que mirar cada mañana. La
+ * hoja pide confirmar y deja escribir qué pasó.
  *
- * Con la recaída ya registrada, la misma esquina ofrece "Quitar", con doble
+ * Con la recaída ya registrada, el mismo botón ofrece quitarla, con doble
  * toque igual que desmarcar un día limpio: perder un registro por un toque
  * de más es lo que hace que alguien deje de usar la app.
  */
@@ -36,8 +37,11 @@ export function RecaidaDeHoy({
   const construye = habit.kind === "build";
   const relapsed = habit.today_status === "relapse";
 
-  const enlace =
-    "flex h-9 items-center rounded-lg px-1 text-[13.5px] font-semibold opacity-75 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current";
+  // El borde va con la tinta de la tarjeta; sin relleno, para que el botón
+  // blanco de arriba siga siendo el principal.
+  const boton =
+    "pulsable flex h-11 w-full items-center justify-center rounded-[14px] border-2 text-[15px] font-semibold tracking-[-0.01em] disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current";
+  const estilo = { color: tinta, borderColor: tinta, opacity: 0.85 };
 
   function registrar(nota: string) {
     setError(null);
@@ -84,10 +88,14 @@ export function RecaidaDeHoy({
                 ? "Quitar el día saltado"
                 : "Quitar la recaída de hoy"
           }
-          className={enlace}
-          style={{ color: tinta }}
+          className={boton}
+          style={estilo}
         >
-          {confirmandoQuitar ? "¿Quitar? Toca otra vez" : "Quitar"}
+          {confirmandoQuitar
+            ? "¿Quitar? Toca otra vez"
+            : construye
+              ? "Quitar el día saltado"
+              : "Quitar la recaída de hoy"}
         </button>
         {error && (
           <p role="alert" className="sr-only">
@@ -104,8 +112,8 @@ export function RecaidaDeHoy({
         type="button"
         disabled={pending}
         onClick={() => setAbierta(true)}
-        className={enlace}
-        style={{ color: tinta }}
+        className={boton}
+        style={estilo}
       >
         {construye ? "Hoy me lo salté" : "Hoy recaí"}
       </button>
